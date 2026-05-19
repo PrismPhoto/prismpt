@@ -1,0 +1,677 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      app_settings: {
+        Row: {
+          confirmation_enabled: boolean
+          deposit_request_enabled: boolean
+          draft_mode: boolean
+          followup_days: number
+          followup_enabled: boolean
+          gcal_calendar_id: string | null
+          gcal_connected: boolean
+          gmail_connected: boolean
+          id: number
+          pre_event_reminder_days: number
+          pre_event_reminder_enabled: boolean
+        }
+        Insert: {
+          confirmation_enabled?: boolean
+          deposit_request_enabled?: boolean
+          draft_mode?: boolean
+          followup_days?: number
+          followup_enabled?: boolean
+          gcal_calendar_id?: string | null
+          gcal_connected?: boolean
+          gmail_connected?: boolean
+          id?: number
+          pre_event_reminder_days?: number
+          pre_event_reminder_enabled?: boolean
+        }
+        Update: {
+          confirmation_enabled?: boolean
+          deposit_request_enabled?: boolean
+          draft_mode?: boolean
+          followup_days?: number
+          followup_enabled?: boolean
+          gcal_calendar_id?: string | null
+          gcal_connected?: boolean
+          gmail_connected?: boolean
+          id?: number
+          pre_event_reminder_days?: number
+          pre_event_reminder_enabled?: boolean
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          body: string
+          id: string
+          key: string
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          key: string
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          key?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      event_photographers: {
+        Row: {
+          event_id: string
+          fee: number
+          fee_paid: boolean
+          fee_paid_date: string | null
+          id: string
+          photographer_id: string
+          position: number
+        }
+        Insert: {
+          event_id: string
+          fee?: number
+          fee_paid?: boolean
+          fee_paid_date?: string | null
+          id?: string
+          photographer_id: string
+          position?: number
+        }
+        Update: {
+          event_id?: string
+          fee?: number
+          fee_paid?: boolean
+          fee_paid_date?: string | null
+          id?: string
+          photographer_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_photographers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_photographers_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          adjudication_date: string | null
+          client_name: string
+          created_at: string
+          deposit_amount: number | null
+          deposit_method: string | null
+          deposit_paid_date: string | null
+          email: string | null
+          event_date: string
+          event_notes: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          event_year: number | null
+          final_payment_date: string | null
+          final_payment_method: string | null
+          final_payment_value: number | null
+          has_pens_caixa: boolean
+          id: string
+          internal_notes: string | null
+          lead_id: string | null
+          location: string | null
+          package_id: string | null
+          package_snapshot: Json | null
+          pax: number | null
+          prism_commission: number
+          status: Database["public"]["Enums"]["event_status"]
+          total_value: number
+          updated_at: string
+          wedding_planner_id: string | null
+          wp_commission_value: number | null
+        }
+        Insert: {
+          adjudication_date?: string | null
+          client_name: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_method?: string | null
+          deposit_paid_date?: string | null
+          email?: string | null
+          event_date: string
+          event_notes?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          event_year?: number | null
+          final_payment_date?: string | null
+          final_payment_method?: string | null
+          final_payment_value?: number | null
+          has_pens_caixa?: boolean
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location?: string | null
+          package_id?: string | null
+          package_snapshot?: Json | null
+          pax?: number | null
+          prism_commission?: number
+          status?: Database["public"]["Enums"]["event_status"]
+          total_value?: number
+          updated_at?: string
+          wedding_planner_id?: string | null
+          wp_commission_value?: number | null
+        }
+        Update: {
+          adjudication_date?: string | null
+          client_name?: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_method?: string | null
+          deposit_paid_date?: string | null
+          email?: string | null
+          event_date?: string
+          event_notes?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          event_year?: number | null
+          final_payment_date?: string | null
+          final_payment_method?: string | null
+          final_payment_value?: number | null
+          has_pens_caixa?: boolean
+          id?: string
+          internal_notes?: string | null
+          lead_id?: string | null
+          location?: string | null
+          package_id?: string | null
+          package_snapshot?: Json | null
+          pax?: number | null
+          prism_commission?: number
+          status?: Database["public"]["Enums"]["event_status"]
+          total_value?: number
+          updated_at?: string
+          wedding_planner_id?: string | null
+          wp_commission_value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_wedding_planner_id_fkey"
+            columns: ["wedding_planner_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_planners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_photographers: {
+        Row: {
+          lead_id: string
+          photographer_id: string
+        }
+        Insert: {
+          lead_id: string
+          photographer_id: string
+        }
+        Update: {
+          lead_id?: string
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_photographers_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_photographers_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          client_name: string
+          created_at: string
+          date_received: string
+          email: string | null
+          event_date: string | null
+          event_type: Database["public"]["Enums"]["event_type"]
+          event_year: number | null
+          id: string
+          location: string | null
+          notes: string | null
+          package_id: string | null
+          pax: number | null
+          source: Database["public"]["Enums"]["lead_source"] | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          wedding_planner_id: string | null
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          date_received?: string
+          email?: string | null
+          event_date?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          event_year?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          package_id?: string | null
+          pax?: number | null
+          source?: Database["public"]["Enums"]["lead_source"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          wedding_planner_id?: string | null
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          date_received?: string
+          email?: string | null
+          event_date?: string | null
+          event_type?: Database["public"]["Enums"]["event_type"]
+          event_year?: number | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          package_id?: string | null
+          pax?: number | null
+          source?: Database["public"]["Enums"]["lead_source"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          wedding_planner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_wedding_planner_id_fkey"
+            columns: ["wedding_planner_id"]
+            isOneToOne: false
+            referencedRelation: "wedding_planners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          active: boolean
+          base_price: number
+          created_at: string
+          description: string | null
+          has_external_photographer: boolean
+          id: string
+          name: string
+          num_prism_photographers: number
+          version: number
+          wp_variant_percentage: number | null
+        }
+        Insert: {
+          active?: boolean
+          base_price: number
+          created_at?: string
+          description?: string | null
+          has_external_photographer?: boolean
+          id?: string
+          name: string
+          num_prism_photographers?: number
+          version?: number
+          wp_variant_percentage?: number | null
+        }
+        Update: {
+          active?: boolean
+          base_price?: number
+          created_at?: string
+          description?: string | null
+          has_external_photographer?: boolean
+          id?: string
+          name?: string
+          num_prism_photographers?: number
+          version?: number
+          wp_variant_percentage?: number | null
+        }
+        Relationships: []
+      }
+      photographer_unavailability: {
+        Row: {
+          date: string
+          id: string
+          notes: string | null
+          photographer_id: string
+        }
+        Insert: {
+          date: string
+          id?: string
+          notes?: string | null
+          photographer_id: string
+        }
+        Update: {
+          date?: string
+          id?: string
+          notes?: string | null
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photographer_unavailability_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      photographers: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          initials: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          initials: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          initials?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wedding_planners: {
+        Row: {
+          commission_percentage: number
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          commission_percentage?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          commission_percentage?: number
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_manager: { Args: { _user_id: string }; Returns: boolean }
+    }
+    Enums: {
+      app_role: "manager" | "photographer"
+      event_status: "Confirmado" | "Aguarda Sinal" | "Cancelado"
+      event_type: "Casamento" | "Corporate" | "Festa" | "Baptizado" | "Outro"
+      lead_source:
+        | "email"
+        | "website"
+        | "instagram"
+        | "wedding_planner"
+        | "outro"
+      lead_status: "Novo" | "Proposta Enviada" | "Adjudicado" | "Arquivo"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      app_role: ["manager", "photographer"],
+      event_status: ["Confirmado", "Aguarda Sinal", "Cancelado"],
+      event_type: ["Casamento", "Corporate", "Festa", "Baptizado", "Outro"],
+      lead_source: [
+        "email",
+        "website",
+        "instagram",
+        "wedding_planner",
+        "outro",
+      ],
+      lead_status: ["Novo", "Proposta Enviada", "Adjudicado", "Arquivo"],
+    },
+  },
+} as const
