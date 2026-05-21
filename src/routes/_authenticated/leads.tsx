@@ -153,7 +153,7 @@ function LeadsPage() {
                     {l.packages && <div className="text-xs">{l.packages.name}</div>}
                     {l.wedding_planners && <div className="text-xs text-muted-foreground">WP: {l.wedding_planners.name}</div>}
                     <div className="flex gap-1 flex-wrap pt-1" onClick={(e) => e.stopPropagation()}>
-                      <Select value={l.status} onValueChange={(v) => updateStatus.mutate({ id: l.id, status: v })}>
+                      <Select value={l.status} onValueChange={(v) => updateStatus.mutate({ lead: l, status: v })}>
                         <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
                         <SelectContent>{LEAD_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                       </Select>
