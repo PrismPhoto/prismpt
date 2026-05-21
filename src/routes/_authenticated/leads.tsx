@@ -83,6 +83,22 @@ function LeadsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const updateStatus = useMutation({
+    mutationFn: async ({ lead, status }: { lead: any; status: string }) => {
+      if (status === "Adjudicado" && !lead.converted_to_event_id) {
+        await adjudicate.mutateAsync(lead);
+        return;
+      }
+      const { error } = await supabase.from("leads").update({ status: status as any }).eq("id", lead.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 + i);
 
   return (
