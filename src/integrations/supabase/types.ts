@@ -56,29 +56,136 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_log: {
+        Row: {
+          draft_created: boolean
+          event_id: string
+          id: string
+          notes: string | null
+          sent: boolean
+          trigger_type: string
+          triggered_at: string
+        }
+        Insert: {
+          draft_created?: boolean
+          event_id: string
+          id?: string
+          notes?: string | null
+          sent?: boolean
+          trigger_type: string
+          triggered_at?: string
+        }
+        Update: {
+          draft_created?: boolean
+          event_id?: string
+          id?: string
+          notes?: string | null
+          sent?: boolean
+          trigger_type?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_drafts: {
+        Row: {
+          body: string
+          created_at: string
+          event_id: string | null
+          gmail_draft_id: string | null
+          id: string
+          lead_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["email_draft_status"]
+          subject: string
+          template_type: Database["public"]["Enums"]["email_template_type"]
+          to_email: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          event_id?: string | null
+          gmail_draft_id?: string | null
+          id?: string
+          lead_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_draft_status"]
+          subject: string
+          template_type: Database["public"]["Enums"]["email_template_type"]
+          to_email: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          event_id?: string | null
+          gmail_draft_id?: string | null
+          id?: string
+          lead_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["email_draft_status"]
+          subject?: string
+          template_type?: Database["public"]["Enums"]["email_template_type"]
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_drafts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_drafts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
+          active: boolean
           body: string
           id: string
           key: string
           name: string
           subject: string
+          template_type:
+            | Database["public"]["Enums"]["email_template_type"]
+            | null
           updated_at: string
         }
         Insert: {
+          active?: boolean
           body: string
           id?: string
           key: string
           name: string
           subject: string
+          template_type?:
+            | Database["public"]["Enums"]["email_template_type"]
+            | null
           updated_at?: string
         }
         Update: {
+          active?: boolean
           body?: string
           id?: string
           key?: string
           name?: string
           subject?: string
+          template_type?:
+            | Database["public"]["Enums"]["email_template_type"]
+            | null
           updated_at?: string
         }
         Relationships: []
@@ -89,27 +196,33 @@ export type Database = {
           fee: number
           fee_paid: boolean
           fee_paid_date: string | null
+          fee_payment_method: string | null
           id: string
           photographer_id: string
           position: number
+          role: Database["public"]["Enums"]["ep_role"] | null
         }
         Insert: {
           event_id: string
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
+          fee_payment_method?: string | null
           id?: string
           photographer_id: string
           position?: number
+          role?: Database["public"]["Enums"]["ep_role"] | null
         }
         Update: {
           event_id?: string
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
+          fee_payment_method?: string | null
           id?: string
           photographer_id?: string
           position?: number
+          role?: Database["public"]["Enums"]["ep_role"] | null
         }
         Relationships: [
           {
@@ -135,15 +248,20 @@ export type Database = {
           created_at: string
           deposit_amount: number | null
           deposit_method: string | null
+          deposit_paid: boolean
           deposit_paid_date: string | null
           email: string | null
           event_date: string
           event_notes: string | null
           event_type: Database["public"]["Enums"]["event_type"]
           event_year: number | null
+          final_date: string | null
+          final_method: string | null
           final_payment_date: string | null
           final_payment_method: string | null
           final_payment_value: number | null
+          final_value: number | null
+          google_calendar_event_id: string | null
           has_pens_caixa: boolean
           id: string
           internal_notes: string | null
@@ -165,15 +283,20 @@ export type Database = {
           created_at?: string
           deposit_amount?: number | null
           deposit_method?: string | null
+          deposit_paid?: boolean
           deposit_paid_date?: string | null
           email?: string | null
           event_date: string
           event_notes?: string | null
           event_type?: Database["public"]["Enums"]["event_type"]
           event_year?: number | null
+          final_date?: string | null
+          final_method?: string | null
           final_payment_date?: string | null
           final_payment_method?: string | null
           final_payment_value?: number | null
+          final_value?: number | null
+          google_calendar_event_id?: string | null
           has_pens_caixa?: boolean
           id?: string
           internal_notes?: string | null
@@ -195,15 +318,20 @@ export type Database = {
           created_at?: string
           deposit_amount?: number | null
           deposit_method?: string | null
+          deposit_paid?: boolean
           deposit_paid_date?: string | null
           email?: string | null
           event_date?: string
           event_notes?: string | null
           event_type?: Database["public"]["Enums"]["event_type"]
           event_year?: number | null
+          final_date?: string | null
+          final_method?: string | null
           final_payment_date?: string | null
           final_payment_method?: string | null
           final_payment_value?: number | null
+          final_value?: number | null
+          google_calendar_event_id?: string | null
           has_pens_caixa?: boolean
           id?: string
           internal_notes?: string | null
@@ -276,6 +404,7 @@ export type Database = {
       leads: {
         Row: {
           client_name: string
+          converted_to_event_id: string | null
           created_at: string
           date_received: string
           email: string | null
@@ -287,6 +416,7 @@ export type Database = {
           notes: string | null
           package_id: string | null
           pax: number | null
+          received_date: string | null
           source: Database["public"]["Enums"]["lead_source"] | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
@@ -294,6 +424,7 @@ export type Database = {
         }
         Insert: {
           client_name: string
+          converted_to_event_id?: string | null
           created_at?: string
           date_received?: string
           email?: string | null
@@ -305,6 +436,7 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           pax?: number | null
+          received_date?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
@@ -312,6 +444,7 @@ export type Database = {
         }
         Update: {
           client_name?: string
+          converted_to_event_id?: string | null
           created_at?: string
           date_received?: string
           email?: string | null
@@ -323,12 +456,20 @@ export type Database = {
           notes?: string | null
           package_id?: string | null
           pax?: number | null
+          received_date?: string | null
           source?: Database["public"]["Enums"]["lead_source"] | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
           wedding_planner_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "leads_converted_to_event_id_fkey"
+            columns: ["converted_to_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "leads_package_id_fkey"
             columns: ["package_id"]
@@ -351,11 +492,14 @@ export type Database = {
           base_price: number
           created_at: string
           description: string | null
+          has_external: boolean
           has_external_photographer: boolean
           id: string
           name: string
           num_prism_photographers: number
           version: number
+          wp_commission_10_price: number | null
+          wp_commission_15_price: number | null
           wp_variant_percentage: number | null
         }
         Insert: {
@@ -363,11 +507,14 @@ export type Database = {
           base_price: number
           created_at?: string
           description?: string | null
+          has_external?: boolean
           has_external_photographer?: boolean
           id?: string
           name: string
           num_prism_photographers?: number
           version?: number
+          wp_commission_10_price?: number | null
+          wp_commission_15_price?: number | null
           wp_variant_percentage?: number | null
         }
         Update: {
@@ -375,14 +522,52 @@ export type Database = {
           base_price?: number
           created_at?: string
           description?: string | null
+          has_external?: boolean
           has_external_photographer?: boolean
           id?: string
           name?: string
           num_prism_photographers?: number
           version?: number
+          wp_commission_10_price?: number | null
+          wp_commission_15_price?: number | null
           wp_variant_percentage?: number | null
         }
         Relationships: []
+      }
+      photographer_availability: {
+        Row: {
+          available: boolean
+          date: string
+          google_calendar_event_id: string | null
+          id: string
+          notes: string | null
+          photographer_id: string
+        }
+        Insert: {
+          available?: boolean
+          date: string
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          photographer_id: string
+        }
+        Update: {
+          available?: boolean
+          date?: string
+          google_calendar_event_id?: string | null
+          id?: string
+          notes?: string | null
+          photographer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photographer_availability_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       photographer_unavailability: {
         Row: {
@@ -421,6 +606,8 @@ export type Database = {
           full_name: string
           id: string
           initials: string
+          personal_email: string | null
+          profile_id: string | null
           user_id: string | null
         }
         Insert: {
@@ -430,6 +617,8 @@ export type Database = {
           full_name: string
           id?: string
           initials: string
+          personal_email?: string | null
+          profile_id?: string | null
           user_id?: string | null
         }
         Update: {
@@ -439,28 +628,50 @@ export type Database = {
           full_name?: string
           id?: string
           initials?: string
+          personal_email?: string | null
+          profile_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "photographers_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
+          active: boolean
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          initials: string | null
+          personal_email: string | null
+          role: Database["public"]["Enums"]["app_role"] | null
         }
         Insert: {
+          active?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          initials?: string | null
+          personal_email?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
         }
         Update: {
+          active?: boolean
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          initials?: string | null
+          personal_email?: string | null
+          role?: Database["public"]["Enums"]["app_role"] | null
         }
         Relationships: []
       }
@@ -525,6 +736,15 @@ export type Database = {
     }
     Enums: {
       app_role: "manager" | "photographer"
+      deposit_method: "revolut" | "bank_transfer" | "cyclik" | "other"
+      email_draft_status: "draft" | "sent"
+      email_template_type:
+        | "proposta"
+        | "followup"
+        | "pedido_sinal"
+        | "confirmacao"
+        | "lembrete"
+      ep_role: "primary" | "secondary" | "tertiary"
       event_status: "Confirmado" | "Aguarda Sinal" | "Cancelado"
       event_type: "Casamento" | "Corporate" | "Festa" | "Baptizado" | "Outro"
       lead_source:
@@ -533,6 +753,7 @@ export type Database = {
         | "instagram"
         | "wedding_planner"
         | "outro"
+        | "other"
       lead_status: "Novo" | "Proposta Enviada" | "Adjudicado" | "Arquivo"
     }
     CompositeTypes: {
@@ -662,6 +883,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["manager", "photographer"],
+      deposit_method: ["revolut", "bank_transfer", "cyclik", "other"],
+      email_draft_status: ["draft", "sent"],
+      email_template_type: [
+        "proposta",
+        "followup",
+        "pedido_sinal",
+        "confirmacao",
+        "lembrete",
+      ],
+      ep_role: ["primary", "secondary", "tertiary"],
       event_status: ["Confirmado", "Aguarda Sinal", "Cancelado"],
       event_type: ["Casamento", "Corporate", "Festa", "Baptizado", "Outro"],
       lead_source: [
@@ -670,6 +901,7 @@ export const Constants = {
         "instagram",
         "wedding_planner",
         "outro",
+        "other",
       ],
       lead_status: ["Novo", "Proposta Enviada", "Adjudicado", "Arquivo"],
     },
