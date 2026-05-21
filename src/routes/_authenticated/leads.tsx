@@ -124,6 +124,7 @@ function LeadsPage() {
                 <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Nova lead</Button>
               </DialogTrigger>
               <LeadForm
+                key={editing?.id ?? "new"}
                 lead={editing}
                 packages={packages}
                 wps={wps}
