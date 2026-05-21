@@ -178,6 +178,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       event_date: form.event_date, client_name: form.client_name, email: form.email || null,
       pax: form.pax ? Number(form.pax) : null, location: form.location || null,
       event_type: form.event_type, package_id: form.package_id || null,
+      event_year: new Date(form.event_date).getFullYear(),
       total_value: Number(form.total_value), prism_commission: Number(form.prism_commission || 0),
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
