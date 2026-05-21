@@ -47,20 +47,19 @@ function LeadsPage() {
     queryFn: async () => (await supabase.from("wedding_planners").select("*")).data ?? [],
   });
 
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("leads").update({ status: status as any }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["leads"] }),
-  });
-
   const adjudicate = useMutation({
     mutationFn: async (lead: any) => {
+      if (lead.converted_to_event_id) {
+        await supabase.from("leads").update({ status: "Adjudicado" as any }).eq("id", lead.id);
+        return;
+      }
+      if (!lead.event_date) throw new Error("Lead sem data de evento — defina a data antes de adjudicar.");
       const pkg = packages.find((p: any) => p.id === lead.package_id);
-      const { error } = await supabase.from("events").insert({
+      const eventYear = new Date(lead.event_date).getFullYear();
+      const { data: ev, error } = await supabase.from("events").insert({
         lead_id: lead.id,
         event_date: lead.event_date,
+        event_year: eventYear,
         client_name: lead.client_name,
         email: lead.email,
         pax: lead.pax,
@@ -72,9 +71,9 @@ function LeadsPage() {
         wedding_planner_id: lead.wedding_planner_id,
         adjudication_date: new Date().toISOString().slice(0, 10),
         status: "Aguarda Sinal",
-      });
+      }).select().single();
       if (error) throw error;
-      await supabase.from("leads").update({ status: "Adjudicado" as any }).eq("id", lead.id);
+      await supabase.from("leads").update({ status: "Adjudicado" as any, converted_to_event_id: ev.id }).eq("id", lead.id);
     },
     onSuccess: () => {
       toast.success("Lead adjudicada — evento criado");
