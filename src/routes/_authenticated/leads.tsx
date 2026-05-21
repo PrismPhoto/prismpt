@@ -55,11 +55,9 @@ function LeadsPage() {
       }
       if (!lead.event_date) throw new Error("Lead sem data de evento — defina a data antes de adjudicar.");
       const pkg = packages.find((p: any) => p.id === lead.package_id);
-      const eventYear = new Date(lead.event_date).getFullYear();
       const { data: ev, error } = await supabase.from("events").insert({
         lead_id: lead.id,
         event_date: lead.event_date,
-        event_year: eventYear,
         client_name: lead.client_name,
         email: lead.email,
         pax: lead.pax,
