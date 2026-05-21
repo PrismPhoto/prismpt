@@ -47,18 +47,15 @@ function LeadsPage() {
     queryFn: async () => (await supabase.from("wedding_planners").select("*")).data ?? [],
   });
 
-  const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("leads").update({ status: status as any }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["leads"] }),
-  });
-
   const adjudicate = useMutation({
     mutationFn: async (lead: any) => {
+      if (lead.converted_to_event_id) {
+        await supabase.from("leads").update({ status: "Adjudicado" as any }).eq("id", lead.id);
+        return;
+      }
+      if (!lead.event_date) throw new Error("Lead sem data de evento — defina a data antes de adjudicar.");
       const pkg = packages.find((p: any) => p.id === lead.package_id);
-      const { error } = await supabase.from("events").insert({
+      const { data: ev, error } = await supabase.from("events").insert({
         lead_id: lead.id,
         event_date: lead.event_date,
         client_name: lead.client_name,
@@ -72,12 +69,28 @@ function LeadsPage() {
         wedding_planner_id: lead.wedding_planner_id,
         adjudication_date: new Date().toISOString().slice(0, 10),
         status: "Aguarda Sinal",
-      });
+      }).select().single();
       if (error) throw error;
-      await supabase.from("leads").update({ status: "Adjudicado" as any }).eq("id", lead.id);
+      await supabase.from("leads").update({ status: "Adjudicado" as any, converted_to_event_id: ev.id }).eq("id", lead.id);
     },
     onSuccess: () => {
       toast.success("Lead adjudicada — evento criado");
+      qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ lead, status }: { lead: any; status: string }) => {
+      if (status === "Adjudicado" && !lead.converted_to_event_id) {
+        await adjudicate.mutateAsync(lead);
+        return;
+      }
+      const { error } = await supabase.from("leads").update({ status: status as any }).eq("id", lead.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["leads"] });
       qc.invalidateQueries({ queryKey: ["events"] });
     },
@@ -109,6 +122,7 @@ function LeadsPage() {
                 <Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Nova lead</Button>
               </DialogTrigger>
               <LeadForm
+                key={editing?.id ?? "new"}
                 lead={editing}
                 packages={packages}
                 wps={wps}
@@ -138,7 +152,7 @@ function LeadsPage() {
                     {l.packages && <div className="text-xs">{l.packages.name}</div>}
                     {l.wedding_planners && <div className="text-xs text-muted-foreground">WP: {l.wedding_planners.name}</div>}
                     <div className="flex gap-1 flex-wrap pt-1" onClick={(e) => e.stopPropagation()}>
-                      <Select value={l.status} onValueChange={(v) => updateStatus.mutate({ id: l.id, status: v })}>
+                      <Select value={l.status} onValueChange={(v) => updateStatus.mutate({ lead: l, status: v })}>
                         <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
                         <SelectContent>{LEAD_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                       </Select>

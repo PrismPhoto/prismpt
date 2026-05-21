@@ -81,7 +81,7 @@ function EventsPage() {
             {role === "manager" && (
               <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
                 <DialogTrigger asChild><Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
-                <EventForm event={editing} packages={packages} wps={wps} photographers={photographers}
+                <EventForm key={editing?.id ?? "new"} event={editing} packages={packages} wps={wps} photographers={photographers}
                   onSaved={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["events"] }); }} />
               </Dialog>
             )}
