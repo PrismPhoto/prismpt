@@ -78,7 +78,7 @@ function PhotogPage() {
 }
 
 function PhotogForm({ initial, onSave }: any) {
-  const [f, setF] = useState({ initials: initial?.initials ?? "", full_name: initial?.full_name ?? "", email: initial?.email ?? "", active: initial?.active ?? true });
+  const [f, setF] = useState({ initials: initial?.initials ?? "", full_name: initial?.full_name ?? "", email: initial?.email ?? "", active: initial?.active ?? true, prism_commission: initial?.prism_commission ?? 0 });
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>{initial ? "Editar" : "Novo"} fotógrafo</DialogTitle></DialogHeader>
@@ -86,6 +86,7 @@ function PhotogForm({ initial, onSave }: any) {
         <div><Label>Iniciais</Label><Input value={f.initials} onChange={(e) => setF({ ...f, initials: e.target.value.toUpperCase() })} /></div>
         <div><Label>Nome completo</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
         <div><Label>Email pessoal</Label><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        <div><Label>Comissão PRISM (€/evento)</Label><Input type="number" min={0} step="0.01" value={f.prism_commission} onChange={(e) => setF({ ...f, prism_commission: e.target.value })} /></div>
         <div className="flex items-center gap-2"><Switch checked={f.active} onCheckedChange={(c) => setF({ ...f, active: c })} /><Label>Ativo</Label></div>
       </div>
       <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
