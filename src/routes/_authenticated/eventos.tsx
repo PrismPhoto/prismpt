@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/eventos")({ component: Eve
 function EventsPage() {
   const qc = useQueryClient();
   const { role } = useAuth();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
   const [open, setOpen] = useState(false);
