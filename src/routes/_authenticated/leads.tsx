@@ -21,7 +21,7 @@ const STATUS_COLS = ["Novo", "Proposta Enviada", "Adjudicado", "Arquivo"] as con
 
 function LeadsPage() {
   const qc = useQueryClient();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(2027);
   const [typeFilter, setTypeFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -97,7 +97,7 @@ function LeadsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 + i);
+  const years = [2027, 2028, 2029, 2030];
 
   return (
     <PageContainer>

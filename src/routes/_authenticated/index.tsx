@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function DashboardPage() {
   const { role } = useAuth();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(2027);
   const [type, setType] = useState<string>("all");
 
   const { data: stats } = useQuery({
@@ -77,7 +77,7 @@ function DashboardPage() {
     );
   }
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+  const years = [2027, 2028, 2029, 2030];
 
   return (
     <PageContainer>
