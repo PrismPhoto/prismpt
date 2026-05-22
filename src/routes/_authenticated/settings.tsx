@@ -39,6 +39,7 @@ function SettingsPage() {
       <Tabs defaultValue="integrations">
         <TabsList>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
+          <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="automations">Automatismos</TabsTrigger>
         </TabsList>
