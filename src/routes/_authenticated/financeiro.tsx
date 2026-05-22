@@ -164,11 +164,15 @@ function FinancePage() {
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{e.wp_commission_value ? EUR(e.wp_commission_value) : <span className="text-muted-foreground">—</span>}</td>}
                     <td className="p-3">
                       <div className="flex gap-1 flex-wrap">
-                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => (
-                          <Badge key={ep.id} variant={ep.fee_paid ? "default" : "outline"} className="text-xs">
-                            {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))}
-                          </Badge>
-                        ))}
+                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => {
+                          const owed = owedToPhotographer(e, ep);
+                          const variant = owed <= 0 ? "default" : ep.deposit_paid ? "secondary" : "outline";
+                          return (
+                            <Badge key={ep.id} variant={variant} className="text-xs">
+                              {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))} {owed > 0 ? `(falta ${EUR(owed)})` : ""}
+                            </Badge>
+                          );
+                        })}
 
                       </div>
                     </td>
