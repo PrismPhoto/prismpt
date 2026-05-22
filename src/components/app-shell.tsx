@@ -24,6 +24,7 @@ const navItems = [
   { to: "/calendario", label: "Calendário", icon: Calendar, managerOnly: false },
   { to: "/financeiro", label: "Financeiro", icon: Wallet, managerOnly: false },
   { to: "/fotografos", label: "Fotógrafos", icon: Camera, managerOnly: true },
+  { to: "/meu-perfil", label: "Meu Perfil", icon: Camera, photographerOnly: true },
   { to: "/pacotes", label: "Pacotes", icon: Package, managerOnly: true },
   { to: "/wedding-planners", label: "Wedding Planners", icon: Heart, managerOnly: true },
   { to: "/settings", label: "Definições", icon: SettingsIcon, managerOnly: true },
