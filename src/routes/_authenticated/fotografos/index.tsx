@@ -21,7 +21,7 @@ function PhotogPage() {
   const { data: list = [] } = useQuery({ queryKey: ["photogs-mgmt"], queryFn: async () => (await supabase.from("photographers").select("*").order("initials")).data ?? [] });
 
   const save = async (f: any) => {
-    const payload = { initials: f.initials, full_name: f.full_name, email: f.email || null, active: f.active };
+    const payload = { initials: f.initials, full_name: f.full_name, email: f.email || null, active: f.active, prism_commission: Number(f.prism_commission) || 0 };
     const { error } = editing
       ? await supabase.from("photographers").update(payload).eq("id", editing.id)
       : await supabase.from("photographers").insert(payload);
@@ -55,6 +55,9 @@ function PhotogPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{p.full_name}</div>
                   <div className="text-xs text-muted-foreground truncate">{p.email ?? "Sem email"}</div>
+                  {Number(p.prism_commission) > 0 && (
+                    <div className="text-xs font-medium text-primary mt-0.5">{Number(p.prism_commission)}€/evento</div>
+                  )}
                 </div>
                 {!p.active && <span className="text-xs text-muted-foreground">Inativo</span>}
                 <Button
@@ -75,7 +78,7 @@ function PhotogPage() {
 }
 
 function PhotogForm({ initial, onSave }: any) {
-  const [f, setF] = useState({ initials: initial?.initials ?? "", full_name: initial?.full_name ?? "", email: initial?.email ?? "", active: initial?.active ?? true });
+  const [f, setF] = useState({ initials: initial?.initials ?? "", full_name: initial?.full_name ?? "", email: initial?.email ?? "", active: initial?.active ?? true, prism_commission: initial?.prism_commission ?? 0 });
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>{initial ? "Editar" : "Novo"} fotógrafo</DialogTitle></DialogHeader>
@@ -83,6 +86,7 @@ function PhotogForm({ initial, onSave }: any) {
         <div><Label>Iniciais</Label><Input value={f.initials} onChange={(e) => setF({ ...f, initials: e.target.value.toUpperCase() })} /></div>
         <div><Label>Nome completo</Label><Input value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></div>
         <div><Label>Email pessoal</Label><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></div>
+        <div><Label>Comissão PRISM (€/evento)</Label><Input type="number" min={0} step="0.01" value={f.prism_commission} onChange={(e) => setF({ ...f, prism_commission: e.target.value })} /></div>
         <div className="flex items-center gap-2"><Switch checked={f.active} onCheckedChange={(c) => setF({ ...f, active: c })} /><Label>Ativo</Label></div>
       </div>
       <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
