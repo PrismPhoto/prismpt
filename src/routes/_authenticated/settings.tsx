@@ -39,6 +39,7 @@ function SettingsPage() {
       <Tabs defaultValue="integrations">
         <TabsList>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
+          <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="automations">Automatismos</TabsTrigger>
         </TabsList>
@@ -72,6 +73,20 @@ function SettingsPage() {
                 <div className="text-xs text-muted-foreground">Nunca envia emails automaticamente sem aprovação</div>
               </div>
               <Switch checked={s.draft_mode} onCheckedChange={(c) => setS({ ...s, draft_mode: c })} />
+            </CardContent>
+          </Card>
+          <Button onClick={saveSettings}>Guardar</Button>
+        </TabsContent>
+
+        <TabsContent value="comunicacao" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tom e estilo da PRISM</CardTitle>
+              <CardDescription>Descreva como a PRISM comunica com os clientes. Será usado pela IA para gerar emails.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea rows={8} value={s.brand_voice ?? ""} onChange={(e) => setS({ ...s, brand_voice: e.target.value })}
+                placeholder="Ex.: A PRISM trata os noivos pelo primeiro nome, com tom caloroso, próximo mas profissional. Usamos frases curtas, evitamos jargão e nunca tratamos por 'caro cliente'. Assinamos como 'Equipa PRISM'." />
             </CardContent>
           </Card>
           <Button onClick={saveSettings}>Guardar</Button>

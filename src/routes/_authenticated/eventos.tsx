@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate } from "@/lib/format";
-import { Plus, Download } from "lucide-react";
+import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
+import { Plus, Download, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -162,23 +163,65 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     };
   });
 
+  const { data: existingExtras = [] } = useQuery({
+    queryKey: ["event_extras", event?.id],
+    queryFn: async () => event?.id ? ((await supabase.from("event_extras").select("*").eq("event_id", event.id)).data ?? []) : [],
+    enabled: !!event?.id,
+  });
+  const [extras, setExtras] = useState<any[]>([]);
+  useEffect(() => {
+    setExtras(existingExtras.map((x: any) => ({ ...x })));
+    // total_value stored includes extras → strip them so editing UI shows base value
+    const prevSum = existingExtras.reduce((s: number, x: any) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
+    if (prevSum > 0) setForm((f: any) => ({ ...f, total_value: Number(f.total_value || 0) - prevSum }));
+  }, [existingExtras]);
+  const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
+
+  const splitFees = (prismCommission: number, photogIds: string[]) => {
+    const n = photogIds.filter(Boolean).length;
+    if (!n) return [0, 0, 0];
+    const each = Number((prismCommission / n).toFixed(2));
+    return [photogIds[0] ? each : 0, photogIds[1] ? each : 0, photogIds[2] ? each : 0];
+  };
+  const recalcFees = (next: any) => {
+    const [f1, f2, f3] = splitFees(Number(next.prism_commission || 0), [next.photog1, next.photog2, next.photog3]);
+    return { ...next, fee1: f1, fee2: f2, fee3: f3 };
+  };
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
-    setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
+    setForm(recalcFees({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value }));
   };
+  const onPrism = (val: string) => setForm(recalcFees({ ...form, prism_commission: val }));
+  const onPhotog = (slot: "photog1" | "photog2" | "photog3", v: string) =>
+    setForm(recalcFees({ ...form, [slot]: v }));
   const onWp = (id: string) => {
     const wp = wps.find((x: any) => x.id === id);
     const commission = wp ? Number(form.total_value) * (wp.commission_percentage / 100) : 0;
     setForm({ ...form, wedding_planner_id: id, wp_commission_value: commission });
   };
 
+  const addExtra = () => {
+    const t: ExtraType = "Outro";
+    setExtras([...extras, { extra_type: t, description: "", quantity: 1, unit_price: EXTRA_DEFAULT_PRICE[t], photographer_id: null }]);
+  };
+  const updateExtra = (i: number, patch: any) => {
+    const next = [...extras];
+    next[i] = { ...next[i], ...patch };
+    if (patch.extra_type) next[i].unit_price = EXTRA_DEFAULT_PRICE[patch.extra_type as ExtraType] ?? next[i].unit_price;
+    setExtras(next);
+  };
+  const removeExtra = (i: number) => setExtras(extras.filter((_, idx) => idx !== i));
+
   const save = async () => {
     if (!form.event_date || !form.client_name) return toast.error("Data e cliente obrigatórios");
+    const baseTotal = Number(form.total_value || 0);
+    const grandTotal = baseTotal + extrasTotal;
     const payload = {
       event_date: form.event_date, client_name: form.client_name, email: form.email || null,
       pax: form.pax ? Number(form.pax) : null, location: form.location || null,
       event_type: form.event_type, package_id: form.package_id || null,
-      total_value: Number(form.total_value), prism_commission: Number(form.prism_commission || 0),
+      total_value: grandTotal, prism_commission: Number(form.prism_commission || 0),
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
       has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
@@ -198,7 +241,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       if (error) return toast.error(error.message);
       eventId = data.id;
     }
-    // sync photographers
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
     const rows = [
       { pos: 1, photog: form.photog1, fee: form.fee1 },
@@ -207,6 +249,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     ].filter((r) => r.photog).map((r) => ({ event_id: eventId, photographer_id: r.photog, position: r.pos, fee: Number(r.fee || 0) }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
+      if (error) return toast.error(error.message);
+    }
+    await supabase.from("event_extras").delete().eq("event_id", eventId);
+    if (extras.length) {
+      const extraRows = extras.map((x) => ({
+        event_id: eventId,
+        extra_type: x.extra_type,
+        description: x.description || null,
+        quantity: Number(x.quantity || 0),
+        unit_price: Number(x.unit_price || 0),
+        total: Number(x.quantity || 0) * Number(x.unit_price || 0),
+        photographer_id: x.photographer_id || null,
+      }));
+      const { error } = await supabase.from("event_extras").insert(extraRows);
       if (error) return toast.error(error.message);
     }
     toast.success("Evento guardado");
@@ -240,8 +296,8 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
             <SelectContent>{packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} v{p.version} ({p.base_price}€)</SelectItem>)}</SelectContent>
           </Select>
         </F>
-        <F label="Valor total"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
-        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => setForm({ ...form, prism_commission: e.target.value })} /></F>
+        <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
+        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => onPrism(e.target.value)} /></F>
         <F label="Wedding Planner">
           <Select value={form.wedding_planner_id || "none"} onValueChange={(v) => onWp(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -255,9 +311,55 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        <PhotogSlot photographers={photographers} pid={form.photog1} fee={form.fee1} onPid={(v: any) => setForm({ ...form, photog1: v })} onFee={(v: any) => setForm({ ...form, fee1: v })} label="Fotógrafo 1" />
-        <PhotogSlot photographers={photographers} pid={form.photog2} fee={form.fee2} onPid={(v: any) => setForm({ ...form, photog2: v })} onFee={(v: any) => setForm({ ...form, fee2: v })} label="Fotógrafo 2" />
-        <PhotogSlot photographers={photographers} pid={form.photog3} fee={form.fee3} onPid={(v: any) => setForm({ ...form, photog3: v })} onFee={(v: any) => setForm({ ...form, fee3: v })} label="Fotógrafo 3" />
+        <PhotogSlot photographers={photographers} pid={form.photog1} fee={form.fee1} onPid={(v: any) => onPhotog("photog1", v)} onFee={(v: any) => setForm({ ...form, fee1: v })} label="Fotógrafo 1" />
+        <PhotogSlot photographers={photographers} pid={form.photog2} fee={form.fee2} onPid={(v: any) => onPhotog("photog2", v)} onFee={(v: any) => setForm({ ...form, fee2: v })} label="Fotógrafo 2" />
+        <PhotogSlot photographers={photographers} pid={form.photog3} fee={form.fee3} onPid={(v: any) => onPhotog("photog3", v)} onFee={(v: any) => setForm({ ...form, fee3: v })} label="Fotógrafo 3" />
+
+        <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
+          <h4 className="text-sm font-semibold">Extras</h4>
+          <Button type="button" size="sm" variant="outline" onClick={addExtra}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
+        </div>
+        {extras.map((x, i) => (
+          <div key={i} className="md:col-span-2 grid grid-cols-12 gap-2 items-end p-2 rounded bg-muted/40">
+            <div className="col-span-3">
+              <Label className="text-xs">Tipo</Label>
+              <Select value={x.extra_type} onValueChange={(v) => updateExtra(i, { extra_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{EXTRA_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-3">
+              <Label className="text-xs">Descrição</Label>
+              <Input value={x.description ?? ""} onChange={(e) => updateExtra(i, { description: e.target.value })} />
+            </div>
+            <div className="col-span-1">
+              <Label className="text-xs">Qt</Label>
+              <Input type="number" step="0.01" value={x.quantity} onChange={(e) => updateExtra(i, { quantity: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Preço un.</Label>
+              <Input type="number" step="0.01" value={x.unit_price} onChange={(e) => updateExtra(i, { unit_price: e.target.value })} />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Fotógrafo</Label>
+              <Select value={x.photographer_id || "none"} onValueChange={(v) => updateExtra(i, { photographer_id: v === "none" ? null : v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-1 flex justify-end">
+              <Button type="button" size="icon" variant="ghost" onClick={() => removeExtra(i)}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+            <div className="col-span-12 text-xs text-right text-muted-foreground">Subtotal: {EUR(Number(x.quantity || 0) * Number(x.unit_price || 0))}</div>
+          </div>
+        ))}
+        <div className="md:col-span-2 flex justify-between items-center text-sm bg-muted/40 px-3 py-2 rounded">
+          <span>Subtotal extras</span><span className="tabular-nums font-medium">{EUR(extrasTotal)}</span>
+        </div>
+        <div className="md:col-span-2 flex justify-between items-center text-base bg-primary/10 px-3 py-2 rounded">
+          <span className="font-medium">Total evento (pacote + extras)</span>
+          <span className="tabular-nums font-semibold">{EUR(Number(form.total_value || 0) + extrasTotal)}</span>
+        </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Pagamentos</h4></div>
         <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>

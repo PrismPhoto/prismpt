@@ -24,6 +24,7 @@ const navItems = [
   { to: "/calendario", label: "Calendário", icon: Calendar, managerOnly: false },
   { to: "/financeiro", label: "Financeiro", icon: Wallet, managerOnly: false },
   { to: "/fotografos", label: "Fotógrafos", icon: Camera, managerOnly: true },
+  { to: "/meu-perfil", label: "Meu Perfil", icon: Camera, photographerOnly: true },
   { to: "/pacotes", label: "Pacotes", icon: Package, managerOnly: true },
   { to: "/wedding-planners", label: "Wedding Planners", icon: Heart, managerOnly: true },
   { to: "/settings", label: "Definições", icon: SettingsIcon, managerOnly: true },
@@ -47,7 +48,11 @@ export function AppShell() {
     );
   }
 
-  const visible = navItems.filter((i) => !i.managerOnly || role === "manager");
+  const visible = navItems.filter((i: any) => {
+    if (i.managerOnly && role !== "manager") return false;
+    if (i.photographerOnly && role !== "photographer") return false;
+    return true;
+  });
 
   const SidebarContent = (
     <div className="flex flex-col h-full">
