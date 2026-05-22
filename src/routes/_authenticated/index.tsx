@@ -77,7 +77,7 @@ function DashboardPage() {
     );
   }
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+  const years = [2027, 2028, 2029, 2030];
 
   return (
     <PageContainer>
