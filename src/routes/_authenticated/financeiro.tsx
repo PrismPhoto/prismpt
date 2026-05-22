@@ -23,7 +23,7 @@ function FinancePage() {
     queryKey: ["finance", year, typeF, photogF],
     queryFn: async () => {
       let q = supabase.from("events")
-        .select("*, event_photographers(*, photographers(initials, full_name)), wedding_planners(name)")
+        .select("*, event_photographers(*, photographers(initials, full_name)), event_extras(*), wedding_planners(name)")
         .eq("event_year", year)
         .order("event_date");
       if (typeF !== "all") q = q.eq("event_type", typeF as any);
@@ -36,22 +36,32 @@ function FinancePage() {
     ? rows
     : rows.filter((e: any) => e.event_photographers?.some((ep: any) => ep.photographer_id === (role === "manager" ? photogF : photographerId)));
 
+  // Extras attributed to a specific photographer count toward their fee
+  const extrasForPhotographer = (e: any, photographerId: string) =>
+    (e.event_extras || [])
+      .filter((x: any) => x.photographer_id === photographerId)
+      .reduce((s: number, x: any) => s + Number(x.total || 0), 0);
+
+  const feeWithExtras = (e: any, ep: any) => Number(ep.fee || 0) + extrasForPhotographer(e, ep.photographer_id);
+
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
   const totalWp = filtered.reduce((s, e) => s + Number(e.wp_commission_value || 0), 0);
-  const allFees = filtered.flatMap((e: any) => e.event_photographers || []);
-  const totalFees = allFees.reduce((s, f) => s + Number(f.fee || 0), 0);
-  const totalFeesPaid = allFees.filter((f) => f.fee_paid).reduce((s, f) => s + Number(f.fee || 0), 0);
+  const allFeeRows = filtered.flatMap((e: any) => (e.event_photographers || []).map((ep: any) => ({ ep, e })));
+  const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
+  const totalFeesPaid = allFeeRows.filter(({ ep }) => ep.fee_paid).reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
   // Per photographer balance
   const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number }> = {};
-  allFees.forEach((f: any) => {
-    const k = f.photographer_id;
-    if (!balances[k]) balances[k] = { initials: f.photographers?.initials ?? "?", full_name: f.photographers?.full_name ?? "", owed: 0, paid: 0 };
-    balances[k].owed += Number(f.fee || 0);
-    if (f.fee_paid) balances[k].paid += Number(f.fee || 0);
+  allFeeRows.forEach(({ ep, e }) => {
+    const k = ep.photographer_id;
+    if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0 };
+    const amount = feeWithExtras(e, ep);
+    balances[k].owed += amount;
+    if (ep.fee_paid) balances[k].paid += amount;
   });
+
 
   const years = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 2 + i);
 
@@ -139,9 +149,10 @@ function FinancePage() {
                       <div className="flex gap-1 flex-wrap">
                         {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => (
                           <Badge key={ep.id} variant={ep.fee_paid ? "default" : "outline"} className="text-xs">
-                            {ep.photographers?.initials}: {EUR(ep.fee)}
+                            {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))}
                           </Badge>
                         ))}
+
                       </div>
                     </td>
                   </tr>
