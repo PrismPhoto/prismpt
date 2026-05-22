@@ -46,14 +46,17 @@ function PhotogProfile() {
   const upcoming = assignments.filter((a: any) => a.events.event_date >= today);
   const past = assignments.filter((a: any) => a.events.event_date < today);
 
-  const creditFor = (a: any) => {
+  const commission = Number(photog?.prism_commission || 0);
+  const paidFor = (a: any) => {
     const dep = a.deposit_paid ? Number(a.deposit_amount || 0) : 0;
-    const fin = a.final_payment_received && a.final_payment_method === "prism" ? Number(a.final_payment_value || 0) : 0;
+    const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
     return dep + fin;
   };
   const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
-  const totalPaid = assignments.reduce((s: number, a: any) => s + creditFor(a), 0);
-  const totalPending = totalFees - totalPaid;
+  const totalCommission = assignments.length * commission;
+  const totalLiquido = totalFees - totalCommission;
+  const totalPaid = assignments.reduce((s: number, a: any) => s + paidFor(a), 0);
+  const totalPending = totalLiquido - totalPaid;
 
   if (photogLoading) {
     return (
