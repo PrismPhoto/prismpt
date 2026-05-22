@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       app_settings: {
         Row: {
+          brand_voice: string | null
           confirmation_enabled: boolean
           deposit_request_enabled: boolean
           draft_mode: boolean
@@ -29,6 +30,7 @@ export type Database = {
           pre_event_reminder_enabled: boolean
         }
         Insert: {
+          brand_voice?: string | null
           confirmation_enabled?: boolean
           deposit_request_enabled?: boolean
           draft_mode?: boolean
@@ -42,6 +44,7 @@ export type Database = {
           pre_event_reminder_enabled?: boolean
         }
         Update: {
+          brand_voice?: string | null
           confirmation_enabled?: boolean
           deposit_request_enabled?: boolean
           draft_mode?: boolean
@@ -189,6 +192,57 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      event_extras: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_id: string
+          extra_type: Database["public"]["Enums"]["extra_type"]
+          id: string
+          photographer_id: string | null
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_id: string
+          extra_type: Database["public"]["Enums"]["extra_type"]
+          id?: string
+          photographer_id?: string | null
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_id?: string
+          extra_type?: Database["public"]["Enums"]["extra_type"]
+          id?: string
+          photographer_id?: string | null
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_extras_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_extras_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_photographers: {
         Row: {
@@ -747,6 +801,20 @@ export type Database = {
       ep_role: "primary" | "secondary" | "tertiary"
       event_status: "Confirmado" | "Aguarda Sinal" | "Cancelado"
       event_type: "Casamento" | "Corporate" | "Festa" | "Baptizado" | "Outro"
+      extra_type:
+        | "Deslocação"
+        | "Estadia"
+        | "Hora Extra"
+        | "Pack Analógico Foto"
+        | "Pack Analógico Video Super8"
+        | "Sessão de Noivos"
+        | "Pre-Wedding"
+        | "Álbum Grande"
+        | "Álbum Médio"
+        | "Álbum Pequeno"
+        | "Álbum Best Of"
+        | "WoodBox"
+        | "Outro"
       lead_source:
         | "email"
         | "website"
@@ -895,6 +963,21 @@ export const Constants = {
       ep_role: ["primary", "secondary", "tertiary"],
       event_status: ["Confirmado", "Aguarda Sinal", "Cancelado"],
       event_type: ["Casamento", "Corporate", "Festa", "Baptizado", "Outro"],
+      extra_type: [
+        "Deslocação",
+        "Estadia",
+        "Hora Extra",
+        "Pack Analógico Foto",
+        "Pack Analógico Video Super8",
+        "Sessão de Noivos",
+        "Pre-Wedding",
+        "Álbum Grande",
+        "Álbum Médio",
+        "Álbum Pequeno",
+        "Álbum Best Of",
+        "WoodBox",
+        "Outro",
+      ],
       lead_source: [
         "email",
         "website",
