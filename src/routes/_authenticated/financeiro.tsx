@@ -63,7 +63,7 @@ function FinancePage() {
   });
 
 
-  const years = Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 2 + i);
+  const years = [2027, 2028, 2029, 2030];
 
   return (
     <PageContainer>
