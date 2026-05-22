@@ -21,7 +21,7 @@ const STATUS_COLS = ["Novo", "Proposta Enviada", "Adjudicado", "Arquivo"] as con
 
 function LeadsPage() {
   const qc = useQueryClient();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(2027);
   const [typeFilter, setTypeFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
