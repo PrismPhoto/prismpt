@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EUR, fmtDate } from "@/lib/format";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos_/$id")({ component: PhotogProfile });
 
@@ -14,7 +14,7 @@ function PhotogProfile() {
   const { id } = Route.useParams();
   const year = new Date().getFullYear();
 
-  const { data: photog } = useQuery({
+  const { data: photog, isLoading: photogLoading } = useQuery({
     queryKey: ["photog", id],
     queryFn: async () => (await supabase.from("photographers").select("*").eq("id", id).maybeSingle()).data,
   });
@@ -45,6 +45,29 @@ function PhotogProfile() {
   const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
   const totalPaid = assignments.filter((a: any) => a.fee_paid).reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
   const totalPending = totalFees - totalPaid;
+
+  if (photogLoading) {
+    return (
+      <PageContainer>
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!photog) {
+    return (
+      <PageContainer>
+        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+          <p className="text-lg text-muted-foreground">Fotógrafo não encontrado</p>
+          <Link to="/fotografos">
+            <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-1" />Voltar</Button>
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
