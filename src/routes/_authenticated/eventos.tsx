@@ -154,12 +154,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       internal_notes: event?.internal_notes ?? "",
       event_notes: event?.event_notes ?? "",
       status: event?.status ?? "Aguarda Sinal",
-      photog1: existingPhotogs.find((p: any) => p.position === 1)?.photographer_id ?? "",
-      fee1: existingPhotogs.find((p: any) => p.position === 1)?.fee ?? 0,
-      photog2: existingPhotogs.find((p: any) => p.position === 2)?.photographer_id ?? "",
-      fee2: existingPhotogs.find((p: any) => p.position === 2)?.fee ?? 0,
-      photog3: existingPhotogs.find((p: any) => p.position === 3)?.photographer_id ?? "",
-      fee3: existingPhotogs.find((p: any) => p.position === 3)?.fee ?? 0,
+      slots: [1, 2, 3].map((pos) => {
+        const ep = existingPhotogs.find((p: any) => p.position === pos);
+        return {
+          photographer_id: ep?.photographer_id ?? "",
+          fee: ep?.fee ?? 0,
+          deposit_amount: ep?.deposit_amount ?? 0,
+          deposit_paid: ep?.deposit_paid ?? false,
+          deposit_paid_date: ep?.deposit_paid_date ?? "",
+          final_payment_received: ep?.final_payment_received ?? false,
+          final_payment_value: ep?.final_payment_value ?? 0,
+          final_payment_date: ep?.final_payment_date ?? "",
+          final_payment_method: ep?.final_payment_method ?? "",
+        };
+      }),
     };
   });
 
