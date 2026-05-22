@@ -283,14 +283,16 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           </Select>
         </F>
         <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
-        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => onPrism(e.target.value)} /></F>
+        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => setForm({ ...form, prism_commission: e.target.value })} /></F>
         <F label="Wedding Planner">
           <Select value={form.wedding_planner_id || "none"} onValueChange={(v) => onWp(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="none">Nenhum</SelectItem>{wps.map((w: any) => <SelectItem key={w.id} value={w.id}>{w.name} ({w.commission_percentage}%)</SelectItem>)}</SelectContent>
           </Select>
         </F>
-        <F label="Comissão WP"><Input type="number" step="0.01" value={form.wp_commission_value} onChange={(e) => setForm({ ...form, wp_commission_value: e.target.value })} /></F>
+        {form.wedding_planner_id && (
+          <F label="Comissão WP"><Input type="number" step="0.01" value={form.wp_commission_value} onChange={(e) => setForm({ ...form, wp_commission_value: e.target.value })} /></F>
+        )}
         <div className="md:col-span-2 flex items-center gap-2 py-2">
           <Checkbox checked={form.has_pens_caixa} onCheckedChange={(c) => setForm({ ...form, has_pens_caixa: !!c })} id="pc" />
           <label htmlFor="pc" className="text-sm">Pens em caixa (+100€)</label>
