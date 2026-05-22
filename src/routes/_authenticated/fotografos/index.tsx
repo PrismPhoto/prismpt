@@ -21,7 +21,7 @@ function PhotogPage() {
   const { data: list = [] } = useQuery({ queryKey: ["photogs-mgmt"], queryFn: async () => (await supabase.from("photographers").select("*").order("initials")).data ?? [] });
 
   const save = async (f: any) => {
-    const payload = { initials: f.initials, full_name: f.full_name, email: f.email || null, active: f.active };
+    const payload = { initials: f.initials, full_name: f.full_name, email: f.email || null, active: f.active, prism_commission: Number(f.prism_commission) || 0 };
     const { error } = editing
       ? await supabase.from("photographers").update(payload).eq("id", editing.id)
       : await supabase.from("photographers").insert(payload);
