@@ -79,9 +79,15 @@ function PhotogProfile() {
         title={photog?.full_name ?? "—"}
         description={`${photog?.initials ?? ""} · ${photog?.email ?? "Sem email"}`}
         actions={
-          <Link to="/fotografos">
-            <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-1" />Voltar</Button>
-          </Link>
+          <>
+            <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
+              <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+              <SelectContent>{YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+            </Select>
+            <Link to="/fotografos">
+              <Button variant="outline" size="sm"><ArrowLeft className="h-4 w-4 mr-1" />Voltar</Button>
+            </Link>
+          </>
         }
       />
 
