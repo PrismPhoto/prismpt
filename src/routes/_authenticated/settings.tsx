@@ -78,6 +78,20 @@ function SettingsPage() {
           <Button onClick={saveSettings}>Guardar</Button>
         </TabsContent>
 
+        <TabsContent value="comunicacao" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tom e estilo da PRISM</CardTitle>
+              <CardDescription>Descreva como a PRISM comunica com os clientes. Será usado pela IA para gerar emails.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Textarea rows={8} value={s.brand_voice ?? ""} onChange={(e) => setS({ ...s, brand_voice: e.target.value })}
+                placeholder="Ex.: A PRISM trata os noivos pelo primeiro nome, com tom caloroso, próximo mas profissional. Usamos frases curtas, evitamos jargão e nunca tratamos por 'caro cliente'. Assinamos como 'Equipa PRISM'." />
+            </CardContent>
+          </Card>
+          <Button onClick={saveSettings}>Guardar</Button>
+        </TabsContent>
+
         <TabsContent value="templates" className="space-y-3 mt-4">
           {templates.map((t: any) => (
             <TemplateEditor key={t.id} template={t} onSaved={() => qc.invalidateQueries({ queryKey: ["templates"] })} />
