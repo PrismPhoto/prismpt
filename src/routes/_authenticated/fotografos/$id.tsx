@@ -109,14 +109,14 @@ function PhotogProfile() {
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} />
+          <EventTable rows={upcoming} commission={commission} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} />
+          <EventTable rows={past} commission={commission} />
         </CardContent>
       </Card>
 
