@@ -152,19 +152,35 @@ function EventTable({ rows }: { rows: any[] }) {
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
             <th className="text-right p-3">Fee</th>
-            <th className="text-left p-3">Pago</th>
+            <th className="text-left p-3">Sinal devolvido</th>
+            <th className="text-left p-3">Pag. final</th>
+            <th className="text-left p-3">Estado</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t">
-              <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
-              <td className="p-3 font-medium">{r.events.client_name}</td>
-              <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
-              <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
-              <td className="p-3">{r.fee_paid ? <Badge>Pago</Badge> : <Badge variant="secondary">Pendente</Badge>}</td>
-            </tr>
-          ))}
+          {rows.map((r) => {
+            const status = r.final_payment_received ? "Pago" : r.deposit_paid ? "Sinal" : "Pendente";
+            const variant: any = r.final_payment_received ? "default" : r.deposit_paid ? "secondary" : "outline";
+            return (
+              <tr key={r.id} className="border-t">
+                <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
+                <td className="p-3 font-medium">{r.events.client_name}</td>
+                <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
+                <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
+                <td className="p-3 text-xs">
+                  {r.deposit_paid
+                    ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
+                    : <span className="text-muted-foreground">—</span>}
+                </td>
+                <td className="p-3 text-xs">
+                  {r.final_payment_received
+                    ? <span>{EUR(r.final_payment_value)} · {r.final_payment_method === "fotografo" ? "direto" : "PRISM"}</span>
+                    : <span className="text-muted-foreground">—</span>}
+                </td>
+                <td className="p-3"><Badge variant={variant}>{status}</Badge></td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
