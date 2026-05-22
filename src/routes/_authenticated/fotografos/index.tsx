@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/fotografos")({ component: PhotogPage });
+export const Route = createFileRoute("/_authenticated/fotografos/")({ component: PhotogPage });
 
 function PhotogPage() {
   const qc = useQueryClient();
