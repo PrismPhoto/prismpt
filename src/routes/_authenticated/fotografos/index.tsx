@@ -55,6 +55,9 @@ function PhotogPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{p.full_name}</div>
                   <div className="text-xs text-muted-foreground truncate">{p.email ?? "Sem email"}</div>
+                  {Number(p.prism_commission) > 0 && (
+                    <div className="text-xs font-medium text-primary mt-0.5">{Number(p.prism_commission)}€/evento</div>
+                  )}
                 </div>
                 {!p.active && <span className="text-xs text-muted-foreground">Inativo</span>}
                 <Button
