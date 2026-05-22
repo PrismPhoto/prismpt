@@ -299,9 +299,9 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        <PhotogSlot photographers={photographers} pid={form.photog1} fee={form.fee1} onPid={(v: any) => onPhotog("photog1", v)} onFee={(v: any) => setForm({ ...form, fee1: v })} label="Fotógrafo 1" />
-        <PhotogSlot photographers={photographers} pid={form.photog2} fee={form.fee2} onPid={(v: any) => onPhotog("photog2", v)} onFee={(v: any) => setForm({ ...form, fee2: v })} label="Fotógrafo 2" />
-        <PhotogSlot photographers={photographers} pid={form.photog3} fee={form.fee3} onPid={(v: any) => onPhotog("photog3", v)} onFee={(v: any) => setForm({ ...form, fee3: v })} label="Fotógrafo 3" />
+        <PhotogSlot photographers={photographers} pid={form.photog1} fee={form.fee1} onPid={(v: any) => setForm({ ...form, photog1: v })} onFee={(v: any) => setForm({ ...form, fee1: v })} label="Fotógrafo 1" />
+        <PhotogSlot photographers={photographers} pid={form.photog2} fee={form.fee2} onPid={(v: any) => setForm({ ...form, photog2: v })} onFee={(v: any) => setForm({ ...form, fee2: v })} label="Fotógrafo 2" />
+        <PhotogSlot photographers={photographers} pid={form.photog3} fee={form.fee3} onPid={(v: any) => setForm({ ...form, photog3: v })} onFee={(v: any) => setForm({ ...form, fee3: v })} label="Fotógrafo 3" />
 
         <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
           <h4 className="text-sm font-semibold">Extras</h4>
