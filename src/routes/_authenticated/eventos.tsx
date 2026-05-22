@@ -169,7 +169,12 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     enabled: !!event?.id,
   });
   const [extras, setExtras] = useState<any[]>([]);
-  useEffect(() => { setExtras(existingExtras.map((x: any) => ({ ...x }))); }, [existingExtras]);
+  useEffect(() => {
+    setExtras(existingExtras.map((x: any) => ({ ...x })));
+    // total_value stored includes extras → strip them so editing UI shows base value
+    const prevSum = existingExtras.reduce((s: number, x: any) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
+    if (prevSum > 0) setForm((f: any) => ({ ...f, total_value: Number(f.total_value || 0) - prevSum }));
+  }, [existingExtras]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
   const splitFees = (prismCommission: number, photogIds: string[]) => {
