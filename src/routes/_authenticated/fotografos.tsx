@@ -41,14 +41,19 @@ function PhotogPage() {
       } />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
         {list.map((p: any) => (
-          <Card key={p.id} className="cursor-pointer hover:border-primary/40" onClick={() => { setEditing(p); setOpen(true); }}>
+          <Card key={p.id} className="hover:border-primary/40 transition-colors">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">{p.initials}</div>
-              <div className="flex-1">
-                <div className="font-medium">{p.full_name}</div>
-                <div className="text-xs text-muted-foreground">{p.email ?? "Sem email"}</div>
-              </div>
+              <Link to="/fotografos/$id" params={{ id: p.id }} className="flex items-center gap-4 flex-1 min-w-0">
+                <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold shrink-0">{p.initials}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{p.full_name}</div>
+                  <div className="text-xs text-muted-foreground truncate">{p.email ?? "Sem email"}</div>
+                </div>
+              </Link>
               {!p.active && <span className="text-xs text-muted-foreground">Inativo</span>}
+              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditing(p); setOpen(true); }}>
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardContent>
           </Card>
         ))}
