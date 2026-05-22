@@ -163,23 +163,60 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     };
   });
 
+  const { data: existingExtras = [] } = useQuery({
+    queryKey: ["event_extras", event?.id],
+    queryFn: async () => event?.id ? ((await supabase.from("event_extras").select("*").eq("event_id", event.id)).data ?? []) : [],
+    enabled: !!event?.id,
+  });
+  const [extras, setExtras] = useState<any[]>([]);
+  useEffect(() => { setExtras(existingExtras.map((x: any) => ({ ...x }))); }, [existingExtras]);
+  const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
+
+  const splitFees = (prismCommission: number, photogIds: string[]) => {
+    const n = photogIds.filter(Boolean).length;
+    if (!n) return [0, 0, 0];
+    const each = Number((prismCommission / n).toFixed(2));
+    return [photogIds[0] ? each : 0, photogIds[1] ? each : 0, photogIds[2] ? each : 0];
+  };
+  const recalcFees = (next: any) => {
+    const [f1, f2, f3] = splitFees(Number(next.prism_commission || 0), [next.photog1, next.photog2, next.photog3]);
+    return { ...next, fee1: f1, fee2: f2, fee3: f3 };
+  };
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
-    setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
+    setForm(recalcFees({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value }));
   };
+  const onPrism = (val: string) => setForm(recalcFees({ ...form, prism_commission: val }));
+  const onPhotog = (slot: "photog1" | "photog2" | "photog3", v: string) =>
+    setForm(recalcFees({ ...form, [slot]: v }));
   const onWp = (id: string) => {
     const wp = wps.find((x: any) => x.id === id);
     const commission = wp ? Number(form.total_value) * (wp.commission_percentage / 100) : 0;
     setForm({ ...form, wedding_planner_id: id, wp_commission_value: commission });
   };
 
+  const addExtra = () => {
+    const t: ExtraType = "Outro";
+    setExtras([...extras, { extra_type: t, description: "", quantity: 1, unit_price: EXTRA_DEFAULT_PRICE[t], photographer_id: null }]);
+  };
+  const updateExtra = (i: number, patch: any) => {
+    const next = [...extras];
+    next[i] = { ...next[i], ...patch };
+    if (patch.extra_type) next[i].unit_price = EXTRA_DEFAULT_PRICE[patch.extra_type as ExtraType] ?? next[i].unit_price;
+    setExtras(next);
+  };
+  const removeExtra = (i: number) => setExtras(extras.filter((_, idx) => idx !== i));
+
   const save = async () => {
     if (!form.event_date || !form.client_name) return toast.error("Data e cliente obrigatórios");
+    const baseTotal = Number(form.total_value || 0);
+    const grandTotal = baseTotal + extrasTotal;
     const payload = {
       event_date: form.event_date, client_name: form.client_name, email: form.email || null,
       pax: form.pax ? Number(form.pax) : null, location: form.location || null,
       event_type: form.event_type, package_id: form.package_id || null,
-      total_value: Number(form.total_value), prism_commission: Number(form.prism_commission || 0),
+      total_value: grandTotal, prism_commission: Number(form.prism_commission || 0),
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
       has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
@@ -199,7 +236,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       if (error) return toast.error(error.message);
       eventId = data.id;
     }
-    // sync photographers
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
     const rows = [
       { pos: 1, photog: form.photog1, fee: form.fee1 },
@@ -208,6 +244,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     ].filter((r) => r.photog).map((r) => ({ event_id: eventId, photographer_id: r.photog, position: r.pos, fee: Number(r.fee || 0) }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
+      if (error) return toast.error(error.message);
+    }
+    await supabase.from("event_extras").delete().eq("event_id", eventId);
+    if (extras.length) {
+      const extraRows = extras.map((x) => ({
+        event_id: eventId,
+        extra_type: x.extra_type,
+        description: x.description || null,
+        quantity: Number(x.quantity || 0),
+        unit_price: Number(x.unit_price || 0),
+        total: Number(x.quantity || 0) * Number(x.unit_price || 0),
+        photographer_id: x.photographer_id || null,
+      }));
+      const { error } = await supabase.from("event_extras").insert(extraRows);
       if (error) return toast.error(error.message);
     }
     toast.success("Evento guardado");
