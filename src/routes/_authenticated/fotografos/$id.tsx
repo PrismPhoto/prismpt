@@ -174,6 +174,7 @@ function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
                 <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
                 <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
                 <td className="p-3 text-right tabular-nums">{EUR(commission)}</td>
+                <td className="p-3 text-right tabular-nums">{EUR(Number(r.fee || 0) - commission)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
