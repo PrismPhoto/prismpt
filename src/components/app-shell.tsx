@@ -48,7 +48,11 @@ export function AppShell() {
     );
   }
 
-  const visible = navItems.filter((i) => !i.managerOnly || role === "manager");
+  const visible = navItems.filter((i: any) => {
+    if (i.managerOnly && role !== "manager") return false;
+    if (i.photographerOnly && role !== "photographer") return false;
+    return true;
+  });
 
   const SidebarContent = (
     <div className="flex flex-col h-full">
