@@ -236,11 +236,22 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       eventId = data.id;
     }
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
-    const rows = [
-      { pos: 1, photog: form.photog1, fee: form.fee1 },
-      { pos: 2, photog: form.photog2, fee: form.fee2 },
-      { pos: 3, photog: form.photog3, fee: form.fee3 },
-    ].filter((r) => r.photog).map((r) => ({ event_id: eventId, photographer_id: r.photog, position: r.pos, fee: Number(r.fee || 0) }));
+    const rows = (form.slots as any[])
+      .map((s, i) => ({ ...s, position: i + 1 }))
+      .filter((s) => s.photographer_id)
+      .map((s) => ({
+        event_id: eventId,
+        photographer_id: s.photographer_id,
+        position: s.position,
+        fee: Number(s.fee || 0),
+        deposit_amount: Number(s.deposit_amount || 0),
+        deposit_paid: !!s.deposit_paid,
+        deposit_paid_date: s.deposit_paid_date || null,
+        final_payment_received: !!s.final_payment_received,
+        final_payment_value: Number(s.final_payment_value || 0),
+        final_payment_date: s.final_payment_date || null,
+        final_payment_method: s.final_payment_method || null,
+      }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
       if (error) return toast.error(error.message);
