@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({ component: 
 
 function FinancePage() {
   const { role, photographerId } = useAuth();
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [photogF, setPhotogF] = useState(role === "manager" ? "all" : photographerId ?? "");
 
