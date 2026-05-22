@@ -149,9 +149,10 @@ function FinancePage() {
                       <div className="flex gap-1 flex-wrap">
                         {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => (
                           <Badge key={ep.id} variant={ep.fee_paid ? "default" : "outline"} className="text-xs">
-                            {ep.photographers?.initials}: {EUR(ep.fee)}
+                            {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))}
                           </Badge>
                         ))}
+
                       </div>
                     </td>
                   </tr>
