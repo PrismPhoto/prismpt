@@ -177,24 +177,10 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   }, [existingExtras]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
-  const splitFees = (prismCommission: number, photogIds: string[]) => {
-    const n = photogIds.filter(Boolean).length;
-    if (!n) return [0, 0, 0];
-    const each = Number((prismCommission / n).toFixed(2));
-    return [photogIds[0] ? each : 0, photogIds[1] ? each : 0, photogIds[2] ? each : 0];
-  };
-  const recalcFees = (next: any) => {
-    const [f1, f2, f3] = splitFees(Number(next.prism_commission || 0), [next.photog1, next.photog2, next.photog3]);
-    return { ...next, fee1: f1, fee2: f2, fee3: f3 };
-  };
-
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
-    setForm(recalcFees({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value }));
+    setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
   };
-  const onPrism = (val: string) => setForm(recalcFees({ ...form, prism_commission: val }));
-  const onPhotog = (slot: "photog1" | "photog2" | "photog3", v: string) =>
-    setForm(recalcFees({ ...form, [slot]: v }));
   const onWp = (id: string) => {
     const wp = wps.find((x: any) => x.id === id);
     const commission = wp ? Number(form.total_value) * (wp.commission_percentage / 100) : 0;
