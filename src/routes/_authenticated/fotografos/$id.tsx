@@ -145,7 +145,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows }: { rows: any[] }) {
+function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
