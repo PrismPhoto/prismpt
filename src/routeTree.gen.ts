@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedWeddingPlannersRouteImport } from './routes/_authenticated/wedding-planners'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
+import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedFotografosRouteImport } from './routes/_authenticated/fotografos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
@@ -50,6 +51,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
   id: '/pacotes',
   path: '/pacotes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
+  id: '/meu-perfil',
+  path: '/meu-perfil',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fotografos': typeof AuthenticatedFotografosRouteWithChildren
   '/leads': typeof AuthenticatedLeadsRoute
+  '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fotografos': typeof AuthenticatedFotografosRouteWithChildren
   '/leads': typeof AuthenticatedLeadsRoute
+  '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/fotografos': typeof AuthenticatedFotografosRouteWithChildren
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
+  '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/fotografos'
     | '/leads'
+    | '/meu-perfil'
     | '/pacotes'
     | '/settings'
     | '/wedding-planners'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/fotografos'
     | '/leads'
+    | '/meu-perfil'
     | '/pacotes'
     | '/settings'
     | '/wedding-planners'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro'
     | '/_authenticated/fotografos'
     | '/_authenticated/leads'
+    | '/_authenticated/meu-perfil'
     | '/_authenticated/pacotes'
     | '/_authenticated/settings'
     | '/_authenticated/wedding-planners'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: '/pacotes'
       fullPath: '/pacotes'
       preLoaderRoute: typeof AuthenticatedPacotesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meu-perfil': {
+      id: '/_authenticated/meu-perfil'
+      path: '/meu-perfil'
+      fullPath: '/meu-perfil'
+      preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/leads': {
@@ -282,6 +301,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFotografosRoute: typeof AuthenticatedFotografosRouteWithChildren
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
+  AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedWeddingPlannersRoute: typeof AuthenticatedWeddingPlannersRoute
@@ -294,6 +314,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFotografosRoute: AuthenticatedFotografosRouteWithChildren,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
+  AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedWeddingPlannersRoute: AuthenticatedWeddingPlannersRoute,
@@ -311,3 +332,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
