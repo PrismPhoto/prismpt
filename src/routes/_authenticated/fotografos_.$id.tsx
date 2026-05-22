@@ -14,7 +14,7 @@ function PhotogProfile() {
   const { id } = Route.useParams();
   const year = new Date().getFullYear();
 
-  const { data: photog } = useQuery({
+  const { data: photog, isLoading: photogLoading } = useQuery({
     queryKey: ["photog", id],
     queryFn: async () => (await supabase.from("photographers").select("*").eq("id", id).maybeSingle()).data,
   });
