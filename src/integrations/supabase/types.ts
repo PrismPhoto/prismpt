@@ -682,6 +682,7 @@ export type Database = {
           id: string
           initials: string
           personal_email: string | null
+          prism_commission: number
           profile_id: string | null
           user_id: string | null
         }
@@ -693,6 +694,7 @@ export type Database = {
           id?: string
           initials: string
           personal_email?: string | null
+          prism_commission?: number
           profile_id?: string | null
           user_id?: string | null
         }
@@ -704,6 +706,7 @@ export type Database = {
           id?: string
           initials?: string
           personal_email?: string | null
+          prism_commission?: number
           profile_id?: string | null
           user_id?: string | null
         }
