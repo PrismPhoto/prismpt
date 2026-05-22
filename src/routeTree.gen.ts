@@ -17,11 +17,11 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
-import { Route as AuthenticatedFotografosRouteImport } from './routes/_authenticated/fotografos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
-import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos_.$id'
+import { Route as AuthenticatedFotografosIndexRouteImport } from './routes/_authenticated/fotografos/index'
+import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos/$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -63,11 +63,6 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
   path: '/leads',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedFotografosRoute = AuthenticatedFotografosRouteImport.update({
-  id: '/fotografos',
-  path: '/fotografos',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -83,9 +78,15 @@ const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
   path: '/calendario',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedFotografosIndexRoute =
+  AuthenticatedFotografosIndexRouteImport.update({
+    id: '/fotografos/',
+    path: '/fotografos/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedFotografosIdRoute =
   AuthenticatedFotografosIdRouteImport.update({
-    id: '/fotografos_/$id',
+    id: '/fotografos/$id',
     path: '/fotografos/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
@@ -96,20 +97,19 @@ export interface FileRoutesByFullPath {
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/fotografos': typeof AuthenticatedFotografosRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/fotografos': typeof AuthenticatedFotografosRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
@@ -117,6 +117,7 @@ export interface FileRoutesByTo {
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/': typeof AuthenticatedIndexRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/fotografos': typeof AuthenticatedFotografosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -125,14 +126,14 @@ export interface FileRoutesById {
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/_authenticated/fotografos': typeof AuthenticatedFotografosRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/_authenticated/fotografos_/$id': typeof AuthenticatedFotografosIdRoute
+  '/_authenticated/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/_authenticated/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,20 +143,19 @@ export interface FileRouteTypes {
     | '/calendario'
     | '/eventos'
     | '/financeiro'
-    | '/fotografos'
     | '/leads'
     | '/meu-perfil'
     | '/pacotes'
     | '/settings'
     | '/wedding-planners'
     | '/fotografos/$id'
+    | '/fotografos/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/calendario'
     | '/eventos'
     | '/financeiro'
-    | '/fotografos'
     | '/leads'
     | '/meu-perfil'
     | '/pacotes'
@@ -163,6 +163,7 @@ export interface FileRouteTypes {
     | '/wedding-planners'
     | '/'
     | '/fotografos/$id'
+    | '/fotografos'
   id:
     | '__root__'
     | '/_authenticated'
@@ -170,14 +171,14 @@ export interface FileRouteTypes {
     | '/_authenticated/calendario'
     | '/_authenticated/eventos'
     | '/_authenticated/financeiro'
-    | '/_authenticated/fotografos'
     | '/_authenticated/leads'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/pacotes'
     | '/_authenticated/settings'
     | '/_authenticated/wedding-planners'
     | '/_authenticated/'
-    | '/_authenticated/fotografos_/$id'
+    | '/_authenticated/fotografos/$id'
+    | '/_authenticated/fotografos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -243,13 +244,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/fotografos': {
-      id: '/_authenticated/fotografos'
-      path: '/fotografos'
-      fullPath: '/fotografos'
-      preLoaderRoute: typeof AuthenticatedFotografosRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
@@ -271,8 +265,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/fotografos_/$id': {
-      id: '/_authenticated/fotografos_/$id'
+    '/_authenticated/fotografos/': {
+      id: '/_authenticated/fotografos/'
+      path: '/fotografos'
+      fullPath: '/fotografos/'
+      preLoaderRoute: typeof AuthenticatedFotografosIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fotografos/$id': {
+      id: '/_authenticated/fotografos/$id'
       path: '/fotografos/$id'
       fullPath: '/fotografos/$id'
       preLoaderRoute: typeof AuthenticatedFotografosIdRouteImport
@@ -285,7 +286,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
-  AuthenticatedFotografosRoute: typeof AuthenticatedFotografosRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
@@ -293,13 +293,13 @@ interface AuthenticatedRouteChildren {
   AuthenticatedWeddingPlannersRoute: typeof AuthenticatedWeddingPlannersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedFotografosIdRoute: typeof AuthenticatedFotografosIdRoute
+  AuthenticatedFotografosIndexRoute: typeof AuthenticatedFotografosIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
-  AuthenticatedFotografosRoute: AuthenticatedFotografosRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
@@ -307,6 +307,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedWeddingPlannersRoute: AuthenticatedWeddingPlannersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedFotografosIdRoute: AuthenticatedFotografosIdRoute,
+  AuthenticatedFotografosIndexRoute: AuthenticatedFotografosIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
