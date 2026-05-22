@@ -97,7 +97,7 @@ function LeadsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 1 + i);
+  const years = [2027, 2028, 2029, 2030];
 
   return (
     <PageContainer>
