@@ -246,33 +246,54 @@ export type Database = {
       }
       event_photographers: {
         Row: {
+          deposit_amount: number
+          deposit_paid: boolean
+          deposit_paid_date: string | null
           event_id: string
           fee: number
           fee_paid: boolean
           fee_paid_date: string | null
           fee_payment_method: string | null
+          final_payment_date: string | null
+          final_payment_method: string | null
+          final_payment_received: boolean
+          final_payment_value: number
           id: string
           photographer_id: string
           position: number
           role: Database["public"]["Enums"]["ep_role"] | null
         }
         Insert: {
+          deposit_amount?: number
+          deposit_paid?: boolean
+          deposit_paid_date?: string | null
           event_id: string
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
           fee_payment_method?: string | null
+          final_payment_date?: string | null
+          final_payment_method?: string | null
+          final_payment_received?: boolean
+          final_payment_value?: number
           id?: string
           photographer_id: string
           position?: number
           role?: Database["public"]["Enums"]["ep_role"] | null
         }
         Update: {
+          deposit_amount?: number
+          deposit_paid?: boolean
+          deposit_paid_date?: string | null
           event_id?: string
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
           fee_payment_method?: string | null
+          final_payment_date?: string | null
+          final_payment_method?: string | null
+          final_payment_received?: boolean
+          final_payment_value?: number
           id?: string
           photographer_id?: string
           position?: number

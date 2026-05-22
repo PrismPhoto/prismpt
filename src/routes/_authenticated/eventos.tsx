@@ -154,12 +154,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       internal_notes: event?.internal_notes ?? "",
       event_notes: event?.event_notes ?? "",
       status: event?.status ?? "Aguarda Sinal",
-      photog1: existingPhotogs.find((p: any) => p.position === 1)?.photographer_id ?? "",
-      fee1: existingPhotogs.find((p: any) => p.position === 1)?.fee ?? 0,
-      photog2: existingPhotogs.find((p: any) => p.position === 2)?.photographer_id ?? "",
-      fee2: existingPhotogs.find((p: any) => p.position === 2)?.fee ?? 0,
-      photog3: existingPhotogs.find((p: any) => p.position === 3)?.photographer_id ?? "",
-      fee3: existingPhotogs.find((p: any) => p.position === 3)?.fee ?? 0,
+      slots: [1, 2, 3].map((pos) => {
+        const ep = existingPhotogs.find((p: any) => p.position === pos);
+        return {
+          photographer_id: ep?.photographer_id ?? "",
+          fee: ep?.fee ?? 0,
+          deposit_amount: ep?.deposit_amount ?? 0,
+          deposit_paid: ep?.deposit_paid ?? false,
+          deposit_paid_date: ep?.deposit_paid_date ?? "",
+          final_payment_received: ep?.final_payment_received ?? false,
+          final_payment_value: ep?.final_payment_value ?? 0,
+          final_payment_date: ep?.final_payment_date ?? "",
+          final_payment_method: ep?.final_payment_method ?? "",
+        };
+      }),
     };
   });
 
@@ -228,11 +236,22 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       eventId = data.id;
     }
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
-    const rows = [
-      { pos: 1, photog: form.photog1, fee: form.fee1 },
-      { pos: 2, photog: form.photog2, fee: form.fee2 },
-      { pos: 3, photog: form.photog3, fee: form.fee3 },
-    ].filter((r) => r.photog).map((r) => ({ event_id: eventId, photographer_id: r.photog, position: r.pos, fee: Number(r.fee || 0) }));
+    const rows = (form.slots as any[])
+      .map((s, i) => ({ ...s, position: i + 1 }))
+      .filter((s) => s.photographer_id)
+      .map((s) => ({
+        event_id: eventId,
+        photographer_id: s.photographer_id,
+        position: s.position,
+        fee: Number(s.fee || 0),
+        deposit_amount: Number(s.deposit_amount || 0),
+        deposit_paid: !!s.deposit_paid,
+        deposit_paid_date: s.deposit_paid_date || null,
+        final_payment_received: !!s.final_payment_received,
+        final_payment_value: Number(s.final_payment_value || 0),
+        final_payment_date: s.final_payment_date || null,
+        final_payment_method: s.final_payment_method || null,
+      }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
       if (error) return toast.error(error.message);
@@ -299,9 +318,19 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        <PhotogSlot photographers={photographers} pid={form.photog1} fee={form.fee1} onPid={(v: any) => setForm({ ...form, photog1: v })} onFee={(v: any) => setForm({ ...form, fee1: v })} label="Fotógrafo 1" />
-        <PhotogSlot photographers={photographers} pid={form.photog2} fee={form.fee2} onPid={(v: any) => setForm({ ...form, photog2: v })} onFee={(v: any) => setForm({ ...form, fee2: v })} label="Fotógrafo 2" />
-        <PhotogSlot photographers={photographers} pid={form.photog3} fee={form.fee3} onPid={(v: any) => setForm({ ...form, photog3: v })} onFee={(v: any) => setForm({ ...form, fee3: v })} label="Fotógrafo 3" />
+        {(form.slots as any[]).map((s, i) => (
+          <PhotogSlot
+            key={i}
+            label={`Fotógrafo ${i + 1}`}
+            photographers={photographers}
+            slot={s}
+            onChange={(patch: any) => {
+              const next = [...form.slots];
+              next[i] = { ...next[i], ...patch };
+              setForm({ ...form, slots: next });
+            }}
+          />
+        ))}
 
         <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
           <h4 className="text-sm font-semibold">Extras</h4>
@@ -366,20 +395,80 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, pid, fee, onPid, onFee, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label }: any) {
+  const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
+  const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
+  const hasPhotog = !!slot.photographer_id;
   return (
-    <div className="md:col-span-2 grid grid-cols-3 gap-2">
-      <div className="col-span-2">
-        <Label className="text-xs">{label}</Label>
-        <Select value={pid || "none"} onValueChange={(v) => onPid(v === "none" ? "" : v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
-        </Select>
+    <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
+      <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="col-span-7">
+          <Label className="text-xs">{label}</Label>
+          <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
+            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-3">
+          <Label className="text-xs">Fee €</Label>
+          <Input type="number" step="0.01" value={slot.fee} onChange={(e) => onChange({ fee: e.target.value })} />
+        </div>
+        <div className="col-span-2 flex justify-end">
+          <Badge variant={statusVariant}>{status}</Badge>
+        </div>
       </div>
-      <div>
-        <Label className="text-xs">Fee €</Label>
-        <Input type="number" step="0.01" value={fee} onChange={(e) => onFee(e.target.value)} />
-      </div>
+
+      {hasPhotog && (
+        <>
+          <div className="border-t pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox id={`dp-${label}`} checked={slot.deposit_paid} onCheckedChange={(c) => onChange({ deposit_paid: !!c })} />
+              <label htmlFor={`dp-${label}`} className="text-xs font-medium">Sinal devolvido ao fotógrafo</label>
+            </div>
+            {slot.deposit_paid && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Valor sinal €</Label>
+                  <Input type="number" step="0.01" value={slot.deposit_amount} onChange={(e) => onChange({ deposit_amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Data</Label>
+                  <Input type="date" value={slot.deposit_paid_date} onChange={(e) => onChange({ deposit_paid_date: e.target.value })} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox id={`fp-${label}`} checked={slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
+              <label htmlFor={`fp-${label}`} className="text-xs font-medium">Pagamento final do cliente recebido</label>
+            </div>
+            {slot.final_payment_received && (
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Valor €</Label>
+                  <Input type="number" step="0.01" value={slot.final_payment_value} onChange={(e) => onChange({ final_payment_value: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Data</Label>
+                  <Input type="date" value={slot.final_payment_date} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Método</Label>
+                  <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prism">PRISM/Revolut</SelectItem>
+                      <SelectItem value="fotografo">Direto ao fotógrafo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -44,11 +44,29 @@ function FinancePage() {
 
   const feeWithExtras = (e: any, ep: any) => Number(ep.fee || 0) + extrasForPhotographer(e, ep.photographer_id);
 
+  // Amount PRISM still owes the photographer:
+  // fee+extras - deposit_amount (if returned) - final_payment_value (only when paid via PRISM)
+  const owedToPhotographer = (e: any, ep: any) => {
+    const total = feeWithExtras(e, ep);
+    const depositCredit = ep.deposit_paid ? Number(ep.deposit_amount || 0) : 0;
+    const finalCredit = ep.final_payment_received && ep.final_payment_method === "prism"
+      ? Number(ep.final_payment_value || 0)
+      : 0;
+    return total - depositCredit - finalCredit;
+  };
+  const paidToPhotographer = (e: any, ep: any) => {
+    const depositCredit = ep.deposit_paid ? Number(ep.deposit_amount || 0) : 0;
+    const finalCredit = ep.final_payment_received && ep.final_payment_method === "prism"
+      ? Number(ep.final_payment_value || 0)
+      : 0;
+    return depositCredit + finalCredit;
+  };
+
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
   const totalWp = filtered.reduce((s, e) => s + Number(e.wp_commission_value || 0), 0);
   const allFeeRows = filtered.flatMap((e: any) => (e.event_photographers || []).map((ep: any) => ({ ep, e })));
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
-  const totalFeesPaid = allFeeRows.filter(({ ep }) => ep.fee_paid).reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
+  const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
@@ -57,9 +75,8 @@ function FinancePage() {
   allFeeRows.forEach(({ ep, e }) => {
     const k = ep.photographer_id;
     if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0 };
-    const amount = feeWithExtras(e, ep);
-    balances[k].owed += amount;
-    if (ep.fee_paid) balances[k].paid += amount;
+    balances[k].owed += feeWithExtras(e, ep);
+    balances[k].paid += paidToPhotographer(e, ep);
   });
 
 
@@ -147,11 +164,15 @@ function FinancePage() {
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{e.wp_commission_value ? EUR(e.wp_commission_value) : <span className="text-muted-foreground">—</span>}</td>}
                     <td className="p-3">
                       <div className="flex gap-1 flex-wrap">
-                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => (
-                          <Badge key={ep.id} variant={ep.fee_paid ? "default" : "outline"} className="text-xs">
-                            {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))}
-                          </Badge>
-                        ))}
+                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => {
+                          const owed = owedToPhotographer(e, ep);
+                          const variant = owed <= 0 ? "default" : ep.deposit_paid ? "secondary" : "outline";
+                          return (
+                            <Badge key={ep.id} variant={variant} className="text-xs">
+                              {ep.photographers?.initials}: {EUR(feeWithExtras(e, ep))} {owed > 0 ? `(falta ${EUR(owed)})` : ""}
+                            </Badge>
+                          );
+                        })}
 
                       </div>
                     </td>
