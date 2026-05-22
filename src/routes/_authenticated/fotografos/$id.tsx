@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { EUR, fmtDate } from "@/lib/format";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/fotografos_/$id")({ component: PhotogProfile });
+export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
 function PhotogProfile() {
   const { id } = Route.useParams();
