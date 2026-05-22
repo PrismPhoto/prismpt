@@ -395,20 +395,80 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, pid, fee, onPid, onFee, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label }: any) {
+  const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
+  const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
+  const hasPhotog = !!slot.photographer_id;
   return (
-    <div className="md:col-span-2 grid grid-cols-3 gap-2">
-      <div className="col-span-2">
-        <Label className="text-xs">{label}</Label>
-        <Select value={pid || "none"} onValueChange={(v) => onPid(v === "none" ? "" : v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
-        </Select>
+    <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
+      <div className="grid grid-cols-12 gap-2 items-end">
+        <div className="col-span-7">
+          <Label className="text-xs">{label}</Label>
+          <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
+            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+            <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-3">
+          <Label className="text-xs">Fee €</Label>
+          <Input type="number" step="0.01" value={slot.fee} onChange={(e) => onChange({ fee: e.target.value })} />
+        </div>
+        <div className="col-span-2 flex justify-end">
+          <Badge variant={statusVariant}>{status}</Badge>
+        </div>
       </div>
-      <div>
-        <Label className="text-xs">Fee €</Label>
-        <Input type="number" step="0.01" value={fee} onChange={(e) => onFee(e.target.value)} />
-      </div>
+
+      {hasPhotog && (
+        <>
+          <div className="border-t pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox id={`dp-${label}`} checked={slot.deposit_paid} onCheckedChange={(c) => onChange({ deposit_paid: !!c })} />
+              <label htmlFor={`dp-${label}`} className="text-xs font-medium">Sinal devolvido ao fotógrafo</label>
+            </div>
+            {slot.deposit_paid && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">Valor sinal €</Label>
+                  <Input type="number" step="0.01" value={slot.deposit_amount} onChange={(e) => onChange({ deposit_amount: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Data</Label>
+                  <Input type="date" value={slot.deposit_paid_date} onChange={(e) => onChange({ deposit_paid_date: e.target.value })} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="border-t pt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Checkbox id={`fp-${label}`} checked={slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
+              <label htmlFor={`fp-${label}`} className="text-xs font-medium">Pagamento final do cliente recebido</label>
+            </div>
+            {slot.final_payment_received && (
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Valor €</Label>
+                  <Input type="number" step="0.01" value={slot.final_payment_value} onChange={(e) => onChange({ final_payment_value: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Data</Label>
+                  <Input type="date" value={slot.final_payment_date} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
+                </div>
+                <div>
+                  <Label className="text-xs">Método</Label>
+                  <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="prism">PRISM/Revolut</SelectItem>
+                      <SelectItem value="fotografo">Direto ao fotógrafo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
