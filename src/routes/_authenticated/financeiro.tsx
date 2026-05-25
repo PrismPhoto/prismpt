@@ -62,9 +62,17 @@ function FinancePage() {
     return depositCredit + finalCredit;
   };
 
+  const activePhotographerId = role === "photographer"
+    ? photographerId
+    : (photogF !== "all" ? photogF : null);
+
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
   const totalWp = filtered.reduce((s, e) => s + Number(e.wp_commission_value || 0), 0);
-  const allFeeRows = filtered.flatMap((e: any) => (e.event_photographers || []).map((ep: any) => ({ ep, e })));
+  const allFeeRows = filtered.flatMap((e: any) =>
+    (e.event_photographers || [])
+      .filter((ep: any) => !activePhotographerId || ep.photographer_id === activePhotographerId)
+      .map((ep: any) => ({ ep, e }))
+  );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
