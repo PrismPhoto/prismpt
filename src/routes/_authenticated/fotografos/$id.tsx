@@ -99,11 +99,12 @@ function PhotogProfile() {
         }
       />
 
-      <div className="grid md:grid-cols-4 gap-3 mb-6">
-        <Stat label={`Total fees ${year}`} value={EUR(totalFees)} />
+      <div className="grid md:grid-cols-5 gap-3 mb-6">
+        <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
+        <Stat label="Comissão PRISM" value={EUR(totalCommission)} />
         <Stat label={`Líquido ${year}`} value={EUR(totalLiquido)} />
         <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
-        <Stat label="Pendente (caixa)" value={EUR(totalPending)} tone="warning" />
+        <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
       </div>
 
       <Card className="mb-6">
