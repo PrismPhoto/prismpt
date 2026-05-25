@@ -330,21 +330,24 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     }
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
     const rows = (form.slots as any[])
-      .map((s, i) => ({ ...s, position: i + 1 }))
-      .filter((s) => s.photographer_id)
+      .map((s, i) => ({ ...s, position: i + 1, _external: isExternalSlot(i) }))
+      .filter((s) => (s._external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id))
       .map((s) => ({
         event_id: eventId,
-        photographer_id: s.photographer_id,
+        photographer_id: s._external ? null : s.photographer_id,
+        external_name: s._external ? String(s.external_name).trim() : null,
         position: s.position,
-        fee: computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
-        prism_commission: Number(s.prism_commission || 0),
-        deposit_amount: Number(s.deposit_amount || 0),
-        deposit_paid: !!s.deposit_paid,
-        deposit_paid_date: s.deposit_paid_date || null,
-        final_payment_received: !!s.final_payment_received,
-        final_payment_value: Number(s.final_payment_value || 0),
-        final_payment_date: s.final_payment_date || null,
-        final_payment_method: s.final_payment_method || null,
+        fee: s._external
+          ? Number(s.fee || 0)
+          : computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
+        prism_commission: s._external ? 0 : Number(s.prism_commission || 0),
+        deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
+        deposit_paid: s._external ? false : !!s.deposit_paid,
+        deposit_paid_date: s._external ? null : (s.deposit_paid_date || null),
+        final_payment_received: s._external ? false : !!s.final_payment_received,
+        final_payment_value: s._external ? 0 : Number(s.final_payment_value || 0),
+        final_payment_date: s._external ? null : (s.final_payment_date || null),
+        final_payment_method: s._external ? null : (s.final_payment_method || null),
       }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
