@@ -1,43 +1,40 @@
-## Resumo "Por pagar aos fotógrafos" no formulário do evento
+## Correcções no resumo "Por pagar aos fotógrafos"
 
-Adicionar um pequeno bloco de resumo dentro do diálogo de evento, **após a secção Fotógrafos** (antes de Extras), que mostra de relance o que ainda falta pagar a cada fotógrafo quando o sinal e/ou pagamento final ainda não foram registados.
+### 1. Contar pagamento "Direto ao Fotógrafo"
 
-### Layout
+Actualmente o resumo só conta o pagamento final como crédito quando `final_payment_method === "prism"`. Da perspectiva do fotógrafo, se o cliente lhe pagou directamente, ele **também já recebeu** — logo deixa de estar em falta.
 
-```text
-┌─ Por pagar aos fotógrafos ──────────────────────┐
-│ Prism 1 (RB)     fee 2900€   sinal —  final —   │
-│   ↳ falta 2900€                                 │
-│ Externo (JM)     fee  500€   sinal ✓  final —   │
-│   ↳ falta  300€  (pago 200€ de 500€)            │
-│ ─────────────────────────────────               │
-│ Total em falta: 3200€                           │
-└─────────────────────────────────────────────────┘
-```
+**Correcção em `src/routes/_authenticated/eventos.tsx`** (bloco do resumo):
+- Mudar `finalCredit` para contar sempre que `s.final_payment_received` for `true`, independentemente do método.
 
-Container: `rounded-md border p-3 bg-muted/20`, só aparece se houver pelo menos um slot preenchido com valor em falta > 0. Slots já totalmente pagos não aparecem (para não poluir).
+> Nota: `financeiro.tsx` mantém a distinção (lá interessa o que a *PRISM* deve), só o resumo dentro do evento muda — é a vista do fotógrafo.
 
-### Cálculo (por slot)
+### 2. Externo: adicionar input "Pago"
 
-Reaproveita a mesma lógica de `financeiro.tsx`:
-- **Total devido** = `slot.fee` (já calculado em tempo real no form)
-- **Crédito sinal** = `slot.deposit_paid ? slot.deposit_amount : 0`
-- **Crédito final** = `slot.final_payment_received && slot.final_payment_method === "prism" ? slot.final_payment_value : 0`
-  *(se o cliente pagou directamente ao fotógrafo via outro método, não conta como dívida da PRISM)*
-- **Falta** = `devido - sinal - final`
+O slot Externo não tem hoje nenhum checkbox de pagamento — por isso aparece sempre "falta X" no resumo. Adicionar uma forma simples de marcar como pago.
 
-Para cada linha mostrar:
-- nome/iniciais (Prism N com iniciais do fotógrafo, ou "Externo — nome")
-- fee total
-- estado sinal (✓ / —) e final (✓ / —)
-- valor em falta a vermelho/destaque
+**Mudanças em `PhotogSlot` (externo)**:
+- Por baixo do "Valor a pagar €", adicionar:
+  - Checkbox **"Pago"** (`slot.final_payment_received`)
+  - Quando marcado: campo **Data** (`final_payment_date`) e **Método** (`final_payment_method`, ex.: "prism" / "direto" / texto livre — manter Input livre tal como nos Prism, para consistência).
+  - Valor pago assume-se = `fee` do externo (não há split sinal/final no externo).
 
-Total agregado em baixo.
+**Mudanças em `save()`** (linhas 352-357):
+- Para slots externos, deixar de zerar `final_payment_received/value/date/method`. Persistir:
+  - `final_payment_received: !!s.final_payment_received`
+  - `final_payment_value: s.final_payment_received ? Number(s.fee || 0) : 0`
+  - `final_payment_date: s.final_payment_date || null`
+  - `final_payment_method: s.final_payment_method || null`
+- `deposit_*` continua a zero para externos (não há sinal).
+
+### 3. Resumo: tratar externo como totalmente pago quando marcado
+
+No cálculo do `paid` para externos: se `final_payment_received` → `paid = fee` (já fica coberto pelo ponto 1 + persistência do valor).
 
 ### Ficheiros tocados
 
-- `src/routes/_authenticated/eventos.tsx` — adicionar bloco JSX entre Fotógrafos (linha ~484) e Extras (linha ~486), com cálculo inline a partir de `form.slots`.
+- `src/routes/_authenticated/eventos.tsx` — lógica do resumo, JSX do `PhotogSlot` externo, `save()`.
 
 ### Sem alterações
 
-- BD, `fee-distribution.ts`, `financeiro.tsx`, `pacotes.tsx`.
+- BD (já tem todos os campos), `fee-distribution.ts`, `financeiro.tsx`.

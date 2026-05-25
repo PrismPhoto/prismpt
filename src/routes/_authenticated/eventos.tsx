@@ -351,10 +351,12 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
         deposit_paid: s._external ? false : !!s.deposit_paid,
         deposit_paid_date: s._external ? null : (s.deposit_paid_date || null),
-        final_payment_received: s._external ? false : !!s.final_payment_received,
-        final_payment_value: s._external ? 0 : Number(s.final_payment_value || 0),
-        final_payment_date: s._external ? null : (s.final_payment_date || null),
-        final_payment_method: s._external ? null : (s.final_payment_method || null),
+        final_payment_received: !!s.final_payment_received,
+        final_payment_value: s._external
+          ? (s.final_payment_received ? Number(s.fee || 0) : 0)
+          : Number(s.final_payment_value || 0),
+        final_payment_date: s.final_payment_date || null,
+        final_payment_method: s.final_payment_method || null,
       }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
@@ -490,8 +492,9 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
             if (!filled) return null;
             const fee = Number(s.fee || 0);
             const depositCredit = s.deposit_paid ? Number(s.deposit_amount || 0) : 0;
-            const finalCredit = s.final_payment_received && s.final_payment_method === "prism"
-              ? Number(s.final_payment_value || 0) : 0;
+            const finalCredit = s.final_payment_received
+              ? (external ? fee : Number(s.final_payment_value || 0))
+              : 0;
             const paid = depositCredit + finalCredit;
             const missing = fee - paid;
             if (missing <= 0) return null;
@@ -692,6 +695,33 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
             )}
           </div>
         </>
+      )}
+
+      {isExternal && filled && (
+        <div className="border-t pt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Checkbox id={`fp-ext-${label}`} checked={!!slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
+            <label htmlFor={`fp-ext-${label}`} className="text-xs font-medium">Pago ao externo</label>
+          </div>
+          {slot.final_payment_received && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Data</Label>
+                <Input type="date" value={slot.final_payment_date ?? ""} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Método</Label>
+                <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="prism">PRISM/Revolut</SelectItem>
+                    <SelectItem value="cliente">Direto pelo cliente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
