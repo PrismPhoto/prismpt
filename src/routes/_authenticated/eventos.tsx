@@ -696,6 +696,33 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
           </div>
         </>
       )}
+
+      {isExternal && filled && (
+        <div className="border-t pt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Checkbox id={`fp-ext-${label}`} checked={!!slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
+            <label htmlFor={`fp-ext-${label}`} className="text-xs font-medium">Pago ao externo</label>
+          </div>
+          {slot.final_payment_received && (
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs">Data</Label>
+                <Input type="date" value={slot.final_payment_date ?? ""} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">Método</Label>
+                <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="prism">PRISM/Revolut</SelectItem>
+                    <SelectItem value="cliente">Direto pelo cliente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
