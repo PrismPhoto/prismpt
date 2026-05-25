@@ -215,11 +215,13 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
   const distributionKey = JSON.stringify(distribution);
 
-  // Recompute all slot fees whenever total_value, commission or distribution changes
+  // Recompute Prism slot fees whenever total_value, commission or distribution changes.
+  // External (fixed) slots keep the fee the user typed.
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
       const nextSlots = (f.slots as any[]).map((s, i) => {
+        if (isExternalSlot(i)) return s;
         const newFee = computeFee(s.photographer_id, i, f.total_value, s.prism_commission);
         if (newFee !== Number(s.fee || 0)) {
           changed = true;
@@ -239,8 +241,13 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       if (f.slots.length === target) return f;
       const next = [...f.slots];
       while (next.length < target) {
+        const i = next.length;
+        const slotDist = distribution[i];
+        const isExt = slotDist?.mode === "fixed";
         next.push({
-          photographer_id: "", fee: 0, prism_commission: 0,
+          photographer_id: "", external_name: "",
+          fee: isExt ? Number(slotDist?.value ?? 0) : 0,
+          prism_commission: 0,
           deposit_amount: 0, deposit_paid: false, deposit_paid_date: "",
           final_payment_received: false, final_payment_value: 0,
           final_payment_date: "", final_payment_method: "",
