@@ -83,6 +83,7 @@ function FinancePage() {
   const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number; commission: number }> = {};
   allFeeRows.forEach(({ ep, e }) => {
     const k = ep.photographer_id;
+    if (!k) return; // skip external photographers (no internal balance)
     if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0, commission: 0 };
     balances[k].owed += feeWithExtras(e, ep);
     balances[k].paid += paidToPhotographer(e, ep);
