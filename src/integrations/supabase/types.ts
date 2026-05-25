@@ -250,6 +250,7 @@ export type Database = {
           deposit_paid: boolean
           deposit_paid_date: string | null
           event_id: string
+          external_name: string | null
           fee: number
           fee_paid: boolean
           fee_paid_date: string | null
@@ -259,7 +260,7 @@ export type Database = {
           final_payment_received: boolean
           final_payment_value: number
           id: string
-          photographer_id: string
+          photographer_id: string | null
           position: number
           prism_commission: number
           role: Database["public"]["Enums"]["ep_role"] | null
@@ -269,6 +270,7 @@ export type Database = {
           deposit_paid?: boolean
           deposit_paid_date?: string | null
           event_id: string
+          external_name?: string | null
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
@@ -278,7 +280,7 @@ export type Database = {
           final_payment_received?: boolean
           final_payment_value?: number
           id?: string
-          photographer_id: string
+          photographer_id?: string | null
           position?: number
           prism_commission?: number
           role?: Database["public"]["Enums"]["ep_role"] | null
@@ -288,6 +290,7 @@ export type Database = {
           deposit_paid?: boolean
           deposit_paid_date?: string | null
           event_id?: string
+          external_name?: string | null
           fee?: number
           fee_paid?: boolean
           fee_paid_date?: string | null
@@ -297,7 +300,7 @@ export type Database = {
           final_payment_received?: boolean
           final_payment_value?: number
           id?: string
-          photographer_id?: string
+          photographer_id?: string | null
           position?: number
           prism_commission?: number
           role?: Database["public"]["Enums"]["ep_role"] | null

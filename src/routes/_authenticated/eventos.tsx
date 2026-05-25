@@ -115,7 +115,7 @@ function EventsPage() {
                     <td className="p-3 font-medium">{e.client_name}</td>
                     <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
                     <td className="p-3 text-muted-foreground">{e.packages?.name ?? "—"}</td>
-                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials).join(" · ")}</td>
+                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                     <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                     <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
                   </tr>
@@ -166,9 +166,12 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         const n = Math.max(dist.length, existingPhotogs.length);
         return Array.from({ length: n }, (_, i) => {
           const ep = existingPhotogs.find((p: any) => p.position === i + 1);
+          const slotDist = dist[i];
+          const isExt = slotDist?.mode === "fixed";
           return {
             photographer_id: ep?.photographer_id ?? "",
-            fee: ep?.fee ?? 0,
+            external_name: ep?.external_name ?? "",
+            fee: ep?.fee ?? (isExt ? Number(slotDist?.value ?? 0) : 0),
             prism_commission: ep?.prism_commission ?? 0,
             deposit_amount: ep?.deposit_amount ?? 0,
             deposit_paid: ep?.deposit_paid ?? false,
@@ -212,11 +215,13 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
   const distributionKey = JSON.stringify(distribution);
 
-  // Recompute all slot fees whenever total_value, commission or distribution changes
+  // Recompute Prism slot fees whenever total_value, commission or distribution changes.
+  // External (fixed) slots keep the fee the user typed.
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
       const nextSlots = (f.slots as any[]).map((s, i) => {
+        if (isExternalSlot(i)) return s;
         const newFee = computeFee(s.photographer_id, i, f.total_value, s.prism_commission);
         if (newFee !== Number(s.fee || 0)) {
           changed = true;
@@ -236,8 +241,13 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       if (f.slots.length === target) return f;
       const next = [...f.slots];
       while (next.length < target) {
+        const i = next.length;
+        const slotDist = distribution[i];
+        const isExt = slotDist?.mode === "fixed";
         next.push({
-          photographer_id: "", fee: 0, prism_commission: 0,
+          photographer_id: "", external_name: "",
+          fee: isExt ? Number(slotDist?.value ?? 0) : 0,
+          prism_commission: 0,
           deposit_amount: 0, deposit_paid: false, deposit_paid_date: "",
           final_payment_received: false, final_payment_value: 0,
           final_payment_date: "", final_payment_method: "",
@@ -320,21 +330,24 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     }
     await supabase.from("event_photographers").delete().eq("event_id", eventId);
     const rows = (form.slots as any[])
-      .map((s, i) => ({ ...s, position: i + 1 }))
-      .filter((s) => s.photographer_id)
+      .map((s, i) => ({ ...s, position: i + 1, _external: isExternalSlot(i) }))
+      .filter((s) => (s._external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id))
       .map((s) => ({
         event_id: eventId,
-        photographer_id: s.photographer_id,
+        photographer_id: s._external ? null : s.photographer_id,
+        external_name: s._external ? String(s.external_name).trim() : null,
         position: s.position,
-        fee: computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
-        prism_commission: Number(s.prism_commission || 0),
-        deposit_amount: Number(s.deposit_amount || 0),
-        deposit_paid: !!s.deposit_paid,
-        deposit_paid_date: s.deposit_paid_date || null,
-        final_payment_received: !!s.final_payment_received,
-        final_payment_value: Number(s.final_payment_value || 0),
-        final_payment_date: s.final_payment_date || null,
-        final_payment_method: s.final_payment_method || null,
+        fee: s._external
+          ? Number(s.fee || 0)
+          : computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
+        prism_commission: s._external ? 0 : Number(s.prism_commission || 0),
+        deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
+        deposit_paid: s._external ? false : !!s.deposit_paid,
+        deposit_paid_date: s._external ? null : (s.deposit_paid_date || null),
+        final_payment_received: s._external ? false : !!s.final_payment_received,
+        final_payment_value: s._external ? 0 : Number(s.final_payment_value || 0),
+        final_payment_date: s._external ? null : (s.final_payment_date || null),
+        final_payment_method: s._external ? null : (s.final_payment_method || null),
       }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
@@ -417,16 +430,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
               onChange={(patch: any) => {
                 const next = [...form.slots];
                 const merged = { ...next[i], ...patch };
-                if ("photographer_id" in patch) {
-                  // Pré-preencher a comissão com o default do fotógrafo ao selecionar (só Prism)
-                  if (external) {
-                    merged.prism_commission = 0;
-                  } else {
+                if (external) {
+                  merged.photographer_id = "";
+                  merged.prism_commission = 0;
+                  // Fee é editável manualmente em slots externos; só recalcular se vier no patch
+                  if (!("fee" in patch)) {
+                    // manter merged.fee como está
+                  }
+                } else {
+                  if ("photographer_id" in patch) {
                     const p = photographers.find((x: any) => x.id === merged.photographer_id);
                     merged.prism_commission = Number(p?.prism_commission || 0);
                   }
+                  merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
                 }
-                merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
                 next[i] = merged;
                 setForm({ ...form, slots: next });
               }}
@@ -509,39 +526,61 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
+  const hasExternalName = !!(slot.external_name && String(slot.external_name).trim());
+  const filled = isExternal ? hasExternalName : hasPhotog;
   return (
     <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
         <div className="col-span-5">
           <Label className="text-xs">{label}</Label>
-          <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
-          </Select>
+          {isExternal ? (
+            <Input
+              placeholder="Nome / iniciais do externo"
+              value={slot.external_name ?? ""}
+              onChange={(e) => onChange({ external_name: e.target.value })}
+            />
+          ) : (
+            <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
+            </Select>
+          )}
         </div>
-        <div className="col-span-2">
-          <Label className="text-xs">Comissão €</Label>
-          <Input
-            type="number"
-            step="0.01"
-            disabled={!hasPhotog || isExternal}
-            value={isExternal ? 0 : (slot.prism_commission ?? 0)}
-            onChange={(e) => onChange({ prism_commission: e.target.value })}
-          />
-        </div>
-        <div className="col-span-3">
-          <Label className="text-xs">Fee (auto)</Label>
-          <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
-            {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
+        {!isExternal && (
+          <div className="col-span-2">
+            <Label className="text-xs">Comissão €</Label>
+            <Input
+              type="number"
+              step="0.01"
+              disabled={!hasPhotog}
+              value={slot.prism_commission ?? 0}
+              onChange={(e) => onChange({ prism_commission: e.target.value })}
+            />
           </div>
+        )}
+        <div className={isExternal ? "col-span-5" : "col-span-3"}>
+          <Label className="text-xs">{isExternal ? "Valor a pagar €" : "Fee (auto)"}</Label>
+          {isExternal ? (
+            <Input
+              type="number"
+              step="0.01"
+              value={slot.fee ?? 0}
+              onChange={(e) => onChange({ fee: Number(e.target.value) || 0 })}
+            />
+          ) : (
+            <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
+              {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
+            </div>
+          )}
         </div>
-        <div className="col-span-2 flex justify-end">
-          <Badge variant={statusVariant}>{status}</Badge>
-        </div>
+        {!isExternal && (
+          <div className="col-span-2 flex justify-end">
+            <Badge variant={statusVariant}>{status}</Badge>
+          </div>
+        )}
       </div>
 
-
-      {hasPhotog && (
+      {!isExternal && filled && (
         <>
           <div className="border-t pt-2">
             <div className="flex items-center gap-2 mb-2">
