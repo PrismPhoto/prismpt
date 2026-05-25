@@ -41,13 +41,19 @@ export function computeSlotFee(
   idx: number,
   totalValue: number,
   prismCommission: number,
+  fixedOverrides?: Record<number, number>,
 ): number {
   const slot = distribution[idx];
   if (!slot) return 0;
-  if (slot.mode === "fixed") return Math.round(Number(slot.value) || 0);
-  const fixedSum = distribution
-    .filter((s) => s.mode === "fixed")
-    .reduce((s, x) => s + (Number(x.value) || 0), 0);
+  const fixedVal = (i: number) => {
+    const ov = fixedOverrides?.[i];
+    return ov !== undefined && ov !== null ? Number(ov) || 0 : Number(distribution[i].value) || 0;
+  };
+  if (slot.mode === "fixed") return Math.round(fixedVal(idx));
+  const fixedSum = distribution.reduce(
+    (s, x, i) => (x.mode === "fixed" ? s + fixedVal(i) : s),
+    0,
+  );
   const pool = Math.max(0, Number(totalValue || 0) - fixedSum);
   const pct = (Number(slot.value) || 0) / 100;
   return Math.round(pool * pct - Number(prismCommission || 0));
