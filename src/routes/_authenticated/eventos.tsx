@@ -467,12 +467,22 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
   return (
     <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
-        <div className="col-span-7">
+        <div className="col-span-5">
           <Label className="text-xs">{label}</Label>
           <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
           </Select>
+        </div>
+        <div className="col-span-2">
+          <Label className="text-xs">Comissão €</Label>
+          <Input
+            type="number"
+            step="0.01"
+            disabled={!hasPhotog}
+            value={slot.prism_commission ?? 0}
+            onChange={(e) => onChange({ prism_commission: e.target.value })}
+          />
         </div>
         <div className="col-span-3">
           <Label className="text-xs">Fee (auto)</Label>
