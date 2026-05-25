@@ -23,7 +23,7 @@ function FinancePage() {
     queryKey: ["finance", year, typeF, photogF],
     queryFn: async () => {
       let q = supabase.from("events")
-        .select("*, event_photographers(*, photographers(initials, full_name, prism_commission)), event_extras(*), wedding_planners(name)")
+        .select("*, event_photographers(*, photographers(initials, full_name)), event_extras(*), wedding_planners(name)")
         .eq("event_year", year)
         .order("event_date");
       if (typeF !== "all") q = q.eq("event_type", typeF as any);
