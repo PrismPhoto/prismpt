@@ -416,7 +416,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, computedFee }: any) {
+function PhotogSlot({ photographers, slot, onChange, label }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
