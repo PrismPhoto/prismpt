@@ -1,44 +1,43 @@
-# Ajustes no formulário do evento
+## Resumo "Por pagar aos fotógrafos" no formulário do evento
 
-## 1. Externo editável reflete-se no fee do Prism
+Adicionar um pequeno bloco de resumo dentro do diálogo de evento, **após a secção Fotógrafos** (antes de Extras), que mostra de relance o que ainda falta pagar a cada fotógrafo quando o sinal e/ou pagamento final ainda não foram registados.
 
-**Problema actual:** `computeSlotFee` usa o `distribution[i].value` do pacote (450€) como valor fixo do externo. Se editares "Valor a pagar" do Externo no evento (ex.: 500€), o fee do Prism continua a calcular com 450€.
+### Layout
 
-**Correcção:** ao calcular o fee dos slots Prism, usar os valores **actuais** dos slots fixos no formulário, não os do pacote.
-
-- Em `src/lib/fee-distribution.ts`: aceitar um override opcional com os valores reais dos slots fixos (ex.: `computeSlotFee(distribution, idx, total, commission, fixedOverrides?)`).
-- Em `eventos.tsx`: passar `form.slots[i].fee` dos slots externos ao calcular, tanto no `useEffect` que recomputa, como no `save()`.
-
-Resultado: editar "Valor a pagar" do Externo para 500€ → fee do Prism passa de 2900€ para 2850€ automaticamente.
-
-## 2. Reordenar e separar secções do formulário
-
-Nova ordem dentro do diálogo de evento:
-
-```
-1. Dados base (data, cliente, tipo, pacote, valor, WP, pens)
-2. Pagamentos
-   ├─ Adjudicação + Sinal   (bloco com borda)
-   │   ├─ Data adjudicação
-   │   ├─ Sinal (€) + Método + Data sinal pago
-   └─ Pagamento final        (bloco com borda)
-       ├─ Valor (com sugestão e botão "usar sugerido")
-       ├─ Data + Método
-3. Fotógrafos  (cada slot — externo editável reflecte em Prism)
-4. Extras + totais
-5. Notas
+```text
+┌─ Por pagar aos fotógrafos ──────────────────────┐
+│ Prism 1 (RB)     fee 2900€   sinal —  final —   │
+│   ↳ falta 2900€                                 │
+│ Externo (JM)     fee  500€   sinal ✓  final —   │
+│   ↳ falta  300€  (pago 200€ de 500€)            │
+│ ─────────────────────────────────               │
+│ Total em falta: 3200€                           │
+└─────────────────────────────────────────────────┘
 ```
 
-Mudanças concretas em `eventos.tsx`:
-- Mover o `<h4>Pagamentos</h4>` + campos de adjudicação/sinal/final para **antes** do `<h4>Fotógrafos</h4>`.
-- Envolver "Adjudicação + Sinal" e "Pagamento final" em dois cartões/containers separados (`rounded-md border p-3 bg-muted/20`) com sub-títulos.
-- Manter os campos existentes — sem alterar a BD nem o `save()`.
+Container: `rounded-md border p-3 bg-muted/20`, só aparece se houver pelo menos um slot preenchido com valor em falta > 0. Slots já totalmente pagos não aparecem (para não poluir).
 
-## Ficheiros tocados
-- `src/lib/fee-distribution.ts` — assinatura de `computeSlotFee` com override de fixos
-- `src/routes/_authenticated/eventos.tsx` — reordenar JSX, agrupar pagamentos em 2 blocos, passar fees dos externos ao calcular Prism
+### Cálculo (por slot)
 
-## Sem alterações
-- Schema da BD
-- `pacotes.tsx` (distribuição continua a definir-se no pacote)
-- `financeiro.tsx`
+Reaproveita a mesma lógica de `financeiro.tsx`:
+- **Total devido** = `slot.fee` (já calculado em tempo real no form)
+- **Crédito sinal** = `slot.deposit_paid ? slot.deposit_amount : 0`
+- **Crédito final** = `slot.final_payment_received && slot.final_payment_method === "prism" ? slot.final_payment_value : 0`
+  *(se o cliente pagou directamente ao fotógrafo via outro método, não conta como dívida da PRISM)*
+- **Falta** = `devido - sinal - final`
+
+Para cada linha mostrar:
+- nome/iniciais (Prism N com iniciais do fotógrafo, ou "Externo — nome")
+- fee total
+- estado sinal (✓ / —) e final (✓ / —)
+- valor em falta a vermelho/destaque
+
+Total agregado em baixo.
+
+### Ficheiros tocados
+
+- `src/routes/_authenticated/eventos.tsx` — adicionar bloco JSX entre Fotógrafos (linha ~484) e Extras (linha ~486), com cálculo inline a partir de `form.slots`.
+
+### Sem alterações
+
+- BD, `fee-distribution.ts`, `financeiro.tsx`, `pacotes.tsx`.
