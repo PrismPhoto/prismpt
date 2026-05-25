@@ -449,7 +449,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
                     const p = photographers.find((x: any) => x.id === merged.photographer_id);
                     merged.prism_commission = Number(p?.prism_commission || 0);
                   }
-                  merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
+                  merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission, next);
                 }
                 next[i] = merged;
                 setForm({ ...form, slots: next });
