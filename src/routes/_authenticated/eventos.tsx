@@ -191,20 +191,19 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
   const SLOT_SPLITS = [0.5, 0.5, 0];
-  const computeFee = (photographer_id: string, idx: number, totalValue: number) => {
+  const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number) => {
     if (!photographer_id) return 0;
-    const p = photographers.find((x: any) => x.id === photographer_id);
-    const pc = Number(p?.prism_commission || 0);
-    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - pc);
+    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - Number(prismCommission || 0));
   };
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
+  const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
 
-  // Recompute all slot fees whenever total_value changes — only update if anything actually changed
+  // Recompute all slot fees whenever total_value or commission changes
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
       const nextSlots = (f.slots as any[]).map((s, i) => {
-        const newFee = computeFee(s.photographer_id, i, f.total_value);
+        const newFee = computeFee(s.photographer_id, i, f.total_value, s.prism_commission);
         if (newFee !== Number(s.fee || 0)) {
           changed = true;
           return { ...s, fee: newFee };
@@ -214,7 +213,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       return changed ? { ...f, slots: nextSlots } : f;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value, selectedPhotographerIdsKey]);
+  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey]);
 
   const suggestedFinalPayment = Math.max(
     0,
