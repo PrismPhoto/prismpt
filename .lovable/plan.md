@@ -1,33 +1,71 @@
-## Objetivo
+## Problema
 
-1. Remover o campo redundante **Comissão Prism** ao nível do evento.
-2. Tornar a **comissão Prism por fotógrafo editável dentro do evento** — vem pré-preenchida com o valor default do fotógrafo (ex. 150€), mas pode ser ajustada (incluindo 0) por evento.
+A divisão do fee está fixada em `SLOT_SPLITS = [0.5, 0.5, 0]` no `eventos.tsx`. Isso quebra:
+- **Prime (1 Prism)**: deve ser 100%, não 50%.
+- **3 fotógrafos Prism**: deve ser 33,33% cada.
+- **Prime 1 Prism + 1 externo**: Prism leva 100% do total *menos* o custo fixo do externo (default 450€); externo leva o valor fixo. Sem comissão Prism para o externo.
+
+Solução: tornar a distribuição **configurável por pacote**, com modo `percent` ou `fixed €` por slot.
 
 ## Mudanças
 
-### Base de dados
-- Migração: adicionar coluna `prism_commission numeric NOT NULL DEFAULT 0` à tabela `event_photographers`. Representa a comissão Prism efetivamente cobrada nesse evento, a esse fotógrafo.
-- (Manter `photographers.prism_commission` como default; não tocar.)
-- (Não remover já `events.prism_commission` para evitar partir dados/queries antigos — apenas deixa de ser usado/escrito. Pode ser removido num clean-up futuro.)
+### 1. Base de dados (migração)
 
-### `src/routes/_authenticated/eventos.tsx`
-- Remover do form o campo "Comissão Prism" (linha 355) e o estado `prism_commission` (linhas 145, 268).
-- Em cada slot (`PhotogSlot`):
-  - Novo campo numérico "Comissão Prism €" editável ao lado do Fee.
-  - Inicialização do slot: se já existe `event_photographers.prism_commission` usa esse valor; caso contrário usa `photographers.prism_commission` do fotógrafo selecionado.
-  - Ao mudar de fotógrafo num slot vazio (sem override prévio), pré-preencher com o default do novo fotógrafo.
-- `computeFee` passa a usar `slot.prism_commission` (override) em vez de `photographers.prism_commission`.
-- `useEffect` que recalcula fees passa a depender também das comissões dos slots.
-- `save()`: incluir `prism_commission` nas rows inseridas em `event_photographers`.
+Adicionar coluna `fee_distribution jsonb` a `packages`. Formato:
 
-### `src/routes/_authenticated/financeiro.tsx`
-- Trocar `ep.photographers?.prism_commission` por `ep.prism_commission` nas duas linhas (78, 89) para refletir o valor real cobrado no evento.
-- Atualizar o `select` para deixar de precisar de `photographers(prism_commission)` (mantém `initials, full_name`).
+```json
+[
+  { "mode": "percent", "value": 100 },
+  { "mode": "fixed",   "value": 450 }
+]
+```
 
-## Fora de scope
-- Não mexer em `events.prism_commission` (coluna fica órfã, sem UI).
-- Sem alterações no `fotografos/$id.tsx` (continua a editar o default por fotógrafo).
-- Sem retroactividade: eventos antigos ficam com `prism_commission = 0` até serem reabertos/guardados (posso correr um backfill se preferires — diz-me).
+Comprimento do array = `num_prism_photographers + (has_external_photographer ? 1 : 0)`. Os primeiros `num_prism` entries são slots Prism; o último (se existir) é o externo.
+
+**Backfill** dos pacotes existentes com base em `num_prism` / `has_external`:
+- 1 Prism, 0 externo → `[{percent,100}]`
+- 2 Prism, 0 externo → `[{percent,50},{percent,50}]`
+- 3 Prism, 0 externo → 3× `{percent,33.34}` (último compensa arredondamento)
+- 1 Prism, 1 externo → `[{percent,100},{fixed,450}]`
+- 2 Prism, 1 externo → `[{percent,50},{percent,50},{fixed,450}]`
+
+### 2. `src/routes/_authenticated/pacotes.tsx`
+
+No `PkgForm`, adicionar secção **"Distribuição do valor"** que renderiza uma linha por slot (Prism 1, Prism 2, …, Externo). Cada linha:
+- Toggle/Select `%` | `€ fixo`
+- Input numérico para o valor
+
+Sempre que `num_prism_photographers` ou `has_external_photographer` mudam, redimensionar o array de distribuição (preservar valores existentes onde possível, aplicar defaults aos novos slots: Prism→percent igualitário, Externo→fixed 450).
+
+Validação suave: se a soma das `%` não der 100, mostrar aviso (mas permitir guardar).
+
+Incluir `fee_distribution` no payload do `save`.
+
+### 3. `src/routes/_authenticated/eventos.tsx`
+
+Substituir o `SLOT_SPLITS` constante por uma derivação baseada no pacote selecionado:
+
+```text
+fee_distribution do pacote → para cada slot i:
+  - se mode=="fixed": fee = value (sem comissão Prism)
+  - se mode=="percent": fee = (total_value − Σ fixed_values) × (pct/100) − prism_commission
+```
+
+Carregar a `fee_distribution` do pacote selecionado (via `packages` query). Fallback se não houver pacote: divisão igualitária pelos slots preenchidos (comportamento atual generalizado).
+
+Ajustar:
+- `computeFee(slot, idx, totalValue, prismCommission, distribution)` → nova assinatura.
+- Renderizar exactamente `distribution.length` slots (não fixos `[1,2,3]`); os slots externos marcados como tal e com label "Externo".
+- Label do slot mostra `"X%"` ou `"€ Y fixo"` consoante o modo.
+- Em slots `fixed` (externo), não pré-preencher `prism_commission` ao escolher fotógrafo (fica 0), e o fee é o valor fixo independentemente do `total_value`.
+- `useEffect` de recompute depende também da distribuição.
+
+### 4. Fora de scope
+
+- Não tocar em `financeiro.tsx` (continua a ler `ep.prism_commission` e `ep.fee` já correctos).
+- Não retroagir fees de eventos antigos — só serão recalculados quando o evento for reaberto/guardado.
+- `event_photographers.position` mantém-se (1..N conforme distribuição).
 
 ## Pergunta
-Queres que faça **backfill** dos eventos existentes (preencher `event_photographers.prism_commission` com o valor atual de `photographers.prism_commission` de cada fotógrafo) ao aplicar a migração? Recomendo que sim, para o Financeiro não cair para 0.
+
+A linha do externo no formulário do evento deve continuar a permitir **escolher um fotógrafo** (mesmo sendo externo, para registo), ou deve ser apenas um campo livre tipo "Nome externo"? Hoje o slot 3 selecciona da lista `photographers` — assumo que mantemos isso (escolher da mesma lista) salvo indicação em contrário.

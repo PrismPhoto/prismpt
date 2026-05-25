@@ -570,6 +570,7 @@ export type Database = {
           base_price: number
           created_at: string
           description: string | null
+          fee_distribution: Json | null
           has_external: boolean
           has_external_photographer: boolean
           id: string
@@ -585,6 +586,7 @@ export type Database = {
           base_price: number
           created_at?: string
           description?: string | null
+          fee_distribution?: Json | null
           has_external?: boolean
           has_external_photographer?: boolean
           id?: string
@@ -600,6 +602,7 @@ export type Database = {
           base_price?: number
           created_at?: string
           description?: string | null
+          fee_distribution?: Json | null
           has_external?: boolean
           has_external_photographer?: boolean
           id?: string
