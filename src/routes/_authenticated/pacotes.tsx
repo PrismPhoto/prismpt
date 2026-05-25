@@ -71,23 +71,57 @@ function PackagesPage() {
 }
 
 function PkgForm({ initial, onSave }: any) {
-  const [f, setF] = useState({
-    name: initial?.name ?? "", version: initial?.version ?? 3, base_price: initial?.base_price ?? 0,
-    description: initial?.description ?? "", num_prism_photographers: initial?.num_prism_photographers ?? 1,
-    has_external_photographer: initial?.has_external_photographer ?? false,
-    has_wp: !!initial?.wp_variant_percentage, wp_variant_percentage: initial?.wp_variant_percentage ?? 10,
-    active: initial?.active ?? true,
+  const [f, setF] = useState(() => {
+    const numPrism = initial?.num_prism_photographers ?? 1;
+    const hasExt = initial?.has_external_photographer ?? false;
+    return {
+      name: initial?.name ?? "", version: initial?.version ?? 3, base_price: initial?.base_price ?? 0,
+      description: initial?.description ?? "", num_prism_photographers: numPrism,
+      has_external_photographer: hasExt,
+      has_wp: !!initial?.wp_variant_percentage, wp_variant_percentage: initial?.wp_variant_percentage ?? 10,
+      active: initial?.active ?? true,
+      fee_distribution: (initial?.fee_distribution as SlotDistribution[] | null)
+        ?? defaultDistribution(numPrism, hasExt),
+    };
   });
+
+  const setNumPrism = (v: string) => {
+    const n = Math.max(1, Number(v) || 1);
+    setF((prev) => ({
+      ...prev,
+      num_prism_photographers: n,
+      fee_distribution: resizeDistribution(prev.fee_distribution, n, prev.has_external_photographer),
+    }));
+  };
+  const setHasExternal = (c: boolean) => {
+    setF((prev) => ({
+      ...prev,
+      has_external_photographer: c,
+      fee_distribution: resizeDistribution(prev.fee_distribution, prev.num_prism_photographers, c),
+    }));
+  };
+  const updateSlot = (idx: number, patch: Partial<SlotDistribution>) => {
+    setF((prev) => {
+      const next = prev.fee_distribution.map((s, i) => i === idx ? { ...s, ...patch } : s);
+      return { ...prev, fee_distribution: next };
+    });
+  };
+
+  const percentSum = f.fee_distribution
+    .filter((s) => s.mode === "percent")
+    .reduce((s, x) => s + (Number(x.value) || 0), 0);
+  const percentWarn = Math.abs(percentSum - 100) > 0.1;
+
   return (
-    <DialogContent>
+    <DialogContent className="max-w-2xl">
       <DialogHeader><DialogTitle>{initial ? "Editar" : "Novo"} pacote</DialogTitle></DialogHeader>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2"><Label>Nome</Label><Input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></div>
         <div><Label>Versão</Label><Input type="number" value={f.version} onChange={(e) => setF({ ...f, version: e.target.value })} /></div>
         <div><Label>Preço base €</Label><Input type="number" step="0.01" value={f.base_price} onChange={(e) => setF({ ...f, base_price: e.target.value })} /></div>
         <div className="col-span-2"><Label>Descrição</Label><Textarea rows={2} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-        <div><Label>Nº Prism</Label><Input type="number" value={f.num_prism_photographers} onChange={(e) => setF({ ...f, num_prism_photographers: e.target.value })} /></div>
-        <div className="flex items-center gap-2 pt-6"><Switch checked={f.has_external_photographer} onCheckedChange={(c) => setF({ ...f, has_external_photographer: c })} /><Label>+ Externo</Label></div>
+        <div><Label>Nº Prism</Label><Input type="number" min={1} value={f.num_prism_photographers} onChange={(e) => setNumPrism(e.target.value)} /></div>
+        <div className="flex items-center gap-2 pt-6"><Switch checked={f.has_external_photographer} onCheckedChange={setHasExternal} /><Label>+ Externo</Label></div>
         <div className="flex items-center gap-2"><Switch checked={f.has_wp} onCheckedChange={(c) => setF({ ...f, has_wp: c })} /><Label>Variante WP</Label></div>
         {f.has_wp && (
           <div><Label>% WP</Label>
@@ -97,9 +131,44 @@ function PkgForm({ initial, onSave }: any) {
             </Select>
           </div>
         )}
+
+        <div className="col-span-2 border-t pt-3 mt-2">
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-sm font-semibold">Distribuição do valor pelos fotógrafos</Label>
+            {percentWarn && <span className="text-xs text-destructive">Soma das % = {percentSum.toFixed(2)} (≠ 100)</span>}
+          </div>
+          <div className="space-y-2">
+            {f.fee_distribution.map((slot, i) => {
+              const isExternal = f.has_external_photographer && i === f.fee_distribution.length - 1;
+              return (
+                <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-4 text-sm">{isExternal ? "Externo" : `Prism ${i + 1}`}</div>
+                  <div className="col-span-4">
+                    <Select value={slot.mode} onValueChange={(v) => updateSlot(i, { mode: v as any })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percent">% do total</SelectItem>
+                        <SelectItem value="fixed">€ fixo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-4">
+                    <Input type="number" step="0.01" value={slot.value}
+                      onChange={(e) => updateSlot(i, { value: Number(e.target.value) || 0 })} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Slots fixos (€) são pagos antes da divisão; o restante é dividido pelas %. A comissão Prism só se aplica a slots em %.
+          </p>
+        </div>
+
         <div className="col-span-2 flex items-center gap-2"><Switch checked={f.active} onCheckedChange={(c) => setF({ ...f, active: c })} /><Label>Ativo</Label></div>
       </div>
       <DialogFooter><Button onClick={() => onSave(f)}>Guardar</Button></DialogFooter>
     </DialogContent>
   );
 }
+
