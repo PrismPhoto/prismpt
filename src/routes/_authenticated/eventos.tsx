@@ -406,7 +406,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, computedFee }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -421,8 +421,10 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           </Select>
         </div>
         <div className="col-span-3">
-          <Label className="text-xs">Fee €</Label>
-          <Input type="number" step="0.01" value={slot.fee} onChange={(e) => onChange({ fee: e.target.value })} />
+          <Label className="text-xs">Fee (auto)</Label>
+          <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
+            {hasPhotog ? EUR(computedFee) : "—"}
+          </div>
         </div>
         <div className="col-span-2 flex justify-end">
           <Badge variant={statusVariant}>{status}</Badge>
