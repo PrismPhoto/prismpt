@@ -185,6 +185,16 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   }, [existingExtras]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
+  const filledSlots = (form.slots as any[]).filter((s: any) => s.photographer_id).length;
+  const splitPct = filledSlots > 0 ? 1 / filledSlots : 0;
+  const grandTotalForFee = Number(form.total_value || 0) + extrasTotal;
+  const computeSlotFee = (s: any) => {
+    if (!s.photographer_id) return 0;
+    const p = photographers.find((x: any) => x.id === s.photographer_id);
+    const pc = Number(p?.prism_commission || 0);
+    return grandTotalForFee * splitPct - pc;
+  };
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
     setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
