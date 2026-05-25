@@ -427,16 +427,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
               onChange={(patch: any) => {
                 const next = [...form.slots];
                 const merged = { ...next[i], ...patch };
-                if ("photographer_id" in patch) {
-                  // Pré-preencher a comissão com o default do fotógrafo ao selecionar (só Prism)
-                  if (external) {
-                    merged.prism_commission = 0;
-                  } else {
+                if (external) {
+                  merged.photographer_id = "";
+                  merged.prism_commission = 0;
+                  // Fee é editável manualmente em slots externos; só recalcular se vier no patch
+                  if (!("fee" in patch)) {
+                    // manter merged.fee como está
+                  }
+                } else {
+                  if ("photographer_id" in patch) {
                     const p = photographers.find((x: any) => x.id === merged.photographer_id);
                     merged.prism_commission = Number(p?.prism_commission || 0);
                   }
+                  merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
                 }
-                merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
                 next[i] = merged;
                 setForm({ ...form, slots: next });
               }}
