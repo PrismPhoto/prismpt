@@ -20,6 +20,8 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/eventos")({ component: EventsPage });
 
+const EMPTY_EXTRAS: any[] = [];
+
 function EventsPage() {
   const qc = useQueryClient();
   const { role } = useAuth();
@@ -171,18 +173,21 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     };
   });
 
-  const { data: existingExtras = [] } = useQuery({
+  const { data: existingExtrasData } = useQuery({
     queryKey: ["event_extras", event?.id],
     queryFn: async () => event?.id ? ((await supabase.from("event_extras").select("*").eq("event_id", event.id)).data ?? []) : [],
     enabled: !!event?.id,
   });
+  const existingExtras = existingExtrasData ?? EMPTY_EXTRAS;
   const [extras, setExtras] = useState<any[]>([]);
   useEffect(() => {
     setExtras(existingExtras.map((x: any) => ({ ...x })));
     // total_value stored includes extras → strip them so editing UI shows base value
     const prevSum = existingExtras.reduce((s: number, x: any) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
-    if (prevSum > 0) setForm((f: any) => ({ ...f, total_value: Number(f.total_value || 0) - prevSum }));
-  }, [existingExtras]);
+    if (!event) return;
+    const baseTotal = Number(event.total_value || 0) - prevSum;
+    setForm((f: any) => Number(f.total_value || 0) === baseTotal ? f : { ...f, total_value: baseTotal });
+  }, [existingExtras, event]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
   const SLOT_SPLITS = [0.5, 0.5, 0];
