@@ -216,6 +216,25 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.total_value, selectedPhotographerIdsKey]);
 
+  const suggestedFinalPayment = Math.max(
+    0,
+    Number(form.total_value || 0) + extrasTotal - (form.deposit_paid_date ? Number(form.deposit_amount || 0) : 0)
+  );
+
+  // Auto-preencher Pagamento final quando ainda não foi tocado
+  useEffect(() => {
+    setForm((f: any) => {
+      const current = f.final_payment_value;
+      const isEmpty = current === "" || current === null || current === undefined || Number(current) === 0;
+      if (!isEmpty) return f;
+      if (Number(current || 0) === suggestedFinalPayment) return f;
+      return { ...f, final_payment_value: suggestedFinalPayment };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestedFinalPayment]);
+
+
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
     setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
@@ -418,7 +437,15 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
         <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
         <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-        <F label="Pagamento final (€)"><Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} /></F>
+        <F label="Pagamento final (€)">
+          <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
+          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+            <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
+            {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
+              <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
+            )}
+          </div>
+        </F>
         <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
         <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
 

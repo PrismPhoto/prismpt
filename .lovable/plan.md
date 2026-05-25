@@ -1,27 +1,23 @@
-## Mudanças
+## Mudança
 
-### 1. `src/routes/_authenticated/fotografos/$id.tsx` — opção (A) mais limpa
+No formulário do evento em `src/routes/_authenticated/eventos.tsx`, o campo **"Pagamento final (€)"** passa a ser auto-preenchido (mas editável).
 
-O `fee` em `event_photographers` já é líquido (split − comissão PRISM). Remover a dupla subtração:
+### Cálculo sugerido
+`suggested = total_value + Σ event_extras.total − (deposit_paid_date ? deposit_amount : 0)`
 
-- Apagar `const commission = …` e tudo que o usa.
-- Apagar os KPIs "Comissão PRISM" e "Líquido". Manter: **Faturado**, **Pago**, **Pendente** (Pendente = Faturado − Pago).
-- Na tabela de eventos: remover colunas "Comissão PRISM" e "Líquido". Manter "Fee" (= valor líquido já).
-- Atualizar `EventTable` para não receber `commission`.
+- `extrasTotal` já está calculado no componente (linha 413).
+- Sinal só é descontado se `deposit_paid_date` estiver preenchido (= sinal já recebido). Caso contrário soma tudo.
 
-### 2. `src/routes/_authenticated/financeiro.tsx` — adicionar KPIs de comissões
+### Comportamento
+- Quando o utilizador abre o formulário e o campo está vazio (`final_payment_value === ""` ou `0`), pré-preenche com o valor sugerido.
+- Mostrar um pequeno hint por baixo do input: `Sugerido: {EUR(suggested)}` com um link/botão "usar sugerido" que repõe o valor calculado (útil se o utilizador editou e quer voltar ao auto).
+- Mantém-se totalmente editável — guarda o que estiver no input.
 
-A comissão PRISM por evento/fotógrafo = `photographers.prism_commission` × nº de assignments desse fotógrafo. A query atual em Financeiro já traz `event_photographers(*, photographers(initials, full_name))` mas não traz `prism_commission` — preciso adicioná-lo ao select (`photographers(initials, full_name, prism_commission)`).
+### Implementação
+1. Calcular `suggestedFinalPayment` no `EventDialog` a partir de `form.total_value`, `form.deposit_amount`, `form.deposit_paid_date` e `extrasTotal`.
+2. Num `useEffect` (com guard tipo "só se ainda não foi tocado / está vazio"), preencher `form.final_payment_value` com o sugerido. Para não cair em loop infinito como antes, condicionar a `form.final_payment_value === "" || Number(form.final_payment_value) === 0`, e comparar antes de chamar `setForm`.
+3. Adicionar o hint visual com botão "usar sugerido" abaixo do input do "Pagamento final (€)".
 
-Novo KPI **"Comissões PRISM"**:
-- Quando há fotógrafo ativo (`activePhotographerId`): soma de `prism_commission` por cada assignment desse fotógrafo nos eventos filtrados.
-- Quando manager sem filtro de fotógrafo: soma de `prism_commission` em todos os `event_photographers` dos eventos filtrados (= receita de comissões da PRISM).
-
-Adicionar à grid de KPIs (sempre visível). Posicionar a seguir a "Por pagar".
-
-Também adicionar coluna **"Comissão PRISM"** na tabela "Caixa por fotógrafo" (manager): nº de eventos × commission desse fotógrafo, para visibilidade.
-
-### Notas
-
-- Não mexer na tabela "Detalhe por evento" do Financeiro — os badges de fees já mostram o valor líquido correto.
-- Não mexer no cálculo de fee em `eventos.tsx`.
+### Fora de scope (confirmado)
+- Manter os campos `final_payment_*` por slot de fotógrafo (semântica diferente: indica quem recebeu o pagamento direto do cliente vs PRISM — usado pelo Financeiro).
+- Sem alterações à BD.
