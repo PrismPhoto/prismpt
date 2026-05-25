@@ -142,7 +142,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       event_type: event?.event_type ?? "Casamento",
       package_id: event?.package_id ?? "",
       total_value: event?.total_value ?? 0,
-      prism_commission: event?.prism_commission ?? 0,
       wedding_planner_id: event?.wedding_planner_id ?? "",
       wp_commission_value: event?.wp_commission_value ?? 0,
       has_pens_caixa: event?.has_pens_caixa ?? false,
@@ -161,6 +160,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         return {
           photographer_id: ep?.photographer_id ?? "",
           fee: ep?.fee ?? 0,
+          prism_commission: ep?.prism_commission ?? 0,
           deposit_amount: ep?.deposit_amount ?? 0,
           deposit_paid: ep?.deposit_paid ?? false,
           deposit_paid_date: ep?.deposit_paid_date ?? "",
