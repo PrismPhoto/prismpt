@@ -141,7 +141,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
+function EventTable({ rows }: { rows: any[] }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -152,8 +152,6 @@ function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
             <th className="text-right p-3">Fee</th>
-            <th className="text-right p-3">Comissão PRISM</th>
-            <th className="text-right p-3">Líquido</th>
             <th className="text-left p-3">Sinal devolvido</th>
             <th className="text-left p-3">Pag. final</th>
             <th className="text-left p-3">Estado</th>
@@ -169,8 +167,6 @@ function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
                 <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(commission)}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(Number(r.fee || 0) - commission)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
