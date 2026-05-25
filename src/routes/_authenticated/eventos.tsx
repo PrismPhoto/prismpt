@@ -421,6 +421,35 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           <label htmlFor="pc" className="text-sm">Pens em caixa (+100€)</label>
         </div>
 
+        <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Pagamentos</h4></div>
+
+        <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+          <div className="text-xs font-semibold uppercase text-muted-foreground">Adjudicação & Sinal</div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>
+            <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
+            <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
+            <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
+          </div>
+        </div>
+
+        <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+          <div className="text-xs font-semibold uppercase text-muted-foreground">Pagamento final</div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <F label="Pagamento final (€)">
+              <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
+              <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
+                {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
+                  <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
+                )}
+              </div>
+            </F>
+            <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
+            <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
+          </div>
+        </div>
+
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
         {(form.slots as any[]).map((s, i) => {
           const slotDist = distribution[i];
@@ -440,10 +469,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
                 if (external) {
                   merged.photographer_id = "";
                   merged.prism_commission = 0;
-                  // Fee é editável manualmente em slots externos; só recalcular se vier no patch
-                  if (!("fee" in patch)) {
-                    // manter merged.fee como está
-                  }
                 } else {
                   if ("photographer_id" in patch) {
                     const p = photographers.find((x: any) => x.id === merged.photographer_id);
@@ -503,23 +528,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           <span className="font-medium">Total evento (pacote + extras)</span>
           <span className="tabular-nums font-semibold">{EUR(Number(form.total_value || 0) + extrasTotal)}</span>
         </div>
-
-        <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Pagamentos</h4></div>
-        <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>
-        <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
-        <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
-        <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-        <F label="Pagamento final (€)">
-          <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
-          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-            <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
-            {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
-              <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
-            )}
-          </div>
-        </F>
-        <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
-        <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
 
         <F label="Notas internas" className="md:col-span-2"><Textarea rows={3} value={form.internal_notes} onChange={(e) => setForm({ ...form, internal_notes: e.target.value })} /></F>
         <F label="Notas evento (calendário)" className="md:col-span-2"><Textarea rows={3} value={form.event_notes} onChange={(e) => setForm({ ...form, event_notes: e.target.value })} /></F>
