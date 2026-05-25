@@ -32,7 +32,15 @@ function PackagesPage() {
       has_external_photographer: f.has_external_photographer,
       wp_variant_percentage: f.has_wp ? Number(f.wp_variant_percentage) : null,
       active: f.active,
+      fee_distribution: f.fee_distribution,
     };
+    const { error } = editing
+      ? await supabase.from("packages").update(payload).eq("id", editing.id)
+      : await supabase.from("packages").insert(payload);
+    if (error) return toast.error(error.message);
+    toast.success("Guardado"); setOpen(false); setEditing(null);
+    qc.invalidateQueries({ queryKey: ["pkgs-mgmt"] });
+  };
     const { error } = editing
       ? await supabase.from("packages").update(payload).eq("id", editing.id)
       : await supabase.from("packages").insert(payload);
