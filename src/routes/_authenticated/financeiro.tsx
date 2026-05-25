@@ -75,16 +75,18 @@ function FinancePage() {
   );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
+  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.photographers?.prism_commission || 0), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
   // Per photographer balance
-  const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number }> = {};
+  const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number; commission: number }> = {};
   allFeeRows.forEach(({ ep, e }) => {
     const k = ep.photographer_id;
-    if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0 };
+    if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0, commission: 0 };
     balances[k].owed += feeWithExtras(e, ep);
     balances[k].paid += paidToPhotographer(e, ep);
+    balances[k].commission += Number(ep.photographers?.prism_commission || 0);
   });
 
 
