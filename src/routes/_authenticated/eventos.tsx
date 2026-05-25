@@ -193,12 +193,20 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - pc);
   };
 
-  // Recompute all slot fees whenever total_value changes
+  // Recompute all slot fees whenever total_value changes — only update if anything actually changed
   useEffect(() => {
-    setForm((f: any) => ({
-      ...f,
-      slots: (f.slots as any[]).map((s, i) => ({ ...s, fee: computeFee(s.photographer_id, i, f.total_value) })),
-    }));
+    setForm((f: any) => {
+      let changed = false;
+      const nextSlots = (f.slots as any[]).map((s, i) => {
+        const newFee = computeFee(s.photographer_id, i, f.total_value);
+        if (newFee !== Number(s.fee || 0)) {
+          changed = true;
+          return { ...s, fee: newFee };
+        }
+        return s;
+      });
+      return changed ? { ...f, slots: nextSlots } : f;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.total_value]);
 
