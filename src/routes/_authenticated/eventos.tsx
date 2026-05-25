@@ -402,26 +402,37 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        {(form.slots as any[]).map((s, i) => (
-          <PhotogSlot
-            key={i}
-            label={`Fotógrafo ${i + 1} — ${Math.round(SLOT_SPLITS[i] * 100)}%`}
-            photographers={photographers}
-            slot={s}
-            onChange={(patch: any) => {
-              const next = [...form.slots];
-              const merged = { ...next[i], ...patch };
-              if ("photographer_id" in patch) {
-                // Pré-preencher a comissão com o default do fotógrafo ao selecionar
-                const p = photographers.find((x: any) => x.id === merged.photographer_id);
-                merged.prism_commission = Number(p?.prism_commission || 0);
-              }
-              merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
-              next[i] = merged;
-              setForm({ ...form, slots: next });
-            }}
-          />
-        ))}
+        {(form.slots as any[]).map((s, i) => {
+          const slotDist = distribution[i];
+          const external = isExternalSlot(i);
+          const labelPrefix = external ? "Externo" : `Prism ${i + 1}`;
+          const labelSuffix = slotDist ? ` — ${slotLabel(slotDist)}` : "";
+          return (
+            <PhotogSlot
+              key={i}
+              label={`${labelPrefix}${labelSuffix}`}
+              photographers={photographers}
+              slot={s}
+              isExternal={external}
+              onChange={(patch: any) => {
+                const next = [...form.slots];
+                const merged = { ...next[i], ...patch };
+                if ("photographer_id" in patch) {
+                  // Pré-preencher a comissão com o default do fotógrafo ao selecionar (só Prism)
+                  if (external) {
+                    merged.prism_commission = 0;
+                  } else {
+                    const p = photographers.find((x: any) => x.id === merged.photographer_id);
+                    merged.prism_commission = Number(p?.prism_commission || 0);
+                  }
+                }
+                merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
+                next[i] = merged;
+                setForm({ ...form, slots: next });
+              }}
+            />
+          );
+        })}
 
         <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
           <h4 className="text-sm font-semibold">Extras</h4>
