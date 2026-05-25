@@ -505,7 +505,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -524,8 +524,8 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           <Input
             type="number"
             step="0.01"
-            disabled={!hasPhotog}
-            value={slot.prism_commission ?? 0}
+            disabled={!hasPhotog || isExternal}
+            value={isExternal ? 0 : (slot.prism_commission ?? 0)}
             onChange={(e) => onChange({ prism_commission: e.target.value })}
           />
         </div>
@@ -539,6 +539,7 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           <Badge variant={statusVariant}>{status}</Badge>
         </div>
       </div>
+
 
       {hasPhotog && (
         <>
