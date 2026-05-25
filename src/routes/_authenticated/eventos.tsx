@@ -185,6 +185,16 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   }, [existingExtras]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
+  const filledSlots = (form.slots as any[]).filter((s: any) => s.photographer_id).length;
+  const splitPct = filledSlots > 0 ? 1 / filledSlots : 0;
+  const grandTotalForFee = Number(form.total_value || 0) + extrasTotal;
+  const computeSlotFee = (s: any) => {
+    if (!s.photographer_id) return 0;
+    const p = photographers.find((x: any) => x.id === s.photographer_id);
+    const pc = Number(p?.prism_commission || 0);
+    return grandTotalForFee * splitPct - pc;
+  };
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
     setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
@@ -243,7 +253,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         event_id: eventId,
         photographer_id: s.photographer_id,
         position: s.position,
-        fee: Number(s.fee || 0),
+        fee: computeSlotFee(s),
         deposit_amount: Number(s.deposit_amount || 0),
         deposit_paid: !!s.deposit_paid,
         deposit_paid_date: s.deposit_paid_date || null,
@@ -324,6 +334,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
             label={`Fotógrafo ${i + 1}`}
             photographers={photographers}
             slot={s}
+            computedFee={computeSlotFee(s)}
             onChange={(patch: any) => {
               const next = [...form.slots];
               next[i] = { ...next[i], ...patch };
@@ -395,7 +406,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, computedFee }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -410,8 +421,10 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           </Select>
         </div>
         <div className="col-span-3">
-          <Label className="text-xs">Fee €</Label>
-          <Input type="number" step="0.01" value={slot.fee} onChange={(e) => onChange({ fee: e.target.value })} />
+          <Label className="text-xs">Fee (auto)</Label>
+          <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
+            {hasPhotog ? EUR(computedFee) : "—"}
+          </div>
         </div>
         <div className="col-span-2 flex justify-end">
           <Badge variant={statusVariant}>{status}</Badge>
