@@ -185,15 +185,22 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   }, [existingExtras]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
-  const filledSlots = (form.slots as any[]).filter((s: any) => s.photographer_id).length;
-  const splitPct = filledSlots > 0 ? 1 / filledSlots : 0;
-  const grandTotalForFee = Number(form.total_value || 0) + extrasTotal;
-  const computeSlotFee = (s: any) => {
-    if (!s.photographer_id) return 0;
-    const p = photographers.find((x: any) => x.id === s.photographer_id);
+  const SLOT_SPLITS = [0.5, 0.5, 0];
+  const computeFee = (photographer_id: string, idx: number, totalValue: number) => {
+    if (!photographer_id) return 0;
+    const p = photographers.find((x: any) => x.id === photographer_id);
     const pc = Number(p?.prism_commission || 0);
-    return grandTotalForFee * splitPct - pc;
+    return Number(totalValue || 0) * SLOT_SPLITS[idx] - pc;
   };
+
+  // Recompute all slot fees whenever total_value changes
+  useEffect(() => {
+    setForm((f: any) => ({
+      ...f,
+      slots: (f.slots as any[]).map((s, i) => ({ ...s, fee: computeFee(s.photographer_id, i, f.total_value) })),
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.total_value]);
 
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
@@ -253,7 +260,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         event_id: eventId,
         photographer_id: s.photographer_id,
         position: s.position,
-        fee: computeSlotFee(s),
+        fee: computeFee(s.photographer_id, s.position - 1, form.total_value),
         deposit_amount: Number(s.deposit_amount || 0),
         deposit_paid: !!s.deposit_paid,
         deposit_paid_date: s.deposit_paid_date || null,
@@ -331,13 +338,16 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         {(form.slots as any[]).map((s, i) => (
           <PhotogSlot
             key={i}
-            label={`Fotógrafo ${i + 1}`}
+            label={`Fotógrafo ${i + 1} — ${Math.round(SLOT_SPLITS[i] * 100)}%`}
             photographers={photographers}
             slot={s}
-            computedFee={computeSlotFee(s)}
             onChange={(patch: any) => {
               const next = [...form.slots];
-              next[i] = { ...next[i], ...patch };
+              const merged = { ...next[i], ...patch };
+              if ("photographer_id" in patch) {
+                merged.fee = computeFee(merged.photographer_id, i, form.total_value);
+              }
+              next[i] = merged;
               setForm({ ...form, slots: next });
             }}
           />
@@ -406,7 +416,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, computedFee }: any) {
+function PhotogSlot({ photographers, slot, onChange, label }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -423,7 +433,7 @@ function PhotogSlot({ photographers, slot, onChange, label, computedFee }: any) 
         <div className="col-span-3">
           <Label className="text-xs">Fee (auto)</Label>
           <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
-            {hasPhotog ? EUR(computedFee) : "—"}
+            {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
           </div>
         </div>
         <div className="col-span-2 flex justify-end">
