@@ -96,10 +96,8 @@ function PhotogProfile() {
         }
       />
 
-      <div className="grid md:grid-cols-5 gap-3 mb-6">
+      <div className="grid md:grid-cols-3 gap-3 mb-6">
         <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
-        <Stat label="Comissão PRISM" value={EUR(totalCommission)} />
-        <Stat label={`Líquido ${year}`} value={EUR(totalLiquido)} />
         <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
         <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
       </div>
@@ -107,14 +105,14 @@ function PhotogProfile() {
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} commission={commission} />
+          <EventTable rows={upcoming} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} commission={commission} />
+          <EventTable rows={past} />
         </CardContent>
       </Card>
 
