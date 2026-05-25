@@ -490,8 +490,9 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
             if (!filled) return null;
             const fee = Number(s.fee || 0);
             const depositCredit = s.deposit_paid ? Number(s.deposit_amount || 0) : 0;
-            const finalCredit = s.final_payment_received && s.final_payment_method === "prism"
-              ? Number(s.final_payment_value || 0) : 0;
+            const finalCredit = s.final_payment_received
+              ? (external ? fee : Number(s.final_payment_value || 0))
+              : 0;
             const paid = depositCredit + finalCredit;
             const missing = fee - paid;
             if (missing <= 0) return null;
