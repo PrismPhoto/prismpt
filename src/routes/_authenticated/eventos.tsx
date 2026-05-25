@@ -437,7 +437,15 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
         <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
         <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-        <F label="Pagamento final (€)"><Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} /></F>
+        <F label="Pagamento final (€)">
+          <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
+          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+            <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
+            {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
+              <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
+            )}
+          </div>
+        </F>
         <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
         <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
 
