@@ -346,7 +346,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         position: s.position,
         fee: s._external
           ? Number(s.fee || 0)
-          : computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
+          : computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission, form.slots),
         prism_commission: s._external ? 0 : Number(s.prism_commission || 0),
         deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
         deposit_paid: s._external ? false : !!s.deposit_paid,
