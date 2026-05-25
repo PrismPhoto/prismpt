@@ -351,10 +351,12 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
         deposit_paid: s._external ? false : !!s.deposit_paid,
         deposit_paid_date: s._external ? null : (s.deposit_paid_date || null),
-        final_payment_received: s._external ? false : !!s.final_payment_received,
-        final_payment_value: s._external ? 0 : Number(s.final_payment_value || 0),
-        final_payment_date: s._external ? null : (s.final_payment_date || null),
-        final_payment_method: s._external ? null : (s.final_payment_method || null),
+        final_payment_received: !!s.final_payment_received,
+        final_payment_value: s._external
+          ? (s.final_payment_received ? Number(s.fee || 0) : 0)
+          : Number(s.final_payment_value || 0),
+        final_payment_date: s.final_payment_date || null,
+        final_payment_method: s.final_payment_method || null,
       }));
     if (rows.length) {
       const { error } = await supabase.from("event_photographers").insert(rows);
