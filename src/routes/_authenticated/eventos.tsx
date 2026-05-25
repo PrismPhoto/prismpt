@@ -324,6 +324,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
             label={`Fotógrafo ${i + 1}`}
             photographers={photographers}
             slot={s}
+            computedFee={computeSlotFee(s)}
             onChange={(patch: any) => {
               const next = [...form.slots];
               next[i] = { ...next[i], ...patch };
