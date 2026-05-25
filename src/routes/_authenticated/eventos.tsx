@@ -253,7 +253,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         event_id: eventId,
         photographer_id: s.photographer_id,
         position: s.position,
-        fee: Number(s.fee || 0),
+        fee: computeSlotFee(s),
         deposit_amount: Number(s.deposit_amount || 0),
         deposit_paid: !!s.deposit_paid,
         deposit_paid_date: s.deposit_paid_date || null,
