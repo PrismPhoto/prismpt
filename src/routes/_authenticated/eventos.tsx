@@ -338,13 +338,16 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         {(form.slots as any[]).map((s, i) => (
           <PhotogSlot
             key={i}
-            label={`Fotógrafo ${i + 1}`}
+            label={`Fotógrafo ${i + 1} — ${Math.round(SLOT_SPLITS[i] * 100)}%`}
             photographers={photographers}
             slot={s}
-            computedFee={computeSlotFee(s)}
             onChange={(patch: any) => {
               const next = [...form.slots];
-              next[i] = { ...next[i], ...patch };
+              const merged = { ...next[i], ...patch };
+              if ("photographer_id" in patch) {
+                merged.fee = computeFee(merged.photographer_id, i, form.total_value);
+              }
+              next[i] = merged;
               setForm({ ...form, slots: next });
             }}
           />
