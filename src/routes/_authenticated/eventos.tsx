@@ -378,8 +378,11 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
               const next = [...form.slots];
               const merged = { ...next[i], ...patch };
               if ("photographer_id" in patch) {
-                merged.fee = computeFee(merged.photographer_id, i, form.total_value);
+                // Pré-preencher a comissão com o default do fotógrafo ao selecionar
+                const p = photographers.find((x: any) => x.id === merged.photographer_id);
+                merged.prism_commission = Number(p?.prism_commission || 0);
               }
+              merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
               next[i] = merged;
               setForm({ ...form, slots: next });
             }}
