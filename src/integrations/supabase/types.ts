@@ -261,6 +261,7 @@ export type Database = {
           id: string
           photographer_id: string
           position: number
+          prism_commission: number
           role: Database["public"]["Enums"]["ep_role"] | null
         }
         Insert: {
@@ -279,6 +280,7 @@ export type Database = {
           id?: string
           photographer_id: string
           position?: number
+          prism_commission?: number
           role?: Database["public"]["Enums"]["ep_role"] | null
         }
         Update: {
@@ -297,6 +299,7 @@ export type Database = {
           id?: string
           photographer_id?: string
           position?: number
+          prism_commission?: number
           role?: Database["public"]["Enums"]["ep_role"] | null
         }
         Relationships: [
