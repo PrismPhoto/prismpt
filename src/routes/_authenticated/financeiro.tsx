@@ -86,7 +86,7 @@ function FinancePage() {
     if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0, commission: 0 };
     balances[k].owed += feeWithExtras(e, ep);
     balances[k].paid += paidToPhotographer(e, ep);
-    balances[k].commission += Number(ep.photographers?.prism_commission || 0);
+    balances[k].commission += Number(ep.prism_commission || 0);
   });
 
 
