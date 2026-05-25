@@ -166,9 +166,12 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         const n = Math.max(dist.length, existingPhotogs.length);
         return Array.from({ length: n }, (_, i) => {
           const ep = existingPhotogs.find((p: any) => p.position === i + 1);
+          const slotDist = dist[i];
+          const isExt = slotDist?.mode === "fixed";
           return {
             photographer_id: ep?.photographer_id ?? "",
-            fee: ep?.fee ?? 0,
+            external_name: ep?.external_name ?? "",
+            fee: ep?.fee ?? (isExt ? Number(slotDist?.value ?? 0) : 0),
             prism_commission: ep?.prism_commission ?? 0,
             deposit_amount: ep?.deposit_amount ?? 0,
             deposit_paid: ep?.deposit_paid ?? false,
