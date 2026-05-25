@@ -352,7 +352,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           </Select>
         </F>
         <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
-        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => setForm({ ...form, prism_commission: e.target.value })} /></F>
+        
         <F label="Wedding Planner">
           <Select value={form.wedding_planner_id || "none"} onValueChange={(v) => onWp(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
