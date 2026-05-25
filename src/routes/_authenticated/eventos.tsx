@@ -115,7 +115,7 @@ function EventsPage() {
                     <td className="p-3 font-medium">{e.client_name}</td>
                     <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
                     <td className="p-3 text-muted-foreground">{e.packages?.name ?? "—"}</td>
-                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials).join(" · ")}</td>
+                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                     <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                     <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
                   </tr>
