@@ -75,7 +75,7 @@ function FinancePage() {
   );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
-  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.photographers?.prism_commission || 0), 0);
+  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.prism_commission || 0), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
