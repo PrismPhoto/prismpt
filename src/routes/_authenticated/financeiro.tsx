@@ -125,6 +125,7 @@ function FinancePage() {
         <KPI label="Fees totais" value={EUR(totalFees)} />
         <KPI label="Fees pagos" value={EUR(totalFeesPaid)} />
         <KPI label="Por pagar" value={EUR(totalFees - totalFeesPaid)} />
+        <KPI label="Comissões PRISM" value={EUR(totalCommission)} />
       </div>
 
       {role === "manager" && (
