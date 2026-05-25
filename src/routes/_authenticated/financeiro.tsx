@@ -116,10 +116,10 @@ function FinancePage() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {role === "manager" && <KPI label="Receita" value={EUR(totalRevenue)} />}
-        {role === "manager" && <KPI label="Recebido" value={EUR(totalReceived)} />}
-        {role === "manager" && <KPI label="Pendente" value={EUR(totalPending)} />}
-        {role === "manager" && <KPI label="Comissões WP" value={EUR(totalWp)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Receita" value={EUR(totalRevenue)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Recebido" value={EUR(totalReceived)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Pendente" value={EUR(totalPending)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Comissões WP" value={EUR(totalWp)} />}
         <KPI label="Fees totais" value={EUR(totalFees)} />
         <KPI label="Fees pagos" value={EUR(totalFeesPaid)} />
         <KPI label="Por pagar" value={EUR(totalFees - totalFeesPaid)} />
