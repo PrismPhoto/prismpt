@@ -17,6 +17,7 @@ import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
 import { Plus, Download, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution } from "@/lib/fee-distribution";
 
 export const Route = createFileRoute("/_authenticated/eventos")({ component: EventsPage });
 
