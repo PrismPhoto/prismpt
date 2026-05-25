@@ -192,6 +192,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     const pc = Number(p?.prism_commission || 0);
     return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - pc);
   };
+  const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
 
   // Recompute all slot fees whenever total_value changes — only update if anything actually changed
   useEffect(() => {
@@ -208,7 +209,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       return changed ? { ...f, slots: nextSlots } : f;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value]);
+  }, [form.total_value, selectedPhotographerIdsKey]);
 
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
