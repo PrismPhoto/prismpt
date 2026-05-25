@@ -156,21 +156,30 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       internal_notes: event?.internal_notes ?? "",
       event_notes: event?.event_notes ?? "",
       status: event?.status ?? "Aguarda Sinal",
-      slots: [1, 2, 3].map((pos) => {
-        const ep = existingPhotogs.find((p: any) => p.position === pos);
-        return {
-          photographer_id: ep?.photographer_id ?? "",
-          fee: ep?.fee ?? 0,
-          prism_commission: ep?.prism_commission ?? 0,
-          deposit_amount: ep?.deposit_amount ?? 0,
-          deposit_paid: ep?.deposit_paid ?? false,
-          deposit_paid_date: ep?.deposit_paid_date ?? "",
-          final_payment_received: ep?.final_payment_received ?? false,
-          final_payment_value: ep?.final_payment_value ?? 0,
-          final_payment_date: ep?.final_payment_date ?? "",
-          final_payment_method: ep?.final_payment_method ?? "",
-        };
-      }),
+      slots: (() => {
+        const pkg = packages.find((p: any) => p.id === (event?.package_id ?? ""));
+        const dist: SlotDistribution[] = (pkg?.fee_distribution as SlotDistribution[] | null)
+          ?? defaultDistribution(
+            Math.max(existingPhotogs.length || 1, pkg?.num_prism_photographers ?? 1),
+            pkg?.has_external_photographer ?? false,
+          );
+        const n = Math.max(dist.length, existingPhotogs.length);
+        return Array.from({ length: n }, (_, i) => {
+          const ep = existingPhotogs.find((p: any) => p.position === i + 1);
+          return {
+            photographer_id: ep?.photographer_id ?? "",
+            fee: ep?.fee ?? 0,
+            prism_commission: ep?.prism_commission ?? 0,
+            deposit_amount: ep?.deposit_amount ?? 0,
+            deposit_paid: ep?.deposit_paid ?? false,
+            deposit_paid_date: ep?.deposit_paid_date ?? "",
+            final_payment_received: ep?.final_payment_received ?? false,
+            final_payment_value: ep?.final_payment_value ?? 0,
+            final_payment_date: ep?.final_payment_date ?? "",
+            final_payment_method: ep?.final_payment_method ?? "",
+          };
+        });
+      })(),
     };
   });
 
