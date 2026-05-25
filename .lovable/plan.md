@@ -1,53 +1,44 @@
-## Problema
+# Ajustes no formulário do evento
 
-No slot "Externo" do evento, hoje:
-- O fotógrafo é escolhido da lista `photographers` (não permite externos).
-- O fee é o valor fixo definido no pacote (`fee_distribution`), sem possibilidade de ajuste por evento.
+## 1. Externo editável reflete-se no fee do Prism
 
-Pretendido: poder escrever o nome/iniciais do externo livremente e editar o valor pago a esse externo neste evento específico (default = valor fixo do pacote, normalmente 450€).
+**Problema actual:** `computeSlotFee` usa o `distribution[i].value` do pacote (450€) como valor fixo do externo. Se editares "Valor a pagar" do Externo no evento (ex.: 500€), o fee do Prism continua a calcular com 450€.
 
-## Mudanças
+**Correcção:** ao calcular o fee dos slots Prism, usar os valores **actuais** dos slots fixos no formulário, não os do pacote.
 
-### 1. Base de dados
+- Em `src/lib/fee-distribution.ts`: aceitar um override opcional com os valores reais dos slots fixos (ex.: `computeSlotFee(distribution, idx, total, commission, fixedOverrides?)`).
+- Em `eventos.tsx`: passar `form.slots[i].fee` dos slots externos ao calcular, tanto no `useEffect` que recomputa, como no `save()`.
 
-Migração em `event_photographers`:
-- `photographer_id` → passar a **nullable** (externo não tem registo na tabela `photographers`).
-- Adicionar `external_name text` nullable — preenchido só em slots externos.
-- Constraint suave: para cada linha, ou `photographer_id` está preenchido, ou `external_name` está preenchido (CHECK).
+Resultado: editar "Valor a pagar" do Externo para 500€ → fee do Prism passa de 2900€ para 2850€ automaticamente.
 
-RLS continua igual; a política de leitura por fotógrafo (`photographer_id = user_id`) simplesmente não devolve linhas externas, o que é o comportamento correcto.
+## 2. Reordenar e separar secções do formulário
 
-### 2. `src/routes/_authenticated/eventos.tsx`
+Nova ordem dentro do diálogo de evento:
 
-**Estado do slot externo:** acrescentar `external_name: string` ao objecto do slot (a par de `photographer_id`, `fee`, etc.). No load do evento, popular a partir de `ep.external_name`.
+```
+1. Dados base (data, cliente, tipo, pacote, valor, WP, pens)
+2. Pagamentos
+   ├─ Adjudicação + Sinal   (bloco com borda)
+   │   ├─ Data adjudicação
+   │   ├─ Sinal (€) + Método + Data sinal pago
+   └─ Pagamento final        (bloco com borda)
+       ├─ Valor (com sugestão e botão "usar sugerido")
+       ├─ Data + Método
+3. Fotógrafos  (cada slot — externo editável reflecte em Prism)
+4. Extras + totais
+5. Notas
+```
 
-**`PhotogSlot` quando `isExternal`:**
-- Substituir o `<Select>` de fotógrafo por um `<Input>` de texto livre ("Nome / iniciais do externo").
-- Mostrar o campo "Fee €" **editável** (já existe, mas hoje é só leitura). Default = valor fixo de `distribution[i].value` do pacote.
-- Esconder o campo "Comissão €" (já está disabled; passar a não renderizar) e os blocos de sinal/pagamento final ao fotógrafo (não aplicáveis a externos — é só uma despesa fixa).
+Mudanças concretas em `eventos.tsx`:
+- Mover o `<h4>Pagamentos</h4>` + campos de adjudicação/sinal/final para **antes** do `<h4>Fotógrafos</h4>`.
+- Envolver "Adjudicação + Sinal" e "Pagamento final" em dois cartões/containers separados (`rounded-md border p-3 bg-muted/20`) com sub-títulos.
+- Manter os campos existentes — sem alterar a BD nem o `save()`.
 
-**Cálculo de fee (`computeSlotFee` em `src/lib/fee-distribution.ts`):**
-- Para slots `fixed`, em vez de devolver sempre `distribution[idx].value`, o evento passa a guardar o fee editado em `slot.fee`. A função continua a devolver o default; o `useEffect` que recomputa fees passa a **não sobrescrever** o fee de slots externos se o utilizador já o editou.
-- Inicialização: ao mudar de pacote ou criar slot externo novo, pré-preencher `slot.fee` com `distribution[i].value`.
+## Ficheiros tocados
+- `src/lib/fee-distribution.ts` — assinatura de `computeSlotFee` com override de fixos
+- `src/routes/_authenticated/eventos.tsx` — reordenar JSX, agrupar pagamentos em 2 blocos, passar fees dos externos ao calcular Prism
 
-**`save()`:**
-- Em slots externos: enviar `photographer_id: null`, `external_name: slot.external_name`, `fee: Number(slot.fee)`, `prism_commission: 0`, restantes campos a 0/false.
-- Validação: se externo está marcado e `external_name` está vazio, ignorar o slot (não inserir).
-
-### 3. Listagens
-
-- `eventos.tsx` linha 118 (coluna "Fotógrafos"): hoje mostra `ep.photographers?.initials`. Passar a usar `ep.photographers?.initials ?? ep.external_name`.
-- `financeiro.tsx`: 
-  - O `select` continua a usar `event_photographers(*, photographers(...))`.
-  - Externos têm `photographer_id = null` → não aparecem nos balanços por fotógrafo (correcto: não são da PRISM). Continuam a contar como custo do evento via `fee`, o que afecta o resultado líquido.
-  - `feeWithExtras` / totais continuam correctos porque iteram `event_photographers` independentemente do `photographer_id`.
-  - Onde se agrupa por `ep.photographer_id` (`balances[k]`), saltar linhas com `photographer_id` null.
-
-### 4. Fora de scope
-
-- Não criar tabela separada para "externos recorrentes" — é só um campo de texto por evento.
-- Pacotes (`pacotes.tsx`) não mudam — continuam a definir o default `fixed` do externo na `fee_distribution`.
-
-## Pergunta
-
-Confirmas que o externo **não deve aparecer** nos balanços/financeiro por fotógrafo (é apenas um custo do evento), certo?
+## Sem alterações
+- Schema da BD
+- `pacotes.tsx` (distribuição continua a definir-se no pacote)
+- `financeiro.tsx`
