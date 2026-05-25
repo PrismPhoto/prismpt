@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
 import { EUR } from "@/lib/format";
 import { toast } from "sonner";
+import { defaultDistribution, resizeDistribution, type SlotDistribution } from "@/lib/fee-distribution";
 
 export const Route = createFileRoute("/_authenticated/pacotes")({ component: PackagesPage });
 
