@@ -62,9 +62,17 @@ function FinancePage() {
     return depositCredit + finalCredit;
   };
 
+  const activePhotographerId = role === "photographer"
+    ? photographerId
+    : (photogF !== "all" ? photogF : null);
+
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
   const totalWp = filtered.reduce((s, e) => s + Number(e.wp_commission_value || 0), 0);
-  const allFeeRows = filtered.flatMap((e: any) => (e.event_photographers || []).map((ep: any) => ({ ep, e })));
+  const allFeeRows = filtered.flatMap((e: any) =>
+    (e.event_photographers || [])
+      .filter((ep: any) => !activePhotographerId || ep.photographer_id === activePhotographerId)
+      .map((ep: any) => ({ ep, e }))
+  );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
@@ -108,10 +116,10 @@ function FinancePage() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {role === "manager" && <KPI label="Receita" value={EUR(totalRevenue)} />}
-        {role === "manager" && <KPI label="Recebido" value={EUR(totalReceived)} />}
-        {role === "manager" && <KPI label="Pendente" value={EUR(totalPending)} />}
-        {role === "manager" && <KPI label="Comissões WP" value={EUR(totalWp)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Receita" value={EUR(totalRevenue)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Recebido" value={EUR(totalReceived)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Pendente" value={EUR(totalPending)} />}
+        {role === "manager" && !activePhotographerId && <KPI label="Comissões WP" value={EUR(totalWp)} />}
         <KPI label="Fees totais" value={EUR(totalFees)} />
         <KPI label="Fees pagos" value={EUR(totalFeesPaid)} />
         <KPI label="Por pagar" value={EUR(totalFees - totalFeesPaid)} />
