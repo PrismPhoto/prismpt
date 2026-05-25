@@ -216,6 +216,25 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.total_value, selectedPhotographerIdsKey]);
 
+  const suggestedFinalPayment = Math.max(
+    0,
+    Number(form.total_value || 0) + extrasTotal - (form.deposit_paid_date ? Number(form.deposit_amount || 0) : 0)
+  );
+
+  // Auto-preencher Pagamento final quando ainda não foi tocado
+  useEffect(() => {
+    setForm((f: any) => {
+      const current = f.final_payment_value;
+      const isEmpty = current === "" || current === null || current === undefined || Number(current) === 0;
+      if (!isEmpty) return f;
+      if (Number(current || 0) === suggestedFinalPayment) return f;
+      return { ...f, final_payment_value: suggestedFinalPayment };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestedFinalPayment]);
+
+
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
     setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
