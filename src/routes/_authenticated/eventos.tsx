@@ -526,39 +526,61 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
+  const hasExternalName = !!(slot.external_name && String(slot.external_name).trim());
+  const filled = isExternal ? hasExternalName : hasPhotog;
   return (
     <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
         <div className="col-span-5">
           <Label className="text-xs">{label}</Label>
-          <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
-            <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
-          </Select>
+          {isExternal ? (
+            <Input
+              placeholder="Nome / iniciais do externo"
+              value={slot.external_name ?? ""}
+              onChange={(e) => onChange({ external_name: e.target.value })}
+            />
+          ) : (
+            <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
+            </Select>
+          )}
         </div>
-        <div className="col-span-2">
-          <Label className="text-xs">Comissão €</Label>
-          <Input
-            type="number"
-            step="0.01"
-            disabled={!hasPhotog || isExternal}
-            value={isExternal ? 0 : (slot.prism_commission ?? 0)}
-            onChange={(e) => onChange({ prism_commission: e.target.value })}
-          />
-        </div>
-        <div className="col-span-3">
-          <Label className="text-xs">Fee (auto)</Label>
-          <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
-            {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
+        {!isExternal && (
+          <div className="col-span-2">
+            <Label className="text-xs">Comissão €</Label>
+            <Input
+              type="number"
+              step="0.01"
+              disabled={!hasPhotog}
+              value={slot.prism_commission ?? 0}
+              onChange={(e) => onChange({ prism_commission: e.target.value })}
+            />
           </div>
+        )}
+        <div className={isExternal ? "col-span-5" : "col-span-3"}>
+          <Label className="text-xs">{isExternal ? "Valor a pagar €" : "Fee (auto)"}</Label>
+          {isExternal ? (
+            <Input
+              type="number"
+              step="0.01"
+              value={slot.fee ?? 0}
+              onChange={(e) => onChange({ fee: Number(e.target.value) || 0 })}
+            />
+          ) : (
+            <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
+              {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
+            </div>
+          )}
         </div>
-        <div className="col-span-2 flex justify-end">
-          <Badge variant={statusVariant}>{status}</Badge>
-        </div>
+        {!isExternal && (
+          <div className="col-span-2 flex justify-end">
+            <Badge variant={statusVariant}>{status}</Badge>
+          </div>
+        )}
       </div>
 
-
-      {hasPhotog && (
+      {!isExternal && filled && (
         <>
           <div className="border-t pt-2">
             <div className="flex items-center gap-2 mb-2">
