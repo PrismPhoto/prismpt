@@ -190,7 +190,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
     if (!photographer_id) return 0;
     const p = photographers.find((x: any) => x.id === photographer_id);
     const pc = Number(p?.prism_commission || 0);
-    return Number(totalValue || 0) * SLOT_SPLITS[idx] - pc;
+    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - pc);
   };
 
   // Recompute all slot fees whenever total_value changes
