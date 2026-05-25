@@ -142,7 +142,6 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       event_type: event?.event_type ?? "Casamento",
       package_id: event?.package_id ?? "",
       total_value: event?.total_value ?? 0,
-      prism_commission: event?.prism_commission ?? 0,
       wedding_planner_id: event?.wedding_planner_id ?? "",
       wp_commission_value: event?.wp_commission_value ?? 0,
       has_pens_caixa: event?.has_pens_caixa ?? false,
@@ -161,6 +160,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         return {
           photographer_id: ep?.photographer_id ?? "",
           fee: ep?.fee ?? 0,
+          prism_commission: ep?.prism_commission ?? 0,
           deposit_amount: ep?.deposit_amount ?? 0,
           deposit_paid: ep?.deposit_paid ?? false,
           deposit_paid_date: ep?.deposit_paid_date ?? "",
@@ -191,20 +191,19 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
   const SLOT_SPLITS = [0.5, 0.5, 0];
-  const computeFee = (photographer_id: string, idx: number, totalValue: number) => {
+  const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number) => {
     if (!photographer_id) return 0;
-    const p = photographers.find((x: any) => x.id === photographer_id);
-    const pc = Number(p?.prism_commission || 0);
-    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - pc);
+    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - Number(prismCommission || 0));
   };
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
+  const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
 
-  // Recompute all slot fees whenever total_value changes — only update if anything actually changed
+  // Recompute all slot fees whenever total_value or commission changes
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
       const nextSlots = (f.slots as any[]).map((s, i) => {
-        const newFee = computeFee(s.photographer_id, i, f.total_value);
+        const newFee = computeFee(s.photographer_id, i, f.total_value, s.prism_commission);
         if (newFee !== Number(s.fee || 0)) {
           changed = true;
           return { ...s, fee: newFee };
@@ -214,7 +213,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       return changed ? { ...f, slots: nextSlots } : f;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value, selectedPhotographerIdsKey]);
+  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey]);
 
   const suggestedFinalPayment = Math.max(
     0,
@@ -265,7 +264,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       event_date: form.event_date, client_name: form.client_name, email: form.email || null,
       pax: form.pax ? Number(form.pax) : null, location: form.location || null,
       event_type: form.event_type, package_id: form.package_id || null,
-      total_value: grandTotal, prism_commission: Number(form.prism_commission || 0),
+      total_value: grandTotal,
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
       has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
@@ -293,7 +292,8 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         event_id: eventId,
         photographer_id: s.photographer_id,
         position: s.position,
-        fee: computeFee(s.photographer_id, s.position - 1, form.total_value),
+        fee: computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission),
+        prism_commission: Number(s.prism_commission || 0),
         deposit_amount: Number(s.deposit_amount || 0),
         deposit_paid: !!s.deposit_paid,
         deposit_paid_date: s.deposit_paid_date || null,
@@ -352,7 +352,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           </Select>
         </F>
         <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
-        <F label="Comissão Prism"><Input type="number" step="0.01" value={form.prism_commission} onChange={(e) => setForm({ ...form, prism_commission: e.target.value })} /></F>
+        
         <F label="Wedding Planner">
           <Select value={form.wedding_planner_id || "none"} onValueChange={(v) => onWp(v === "none" ? "" : v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -378,8 +378,11 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
               const next = [...form.slots];
               const merged = { ...next[i], ...patch };
               if ("photographer_id" in patch) {
-                merged.fee = computeFee(merged.photographer_id, i, form.total_value);
+                // Pré-preencher a comissão com o default do fotógrafo ao selecionar
+                const p = photographers.find((x: any) => x.id === merged.photographer_id);
+                merged.prism_commission = Number(p?.prism_commission || 0);
               }
+              merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
               next[i] = merged;
               setForm({ ...form, slots: next });
             }}
@@ -464,12 +467,22 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
   return (
     <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
-        <div className="col-span-7">
+        <div className="col-span-5">
           <Label className="text-xs">{label}</Label>
           <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
           </Select>
+        </div>
+        <div className="col-span-2">
+          <Label className="text-xs">Comissão €</Label>
+          <Input
+            type="number"
+            step="0.01"
+            disabled={!hasPhotog}
+            value={slot.prism_commission ?? 0}
+            onChange={(e) => onChange({ prism_commission: e.target.value })}
+          />
         </div>
         <div className="col-span-3">
           <Label className="text-xs">Fee (auto)</Label>

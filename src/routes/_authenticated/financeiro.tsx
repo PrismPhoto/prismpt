@@ -23,7 +23,7 @@ function FinancePage() {
     queryKey: ["finance", year, typeF, photogF],
     queryFn: async () => {
       let q = supabase.from("events")
-        .select("*, event_photographers(*, photographers(initials, full_name, prism_commission)), event_extras(*), wedding_planners(name)")
+        .select("*, event_photographers(*, photographers(initials, full_name)), event_extras(*), wedding_planners(name)")
         .eq("event_year", year)
         .order("event_date");
       if (typeF !== "all") q = q.eq("event_type", typeF as any);
@@ -75,7 +75,7 @@ function FinancePage() {
   );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
-  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.photographers?.prism_commission || 0), 0);
+  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.prism_commission || 0), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
@@ -86,7 +86,7 @@ function FinancePage() {
     if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0, commission: 0 };
     balances[k].owed += feeWithExtras(e, ep);
     balances[k].paid += paidToPhotographer(e, ep);
-    balances[k].commission += Number(ep.photographers?.prism_commission || 0);
+    balances[k].commission += Number(ep.prism_commission || 0);
   });
 
 
