@@ -133,13 +133,14 @@ function FinancePage() {
           <CardHeader><CardTitle className="text-base">Caixa por fotógrafo</CardTitle></CardHeader>
           <CardContent>
             <table className="w-full text-sm">
-              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">A pagar</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Saldo</th></tr></thead>
+              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">A pagar</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Comissão PRISM</th><th className="text-right p-2">Saldo</th></tr></thead>
               <tbody>
                 {Object.values(balances).map((b) => (
                   <tr key={b.initials} className="border-t">
                     <td className="p-2">{b.initials} · {b.full_name}</td>
                     <td className="p-2 text-right tabular-nums">{EUR(b.owed)}</td>
                     <td className="p-2 text-right tabular-nums">{EUR(b.paid)}</td>
+                    <td className="p-2 text-right tabular-nums">{EUR(b.commission)}</td>
                     <td className="p-2 text-right tabular-nums font-medium">{EUR(b.owed - b.paid)}</td>
                   </tr>
                 ))}
