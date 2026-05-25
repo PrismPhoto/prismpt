@@ -206,23 +206,30 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   const selectedPackage = packages.find((p: any) => p.id === form.package_id);
   const distribution: SlotDistribution[] = (selectedPackage?.fee_distribution as SlotDistribution[] | null)
     ?? defaultDistribution(form.slots.length || 1, false);
-  const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number) => {
+  const fixedOverrides = (slots: any[]) => {
+    const o: Record<number, number> = {};
+    slots.forEach((s, i) => { if (distribution[i]?.mode === "fixed") o[i] = Number(s.fee || 0); });
+    return o;
+  };
+  const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number, slots: any[]) => {
     if (!photographer_id) return 0;
-    return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0));
+    return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0), fixedOverrides(slots));
   };
   const isExternalSlot = (idx: number) => distribution[idx]?.mode === "fixed";
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
+  const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
   const distributionKey = JSON.stringify(distribution);
 
-  // Recompute Prism slot fees whenever total_value, commission or distribution changes.
-  // External (fixed) slots keep the fee the user typed.
+  // Recompute Prism slot fees whenever total_value, commission, external fees or distribution changes.
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
+      const ov = fixedOverrides(f.slots);
       const nextSlots = (f.slots as any[]).map((s, i) => {
         if (isExternalSlot(i)) return s;
-        const newFee = computeFee(s.photographer_id, i, f.total_value, s.prism_commission);
+        if (!s.photographer_id) return s;
+        const newFee = computeSlotFee(distribution, i, Number(f.total_value || 0), Number(s.prism_commission || 0), ov);
         if (newFee !== Number(s.fee || 0)) {
           changed = true;
           return { ...s, fee: newFee };
@@ -232,7 +239,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       return changed ? { ...f, slots: nextSlots } : f;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey, distributionKey]);
+  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey, externalFeesKey, distributionKey]);
 
   // Resize slots when the selected package distribution length changes
   useEffect(() => {
