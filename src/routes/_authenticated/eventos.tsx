@@ -483,6 +483,53 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
           );
         })}
 
+        {(() => {
+          const rows = (form.slots as any[]).map((s, i) => {
+            const external = isExternalSlot(i);
+            const filled = external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id;
+            if (!filled) return null;
+            const fee = Number(s.fee || 0);
+            const depositCredit = s.deposit_paid ? Number(s.deposit_amount || 0) : 0;
+            const finalCredit = s.final_payment_received && s.final_payment_method === "prism"
+              ? Number(s.final_payment_value || 0) : 0;
+            const paid = depositCredit + finalCredit;
+            const missing = fee - paid;
+            if (missing <= 0) return null;
+            const photog = photographers.find((p: any) => p.id === s.photographer_id);
+            const name = external
+              ? `Externo — ${s.external_name}`
+              : `Prism ${i + 1}${photog ? ` (${photog.initials})` : ""}`;
+            return { name, fee, paid, missing, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
+          }).filter(Boolean) as any[];
+          if (rows.length === 0) return null;
+          const totalMissing = rows.reduce((acc, r) => acc + r.missing, 0);
+          return (
+            <div className="md:col-span-2 rounded-md border p-3 bg-muted/20">
+              <h4 className="text-sm font-semibold mb-2">Por pagar aos fotógrafos</h4>
+              <div className="space-y-1.5 text-sm">
+                {rows.map((r, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="truncate">{r.name}</span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        fee {EUR(r.fee)} · sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
+                      </span>
+                    </div>
+                    <div className="text-right tabular-nums whitespace-nowrap">
+                      <span className="font-medium text-destructive">falta {EUR(r.missing)}</span>
+                      {r.paid > 0 && <span className="text-xs text-muted-foreground ml-2">(pago {EUR(r.paid)})</span>}
+                    </div>
+                  </div>
+                ))}
+                <div className="border-t pt-1.5 mt-1.5 flex items-center justify-between font-medium">
+                  <span>Total em falta</span>
+                  <span className="tabular-nums text-destructive">{EUR(totalMissing)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
           <h4 className="text-sm font-semibold">Extras</h4>
           <Button type="button" size="sm" variant="outline" onClick={addExtra}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
