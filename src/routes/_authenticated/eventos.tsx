@@ -433,7 +433,7 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
         <div className="col-span-3">
           <Label className="text-xs">Fee (auto)</Label>
           <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
-            {hasPhotog ? EUR(computedFee) : "—"}
+            {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
           </div>
         </div>
         <div className="col-span-2 flex justify-end">
