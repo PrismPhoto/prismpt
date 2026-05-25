@@ -17,6 +17,7 @@ import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
 import { Plus, Download, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution } from "@/lib/fee-distribution";
 
 export const Route = createFileRoute("/_authenticated/eventos")({ component: EventsPage });
 
@@ -155,21 +156,30 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       internal_notes: event?.internal_notes ?? "",
       event_notes: event?.event_notes ?? "",
       status: event?.status ?? "Aguarda Sinal",
-      slots: [1, 2, 3].map((pos) => {
-        const ep = existingPhotogs.find((p: any) => p.position === pos);
-        return {
-          photographer_id: ep?.photographer_id ?? "",
-          fee: ep?.fee ?? 0,
-          prism_commission: ep?.prism_commission ?? 0,
-          deposit_amount: ep?.deposit_amount ?? 0,
-          deposit_paid: ep?.deposit_paid ?? false,
-          deposit_paid_date: ep?.deposit_paid_date ?? "",
-          final_payment_received: ep?.final_payment_received ?? false,
-          final_payment_value: ep?.final_payment_value ?? 0,
-          final_payment_date: ep?.final_payment_date ?? "",
-          final_payment_method: ep?.final_payment_method ?? "",
-        };
-      }),
+      slots: (() => {
+        const pkg = packages.find((p: any) => p.id === (event?.package_id ?? ""));
+        const dist: SlotDistribution[] = (pkg?.fee_distribution as SlotDistribution[] | null)
+          ?? defaultDistribution(
+            Math.max(existingPhotogs.length || 1, pkg?.num_prism_photographers ?? 1),
+            pkg?.has_external_photographer ?? false,
+          );
+        const n = Math.max(dist.length, existingPhotogs.length);
+        return Array.from({ length: n }, (_, i) => {
+          const ep = existingPhotogs.find((p: any) => p.position === i + 1);
+          return {
+            photographer_id: ep?.photographer_id ?? "",
+            fee: ep?.fee ?? 0,
+            prism_commission: ep?.prism_commission ?? 0,
+            deposit_amount: ep?.deposit_amount ?? 0,
+            deposit_paid: ep?.deposit_paid ?? false,
+            deposit_paid_date: ep?.deposit_paid_date ?? "",
+            final_payment_received: ep?.final_payment_received ?? false,
+            final_payment_value: ep?.final_payment_value ?? 0,
+            final_payment_date: ep?.final_payment_date ?? "",
+            final_payment_method: ep?.final_payment_method ?? "",
+          };
+        });
+      })(),
     };
   });
 
@@ -190,15 +200,19 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   }, [existingExtras, event]);
   const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
 
-  const SLOT_SPLITS = [0.5, 0.5, 0];
+  const selectedPackage = packages.find((p: any) => p.id === form.package_id);
+  const distribution: SlotDistribution[] = (selectedPackage?.fee_distribution as SlotDistribution[] | null)
+    ?? defaultDistribution(form.slots.length || 1, false);
   const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number) => {
     if (!photographer_id) return 0;
-    return Math.round(Number(totalValue || 0) * SLOT_SPLITS[idx] - Number(prismCommission || 0));
+    return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0));
   };
+  const isExternalSlot = (idx: number) => distribution[idx]?.mode === "fixed";
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
+  const distributionKey = JSON.stringify(distribution);
 
-  // Recompute all slot fees whenever total_value or commission changes
+  // Recompute all slot fees whenever total_value, commission or distribution changes
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
@@ -213,7 +227,27 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
       return changed ? { ...f, slots: nextSlots } : f;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey]);
+  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey, distributionKey]);
+
+  // Resize slots when the selected package distribution length changes
+  useEffect(() => {
+    setForm((f: any) => {
+      const target = distribution.length;
+      if (f.slots.length === target) return f;
+      const next = [...f.slots];
+      while (next.length < target) {
+        next.push({
+          photographer_id: "", fee: 0, prism_commission: 0,
+          deposit_amount: 0, deposit_paid: false, deposit_paid_date: "",
+          final_payment_received: false, final_payment_value: 0,
+          final_payment_date: "", final_payment_method: "",
+        });
+      }
+      while (next.length > target) next.pop();
+      return { ...f, slots: next };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [distributionKey]);
 
   const suggestedFinalPayment = Math.max(
     0,
@@ -368,26 +402,37 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
         </div>
 
         <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        {(form.slots as any[]).map((s, i) => (
-          <PhotogSlot
-            key={i}
-            label={`Fotógrafo ${i + 1} — ${Math.round(SLOT_SPLITS[i] * 100)}%`}
-            photographers={photographers}
-            slot={s}
-            onChange={(patch: any) => {
-              const next = [...form.slots];
-              const merged = { ...next[i], ...patch };
-              if ("photographer_id" in patch) {
-                // Pré-preencher a comissão com o default do fotógrafo ao selecionar
-                const p = photographers.find((x: any) => x.id === merged.photographer_id);
-                merged.prism_commission = Number(p?.prism_commission || 0);
-              }
-              merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
-              next[i] = merged;
-              setForm({ ...form, slots: next });
-            }}
-          />
-        ))}
+        {(form.slots as any[]).map((s, i) => {
+          const slotDist = distribution[i];
+          const external = isExternalSlot(i);
+          const labelPrefix = external ? "Externo" : `Prism ${i + 1}`;
+          const labelSuffix = slotDist ? ` — ${slotLabel(slotDist)}` : "";
+          return (
+            <PhotogSlot
+              key={i}
+              label={`${labelPrefix}${labelSuffix}`}
+              photographers={photographers}
+              slot={s}
+              isExternal={external}
+              onChange={(patch: any) => {
+                const next = [...form.slots];
+                const merged = { ...next[i], ...patch };
+                if ("photographer_id" in patch) {
+                  // Pré-preencher a comissão com o default do fotógrafo ao selecionar (só Prism)
+                  if (external) {
+                    merged.prism_commission = 0;
+                  } else {
+                    const p = photographers.find((x: any) => x.id === merged.photographer_id);
+                    merged.prism_commission = Number(p?.prism_commission || 0);
+                  }
+                }
+                merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission);
+                next[i] = merged;
+                setForm({ ...form, slots: next });
+              }}
+            />
+          );
+        })}
 
         <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
           <h4 className="text-sm font-semibold">Extras</h4>
@@ -460,7 +505,7 @@ function EventForm({ event, packages, wps, photographers, onSaved }: any) {
   );
 }
 
-function PhotogSlot({ photographers, slot, onChange, label }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -479,8 +524,8 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           <Input
             type="number"
             step="0.01"
-            disabled={!hasPhotog}
-            value={slot.prism_commission ?? 0}
+            disabled={!hasPhotog || isExternal}
+            value={isExternal ? 0 : (slot.prism_commission ?? 0)}
             onChange={(e) => onChange({ prism_commission: e.target.value })}
           />
         </div>
@@ -494,6 +539,7 @@ function PhotogSlot({ photographers, slot, onChange, label }: any) {
           <Badge variant={statusVariant}>{status}</Badge>
         </div>
       </div>
+
 
       {hasPhotog && (
         <>
