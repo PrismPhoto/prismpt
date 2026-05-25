@@ -46,17 +46,14 @@ function PhotogProfile() {
   const upcoming = assignments.filter((a: any) => a.events.event_date >= today);
   const past = assignments.filter((a: any) => a.events.event_date < today);
 
-  const commission = Number(photog?.prism_commission || 0);
   const paidFor = (a: any) => {
     const dep = a.deposit_paid ? Number(a.deposit_amount || 0) : 0;
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
     return dep + fin;
   };
   const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
-  const totalCommission = assignments.length * commission;
-  const totalLiquido = totalFees - totalCommission;
   const totalPaid = assignments.reduce((s: number, a: any) => s + paidFor(a), 0);
-  const totalPending = totalLiquido - totalPaid;
+  const totalPending = totalFees - totalPaid;
 
   if (photogLoading) {
     return (
@@ -99,10 +96,8 @@ function PhotogProfile() {
         }
       />
 
-      <div className="grid md:grid-cols-5 gap-3 mb-6">
+      <div className="grid md:grid-cols-3 gap-3 mb-6">
         <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
-        <Stat label="Comissão PRISM" value={EUR(totalCommission)} />
-        <Stat label={`Líquido ${year}`} value={EUR(totalLiquido)} />
         <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
         <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
       </div>
@@ -110,14 +105,14 @@ function PhotogProfile() {
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} commission={commission} />
+          <EventTable rows={upcoming} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} commission={commission} />
+          <EventTable rows={past} />
         </CardContent>
       </Card>
 
@@ -146,7 +141,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
+function EventTable({ rows }: { rows: any[] }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -157,8 +152,6 @@ function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
             <th className="text-right p-3">Fee</th>
-            <th className="text-right p-3">Comissão PRISM</th>
-            <th className="text-right p-3">Líquido</th>
             <th className="text-left p-3">Sinal devolvido</th>
             <th className="text-left p-3">Pag. final</th>
             <th className="text-left p-3">Estado</th>
@@ -174,8 +167,6 @@ function EventTable({ rows, commission }: { rows: any[]; commission: number }) {
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
                 <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(commission)}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(Number(r.fee || 0) - commission)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>

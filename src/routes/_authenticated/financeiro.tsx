@@ -23,7 +23,7 @@ function FinancePage() {
     queryKey: ["finance", year, typeF, photogF],
     queryFn: async () => {
       let q = supabase.from("events")
-        .select("*, event_photographers(*, photographers(initials, full_name)), event_extras(*), wedding_planners(name)")
+        .select("*, event_photographers(*, photographers(initials, full_name, prism_commission)), event_extras(*), wedding_planners(name)")
         .eq("event_year", year)
         .order("event_date");
       if (typeF !== "all") q = q.eq("event_type", typeF as any);
@@ -75,16 +75,18 @@ function FinancePage() {
   );
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
+  const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.photographers?.prism_commission || 0), 0);
   const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
   // Per photographer balance
-  const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number }> = {};
+  const balances: Record<string, { initials: string; full_name: string; owed: number; paid: number; commission: number }> = {};
   allFeeRows.forEach(({ ep, e }) => {
     const k = ep.photographer_id;
-    if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0 };
+    if (!balances[k]) balances[k] = { initials: ep.photographers?.initials ?? "?", full_name: ep.photographers?.full_name ?? "", owed: 0, paid: 0, commission: 0 };
     balances[k].owed += feeWithExtras(e, ep);
     balances[k].paid += paidToPhotographer(e, ep);
+    balances[k].commission += Number(ep.photographers?.prism_commission || 0);
   });
 
 
@@ -123,6 +125,7 @@ function FinancePage() {
         <KPI label="Fees totais" value={EUR(totalFees)} />
         <KPI label="Fees pagos" value={EUR(totalFeesPaid)} />
         <KPI label="Por pagar" value={EUR(totalFees - totalFeesPaid)} />
+        <KPI label="Comissões PRISM" value={EUR(totalCommission)} />
       </div>
 
       {role === "manager" && (
@@ -130,13 +133,14 @@ function FinancePage() {
           <CardHeader><CardTitle className="text-base">Caixa por fotógrafo</CardTitle></CardHeader>
           <CardContent>
             <table className="w-full text-sm">
-              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">A pagar</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Saldo</th></tr></thead>
+              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">A pagar</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Comissão PRISM</th><th className="text-right p-2">Saldo</th></tr></thead>
               <tbody>
                 {Object.values(balances).map((b) => (
                   <tr key={b.initials} className="border-t">
                     <td className="p-2">{b.initials} · {b.full_name}</td>
                     <td className="p-2 text-right tabular-nums">{EUR(b.owed)}</td>
                     <td className="p-2 text-right tabular-nums">{EUR(b.paid)}</td>
+                    <td className="p-2 text-right tabular-nums">{EUR(b.commission)}</td>
                     <td className="p-2 text-right tabular-nums font-medium">{EUR(b.owed - b.paid)}</td>
                   </tr>
                 ))}

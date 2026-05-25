@@ -1,32 +1,27 @@
-## Problema
+## Mudanças
 
-Na página **Financeiro**, quando se filtra por um fotógrafo específico (ex.: ZD):
+### 1. `src/routes/_authenticated/fotografos/$id.tsx` — opção (A) mais limpa
 
-- **Receita** mostra o `total_value` completo do evento (ex.: 2000€), mesmo que o ZD só seja 1 dos 2 fotógrafos.
-- **Fees totais / pagos / por pagar** também somam os fees de *todos* os fotógrafos do evento, não só do ZD.
-- **Sinal / Final / WP** idem — valores totais do evento.
+O `fee` em `event_photographers` já é líquido (split − comissão PRISM). Remover a dupla subtração:
 
-Só os badges por evento já mostram corretamente apenas a linha do fotógrafo, mas os KPIs no topo não.
+- Apagar `const commission = …` e tudo que o usa.
+- Apagar os KPIs "Comissão PRISM" e "Líquido". Manter: **Faturado**, **Pago**, **Pendente** (Pendente = Faturado − Pago).
+- Na tabela de eventos: remover colunas "Comissão PRISM" e "Líquido". Manter "Fee" (= valor líquido já).
+- Atualizar `EventTable` para não receber `commission`.
 
-## Solução
+### 2. `src/routes/_authenticated/financeiro.tsx` — adicionar KPIs de comissões
 
-Em `src/routes/_authenticated/financeiro.tsx`, quando há um fotógrafo selecionado (role `photographer`, ou manager com `photogF !== "all"`), calcular os KPIs apenas com a fatia desse fotógrafo:
+A comissão PRISM por evento/fotógrafo = `photographers.prism_commission` × nº de assignments desse fotógrafo. A query atual em Financeiro já traz `event_photographers(*, photographers(initials, full_name))` mas não traz `prism_commission` — preciso adicioná-lo ao select (`photographers(initials, full_name, prism_commission)`).
 
-1. Determinar `activePhotographerId` (= `photographerId` se role photographer, senão `photogF` quando ≠ "all", senão `null`).
-2. Quando `activePhotographerId` está definido:
-   - **Fees totais** = soma de `feeWithExtras(e, ep)` apenas para o `ep` desse fotógrafo.
-   - **Fees pagos** = soma de `paidToPhotographer(e, ep)` apenas para esse `ep`.
-   - **Por pagar** = Fees totais − Fees pagos (já correto por consequência).
-   - **Receita** (visível só para manager): mostrar a fatia do fotógrafo = `feeWithExtras` desse `ep` (ou seja, o que o evento "vale" para ele). Alternativa: esconder Receita/Recebido/Pendente/WP nesse modo, já que esses valores são do evento todo, não atribuíveis a um fotógrafo. **Decisão proposta**: esconder Receita / Recebido / Pendente / WP quando há fotógrafo selecionado, e mostrar apenas os KPIs de fees (que são o que faz sentido por fotógrafo). Confirmar abaixo.
-3. Na tabela "Detalhe por evento", quando há fotógrafo selecionado, esconder/zerar as colunas Valor/Sinal/Final/WP (são do evento, não do fotógrafo) — ou deixá-las como contexto. **Decisão proposta**: manter as colunas como contexto do evento, sem alterar.
-4. A secção "Caixa por fotógrafo" (manager) continua igual.
+Novo KPI **"Comissões PRISM"**:
+- Quando há fotógrafo ativo (`activePhotographerId`): soma de `prism_commission` por cada assignment desse fotógrafo nos eventos filtrados.
+- Quando manager sem filtro de fotógrafo: soma de `prism_commission` em todos os `event_photographers` dos eventos filtrados (= receita de comissões da PRISM).
 
-## Pergunta antes de implementar
+Adicionar à grid de KPIs (sempre visível). Posicionar a seguir a "Por pagar".
 
-Quando filtras por 1 fotógrafo, o que esperas ver nos KPIs do topo?
+Também adicionar coluna **"Comissão PRISM"** na tabela "Caixa por fotógrafo" (manager): nº de eventos × commission desse fotógrafo, para visibilidade.
 
-- **(A)** Só os KPIs de fees desse fotógrafo (Fees totais / pagos / por pagar). Esconder Receita, Recebido, Pendente, WP.
-- **(B)** Manter todos os KPIs mas converter Receita/Recebido/Pendente para a fatia do fotógrafo (fee+extras / pago / por pagar) — efetivamente duplica a info dos fees.
-- **(C)** Manter Receita = total do evento (atual) mas corrigir só os fees para a fatia do fotógrafo.
+### Notas
 
-A minha recomendação é **(A)**.
+- Não mexer na tabela "Detalhe por evento" do Financeiro — os badges de fees já mostram o valor líquido correto.
+- Não mexer no cálculo de fee em `eventos.tsx`.
