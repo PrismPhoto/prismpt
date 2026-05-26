@@ -44,23 +44,24 @@ function FinancePage() {
 
   const feeWithExtras = (e: any, ep: any) => Number(ep.fee || 0) + extrasForPhotographer(e, ep.photographer_id);
 
-  // Amount PRISM still owes the photographer:
-  // fee+extras - deposit_amount (if returned) - final_payment_value (only when paid via PRISM)
+  // Amount still owed to the photographer (perspective of the photographer):
+  // any final_payment_received counts as paid, regardless of method.
+  // For externals (no photographer_id), payment value = fee.
+  const finalCreditFor = (ep: any) => {
+    if (!ep.final_payment_received) return 0;
+    const isExternal = !ep.photographer_id;
+    return isExternal ? Number(ep.fee || 0) : Number(ep.final_payment_value || 0);
+  };
   const owedToPhotographer = (e: any, ep: any) => {
     const total = feeWithExtras(e, ep);
     const depositCredit = ep.deposit_paid ? Number(ep.deposit_amount || 0) : 0;
-    const finalCredit = ep.final_payment_received && ep.final_payment_method === "prism"
-      ? Number(ep.final_payment_value || 0)
-      : 0;
-    return total - depositCredit - finalCredit;
+    return total - depositCredit - finalCreditFor(ep);
   };
-  const paidToPhotographer = (e: any, ep: any) => {
+  const paidToPhotographer = (_e: any, ep: any) => {
     const depositCredit = ep.deposit_paid ? Number(ep.deposit_amount || 0) : 0;
-    const finalCredit = ep.final_payment_received && ep.final_payment_method === "prism"
-      ? Number(ep.final_payment_value || 0)
-      : 0;
-    return depositCredit + finalCredit;
+    return depositCredit + finalCreditFor(ep);
   };
+
 
   const activePhotographerId = role === "photographer"
     ? photographerId
