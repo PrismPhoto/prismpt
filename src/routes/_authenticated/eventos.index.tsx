@@ -15,7 +15,7 @@ import { Plus, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/eventos")({ component: EventsPage });
+export const Route = createFileRoute("/_authenticated/eventos/")({ component: EventsPage });
 
 function EventsPage() {
   const qc = useQueryClient();
