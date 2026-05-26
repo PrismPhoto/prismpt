@@ -325,8 +325,16 @@ export type Database = {
       events: {
         Row: {
           adjudication_date: string | null
+          bride_dress: string | null
+          bride_phone: string | null
+          bride_prep_address: string | null
+          catering_company: string | null
+          ceremony_location: string | null
+          ceremony_time: string | null
           client_name: string
+          couple_names: string | null
           created_at: string
+          decoration_company: string | null
           deposit_amount: number | null
           deposit_method: string | null
           deposit_paid: boolean
@@ -343,25 +351,41 @@ export type Database = {
           final_payment_value: number | null
           final_value: number | null
           google_calendar_event_id: string | null
+          groom_phone: string | null
+          groom_prep_address: string | null
           has_pens_caixa: boolean
           id: string
+          instagram_tags: string | null
           internal_notes: string | null
           lead_id: string | null
           location: string | null
+          makeup_hair: string | null
           package_id: string | null
           package_snapshot: Json | null
           pax: number | null
+          photo_permission: string | null
+          pre_wedding_notes: string | null
           prism_commission: number
+          reception_location: string | null
           status: Database["public"]["Enums"]["event_status"]
           total_value: number
           updated_at: string
+          videographer: string | null
           wedding_planner_id: string | null
           wp_commission_value: number | null
         }
         Insert: {
           adjudication_date?: string | null
+          bride_dress?: string | null
+          bride_phone?: string | null
+          bride_prep_address?: string | null
+          catering_company?: string | null
+          ceremony_location?: string | null
+          ceremony_time?: string | null
           client_name: string
+          couple_names?: string | null
           created_at?: string
+          decoration_company?: string | null
           deposit_amount?: number | null
           deposit_method?: string | null
           deposit_paid?: boolean
@@ -378,25 +402,41 @@ export type Database = {
           final_payment_value?: number | null
           final_value?: number | null
           google_calendar_event_id?: string | null
+          groom_phone?: string | null
+          groom_prep_address?: string | null
           has_pens_caixa?: boolean
           id?: string
+          instagram_tags?: string | null
           internal_notes?: string | null
           lead_id?: string | null
           location?: string | null
+          makeup_hair?: string | null
           package_id?: string | null
           package_snapshot?: Json | null
           pax?: number | null
+          photo_permission?: string | null
+          pre_wedding_notes?: string | null
           prism_commission?: number
+          reception_location?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           total_value?: number
           updated_at?: string
+          videographer?: string | null
           wedding_planner_id?: string | null
           wp_commission_value?: number | null
         }
         Update: {
           adjudication_date?: string | null
+          bride_dress?: string | null
+          bride_phone?: string | null
+          bride_prep_address?: string | null
+          catering_company?: string | null
+          ceremony_location?: string | null
+          ceremony_time?: string | null
           client_name?: string
+          couple_names?: string | null
           created_at?: string
+          decoration_company?: string | null
           deposit_amount?: number | null
           deposit_method?: string | null
           deposit_paid?: boolean
@@ -413,18 +453,26 @@ export type Database = {
           final_payment_value?: number | null
           final_value?: number | null
           google_calendar_event_id?: string | null
+          groom_phone?: string | null
+          groom_prep_address?: string | null
           has_pens_caixa?: boolean
           id?: string
+          instagram_tags?: string | null
           internal_notes?: string | null
           lead_id?: string | null
           location?: string | null
+          makeup_hair?: string | null
           package_id?: string | null
           package_snapshot?: Json | null
           pax?: number | null
+          photo_permission?: string | null
+          pre_wedding_notes?: string | null
           prism_commission?: number
+          reception_location?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           total_value?: number
           updated_at?: string
+          videographer?: string | null
           wedding_planner_id?: string | null
           wp_commission_value?: number | null
         }
