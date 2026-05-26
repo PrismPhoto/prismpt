@@ -22,6 +22,7 @@ import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedFotografosIndexRouteImport } from './routes/_authenticated/fotografos/index'
 import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos/$id'
+import { Route as AuthenticatedEventosIdRouteImport } from './routes/_authenticated/eventos.$id'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -90,25 +91,31 @@ const AuthenticatedFotografosIdRoute =
     path: '/fotografos/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEventosIdRoute = AuthenticatedEventosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedEventosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
-  '/eventos': typeof AuthenticatedEventosRoute
+  '/eventos': typeof AuthenticatedEventosRouteWithChildren
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
+  '/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
   '/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
-  '/eventos': typeof AuthenticatedEventosRoute
+  '/eventos': typeof AuthenticatedEventosRouteWithChildren
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
   '/fotografos': typeof AuthenticatedFotografosIndexRoute
 }
@@ -124,7 +132,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
-  '/_authenticated/eventos': typeof AuthenticatedEventosRoute
+  '/_authenticated/eventos': typeof AuthenticatedEventosRouteWithChildren
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/_authenticated/fotografos/$id': typeof AuthenticatedFotografosIdRoute
   '/_authenticated/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/pacotes'
     | '/settings'
     | '/wedding-planners'
+    | '/eventos/$id'
     | '/fotografos/$id'
     | '/fotografos/'
   fileRoutesByTo: FileRoutesByTo
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/wedding-planners'
     | '/'
+    | '/eventos/$id'
     | '/fotografos/$id'
     | '/fotografos'
   id:
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/wedding-planners'
     | '/_authenticated/'
+    | '/_authenticated/eventos/$id'
     | '/_authenticated/fotografos/$id'
     | '/_authenticated/fotografos/'
   fileRoutesById: FileRoutesById
@@ -279,12 +291,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFotografosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/eventos/$id': {
+      id: '/_authenticated/eventos/$id'
+      path: '/$id'
+      fullPath: '/eventos/$id'
+      preLoaderRoute: typeof AuthenticatedEventosIdRouteImport
+      parentRoute: typeof AuthenticatedEventosRoute
+    }
   }
 }
 
+interface AuthenticatedEventosRouteChildren {
+  AuthenticatedEventosIdRoute: typeof AuthenticatedEventosIdRoute
+}
+
+const AuthenticatedEventosRouteChildren: AuthenticatedEventosRouteChildren = {
+  AuthenticatedEventosIdRoute: AuthenticatedEventosIdRoute,
+}
+
+const AuthenticatedEventosRouteWithChildren =
+  AuthenticatedEventosRoute._addFileChildren(AuthenticatedEventosRouteChildren)
+
 interface AuthenticatedRouteChildren {
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
-  AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
+  AuthenticatedEventosRoute: typeof AuthenticatedEventosRouteWithChildren
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
@@ -298,7 +328,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
-  AuthenticatedEventosRoute: AuthenticatedEventosRoute,
+  AuthenticatedEventosRoute: AuthenticatedEventosRouteWithChildren,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
@@ -321,3 +351,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
