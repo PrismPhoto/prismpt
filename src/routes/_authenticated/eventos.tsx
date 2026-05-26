@@ -1,36 +1,30 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate } from "@/lib/format";
-import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
-import { Plus, Download, Trash2 } from "lucide-react";
+import { Plus, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution } from "@/lib/fee-distribution";
 
 export const Route = createFileRoute("/_authenticated/eventos")({ component: EventsPage });
 
-const EMPTY_EXTRAS: any[] = [];
-
 function EventsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { role } = useAuth();
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const { data: events = [] } = useQuery({
     queryKey: ["events", year, typeF, statusF],
@@ -44,8 +38,6 @@ function EventsPage() {
   });
 
   const { data: packages = [] } = useQuery({ queryKey: ["packages-all"], queryFn: async () => (await supabase.from("packages").select("*")).data ?? [] });
-  const { data: wps = [] } = useQuery({ queryKey: ["wps"], queryFn: async () => (await supabase.from("wedding_planners").select("*")).data ?? [] });
-  const { data: photographers = [] } = useQuery({ queryKey: ["photogs"], queryFn: async () => (await supabase.from("photographers").select("*").eq("active", true)).data ?? [] });
 
   const years = [2027, 2028, 2029, 2030];
 
@@ -83,10 +75,16 @@ function EventsPage() {
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
             {role === "manager" && (
-              <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
-                <DialogTrigger asChild><Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
-                <EventForm key={editing?.id ?? "new"} event={editing} packages={packages} wps={wps} photographers={photographers}
-                  onSaved={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["events"] }); }} />
+              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
+                <QuickCreateDialog
+                  packages={packages}
+                  onCreated={(id: string) => {
+                    setCreateOpen(false);
+                    qc.invalidateQueries({ queryKey: ["events"] });
+                    navigate({ to: "/eventos/$id", params: { id } });
+                  }}
+                />
               </Dialog>
             )}
           </>
@@ -110,7 +108,11 @@ function EventsPage() {
               </thead>
               <tbody>
                 {events.map((e: any) => (
-                  <tr key={e.id} className="border-t hover:bg-muted/30 cursor-pointer" onClick={() => { if (role === "manager") { setEditing(e); setOpen(true); } }}>
+                  <tr
+                    key={e.id}
+                    className="border-t hover:bg-muted/30 cursor-pointer"
+                    onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
+                  >
                     <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
                     <td className="p-3 font-medium">{e.client_name}</td>
                     <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
@@ -130,603 +132,70 @@ function EventsPage() {
   );
 }
 
-function EventForm({ event, packages, wps, photographers, onSaved }: any) {
-  const isEdit = !!event;
-  const [form, setForm] = useState<any>(() => {
-    const existingPhotogs = event?.event_photographers ?? [];
-    return {
-      event_date: event?.event_date ?? "",
-      client_name: event?.client_name ?? "",
-      email: event?.email ?? "",
-      pax: event?.pax ?? "",
-      location: event?.location ?? "",
-      event_type: event?.event_type ?? "Casamento",
-      package_id: event?.package_id ?? "",
-      total_value: event?.total_value ?? 0,
-      wedding_planner_id: event?.wedding_planner_id ?? "",
-      wp_commission_value: event?.wp_commission_value ?? 0,
-      has_pens_caixa: event?.has_pens_caixa ?? false,
-      adjudication_date: event?.adjudication_date ?? "",
-      deposit_amount: event?.deposit_amount ?? 400,
-      deposit_method: event?.deposit_method ?? "",
-      deposit_paid_date: event?.deposit_paid_date ?? "",
-      final_payment_value: event?.final_payment_value ?? "",
-      final_payment_date: event?.final_payment_date ?? "",
-      final_payment_method: event?.final_payment_method ?? "",
-      internal_notes: event?.internal_notes ?? "",
-      event_notes: event?.event_notes ?? "",
-      status: event?.status ?? "Aguarda Sinal",
-      slots: (() => {
-        const pkg = packages.find((p: any) => p.id === (event?.package_id ?? ""));
-        const dist: SlotDistribution[] = (pkg?.fee_distribution as SlotDistribution[] | null)
-          ?? defaultDistribution(
-            Math.max(existingPhotogs.length || 1, pkg?.num_prism_photographers ?? 1),
-            pkg?.has_external_photographer ?? false,
-          );
-        const n = Math.max(dist.length, existingPhotogs.length);
-        return Array.from({ length: n }, (_, i) => {
-          const ep = existingPhotogs.find((p: any) => p.position === i + 1);
-          const slotDist = dist[i];
-          const isExt = slotDist?.mode === "fixed";
-          return {
-            photographer_id: ep?.photographer_id ?? "",
-            external_name: ep?.external_name ?? "",
-            fee: ep?.fee ?? (isExt ? Number(slotDist?.value ?? 0) : 0),
-            prism_commission: ep?.prism_commission ?? 0,
-            deposit_amount: ep?.deposit_amount ?? 0,
-            deposit_paid: ep?.deposit_paid ?? false,
-            deposit_paid_date: ep?.deposit_paid_date ?? "",
-            final_payment_received: ep?.final_payment_received ?? false,
-            final_payment_value: ep?.final_payment_value ?? 0,
-            final_payment_date: ep?.final_payment_date ?? "",
-            final_payment_method: ep?.final_payment_method ?? "",
-          };
-        });
-      })(),
-    };
+function QuickCreateDialog({ packages, onCreated }: any) {
+  const [form, setForm] = useState({
+    event_date: "",
+    client_name: "",
+    event_type: "Casamento",
+    package_id: "",
   });
+  const [saving, setSaving] = useState(false);
 
-  const { data: existingExtrasData } = useQuery({
-    queryKey: ["event_extras", event?.id],
-    queryFn: async () => event?.id ? ((await supabase.from("event_extras").select("*").eq("event_id", event.id)).data ?? []) : [],
-    enabled: !!event?.id,
-  });
-  const existingExtras = existingExtrasData ?? EMPTY_EXTRAS;
-  const [extras, setExtras] = useState<any[]>([]);
-  useEffect(() => {
-    setExtras(existingExtras.map((x: any) => ({ ...x })));
-    // total_value stored includes extras → strip them so editing UI shows base value
-    const prevSum = existingExtras.reduce((s: number, x: any) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
-    if (!event) return;
-    const baseTotal = Number(event.total_value || 0) - prevSum;
-    setForm((f: any) => Number(f.total_value || 0) === baseTotal ? f : { ...f, total_value: baseTotal });
-  }, [existingExtras, event]);
-  const extrasTotal = extras.reduce((s, x) => s + Number(x.quantity || 0) * Number(x.unit_price || 0), 0);
-
-  const selectedPackage = packages.find((p: any) => p.id === form.package_id);
-  const distribution: SlotDistribution[] = (selectedPackage?.fee_distribution as SlotDistribution[] | null)
-    ?? defaultDistribution(form.slots.length || 1, false);
-  const fixedOverrides = (slots: any[]) => {
-    const o: Record<number, number> = {};
-    slots.forEach((s, i) => { if (distribution[i]?.mode === "fixed") o[i] = Number(s.fee || 0); });
-    return o;
-  };
-  const computeFee = (photographer_id: string, idx: number, totalValue: number, prismCommission: number, slots: any[]) => {
-    if (!photographer_id) return 0;
-    return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0), fixedOverrides(slots));
-  };
-  const isExternalSlot = (idx: number) => distribution[idx]?.mode === "fixed";
-  const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
-  const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
-  const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
-  const distributionKey = JSON.stringify(distribution);
-
-  // Recompute Prism slot fees whenever total_value, commission, external fees or distribution changes.
-  useEffect(() => {
-    setForm((f: any) => {
-      let changed = false;
-      const ov = fixedOverrides(f.slots);
-      const nextSlots = (f.slots as any[]).map((s, i) => {
-        if (isExternalSlot(i)) return s;
-        if (!s.photographer_id) return s;
-        const newFee = computeSlotFee(distribution, i, Number(f.total_value || 0), Number(s.prism_commission || 0), ov);
-        if (newFee !== Number(s.fee || 0)) {
-          changed = true;
-          return { ...s, fee: newFee };
-        }
-        return s;
-      });
-      return changed ? { ...f, slots: nextSlots } : f;
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.total_value, selectedPhotographerIdsKey, slotCommissionsKey, externalFeesKey, distributionKey]);
-
-  // Resize slots when the selected package distribution length changes
-  useEffect(() => {
-    setForm((f: any) => {
-      const target = distribution.length;
-      if (f.slots.length === target) return f;
-      const next = [...f.slots];
-      while (next.length < target) {
-        const i = next.length;
-        const slotDist = distribution[i];
-        const isExt = slotDist?.mode === "fixed";
-        next.push({
-          photographer_id: "", external_name: "",
-          fee: isExt ? Number(slotDist?.value ?? 0) : 0,
-          prism_commission: 0,
-          deposit_amount: 0, deposit_paid: false, deposit_paid_date: "",
-          final_payment_received: false, final_payment_value: 0,
-          final_payment_date: "", final_payment_method: "",
-        });
-      }
-      while (next.length > target) next.pop();
-      return { ...f, slots: next };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [distributionKey]);
-
-  const suggestedFinalPayment = Math.max(
-    0,
-    Number(form.total_value || 0) + extrasTotal - (form.deposit_paid_date ? Number(form.deposit_amount || 0) : 0)
-  );
-
-  // Auto-preencher Pagamento final quando ainda não foi tocado
-  useEffect(() => {
-    setForm((f: any) => {
-      const current = f.final_payment_value;
-      const isEmpty = current === "" || current === null || current === undefined || Number(current) === 0;
-      if (!isEmpty) return f;
-      if (Number(current || 0) === suggestedFinalPayment) return f;
-      return { ...f, final_payment_value: suggestedFinalPayment };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suggestedFinalPayment]);
-
-
-
-  const onPkg = (id: string) => {
-    const p = packages.find((x: any) => x.id === id);
-    setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
-  };
-  const onWp = (id: string) => {
-    const wp = wps.find((x: any) => x.id === id);
-    const commission = wp ? Number(form.total_value) * (wp.commission_percentage / 100) : 0;
-    setForm({ ...form, wedding_planner_id: id, wp_commission_value: commission });
-  };
-
-  const addExtra = () => {
-    const t: ExtraType = "Outro";
-    setExtras([...extras, { extra_type: t, description: "", quantity: 1, unit_price: EXTRA_DEFAULT_PRICE[t], photographer_id: null }]);
-  };
-  const updateExtra = (i: number, patch: any) => {
-    const next = [...extras];
-    next[i] = { ...next[i], ...patch };
-    if (patch.extra_type) next[i].unit_price = EXTRA_DEFAULT_PRICE[patch.extra_type as ExtraType] ?? next[i].unit_price;
-    setExtras(next);
-  };
-  const removeExtra = (i: number) => setExtras(extras.filter((_, idx) => idx !== i));
-
-  const save = async () => {
+  const create = async () => {
     if (!form.event_date || !form.client_name) return toast.error("Data e cliente obrigatórios");
-    const baseTotal = Number(form.total_value || 0);
-    const grandTotal = baseTotal + extrasTotal;
-    const payload = {
-      event_date: form.event_date, client_name: form.client_name, email: form.email || null,
-      pax: form.pax ? Number(form.pax) : null, location: form.location || null,
-      event_type: form.event_type, package_id: form.package_id || null,
-      total_value: grandTotal,
-      wedding_planner_id: form.wedding_planner_id || null,
-      wp_commission_value: Number(form.wp_commission_value || 0),
-      has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
-      deposit_amount: Number(form.deposit_amount || 0), deposit_method: form.deposit_method || null,
-      deposit_paid_date: form.deposit_paid_date || null,
-      final_payment_value: form.final_payment_value ? Number(form.final_payment_value) : null,
-      final_payment_date: form.final_payment_date || null, final_payment_method: form.final_payment_method || null,
-      internal_notes: form.internal_notes || null, event_notes: form.event_notes || null,
-      status: form.status,
-    };
-    let eventId = event?.id;
-    if (isEdit) {
-      const { error } = await supabase.from("events").update(payload).eq("id", event.id);
-      if (error) return toast.error(error.message);
-    } else {
-      const { data, error } = await supabase.from("events").insert(payload).select().single();
-      if (error) return toast.error(error.message);
-      eventId = data.id;
-    }
-    await supabase.from("event_photographers").delete().eq("event_id", eventId);
-    const rows = (form.slots as any[])
-      .map((s, i) => ({ ...s, position: i + 1, _external: isExternalSlot(i) }))
-      .filter((s) => (s._external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id))
-      .map((s) => ({
-        event_id: eventId,
-        photographer_id: s._external ? null : s.photographer_id,
-        external_name: s._external ? String(s.external_name).trim() : null,
-        position: s.position,
-        fee: s._external
-          ? Number(s.fee || 0)
-          : computeFee(s.photographer_id, s.position - 1, form.total_value, s.prism_commission, form.slots),
-        prism_commission: s._external ? 0 : Number(s.prism_commission || 0),
-        deposit_amount: s._external ? 0 : Number(s.deposit_amount || 0),
-        deposit_paid: s._external ? false : !!s.deposit_paid,
-        deposit_paid_date: s._external ? null : (s.deposit_paid_date || null),
-        final_payment_received: !!s.final_payment_received,
-        final_payment_value: s._external
-          ? (s.final_payment_received ? Number(s.fee || 0) : 0)
-          : Number(s.final_payment_value || 0),
-        final_payment_date: s.final_payment_date || null,
-        final_payment_method: s.final_payment_method || null,
-      }));
-    if (rows.length) {
-      const { error } = await supabase.from("event_photographers").insert(rows);
-      if (error) return toast.error(error.message);
-    }
-    await supabase.from("event_extras").delete().eq("event_id", eventId);
-    if (extras.length) {
-      const extraRows = extras.map((x) => ({
-        event_id: eventId,
-        extra_type: x.extra_type,
-        description: x.description || null,
-        quantity: Number(x.quantity || 0),
-        unit_price: Number(x.unit_price || 0),
-        total: Number(x.quantity || 0) * Number(x.unit_price || 0),
-        photographer_id: x.photographer_id || null,
-      }));
-      const { error } = await supabase.from("event_extras").insert(extraRows);
-      if (error) return toast.error(error.message);
-    }
-    toast.success("Evento guardado");
-    onSaved();
+    setSaving(true);
+    const pkg = packages.find((p: any) => p.id === form.package_id);
+    const { data, error } = await supabase
+      .from("events")
+      .insert({
+        event_date: form.event_date,
+        client_name: form.client_name,
+        event_type: form.event_type as any,
+        package_id: form.package_id || null,
+        total_value: pkg?.base_price ?? 0,
+      })
+      .select()
+      .single();
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Evento criado — preenche o resto na página");
+    onCreated(data.id);
   };
 
   return (
-    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader><DialogTitle>{isEdit ? "Editar evento" : "Novo evento"}</DialogTitle></DialogHeader>
-      <div className="grid md:grid-cols-2 gap-3">
-        <F label="Data"><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></F>
-        <F label="Status">
-          <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{EVENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
-        </F>
-        <F label="Cliente"><Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} /></F>
-        <F label="Email"><Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></F>
-        <F label="Pax"><Input type="number" value={form.pax} onChange={(e) => setForm({ ...form, pax: e.target.value })} /></F>
-        <F label="Local"><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></F>
-        <F label="Tipo">
+    <DialogContent className="max-w-md">
+      <DialogHeader><DialogTitle>Novo evento</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Data</Label>
+          <Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Cliente (referência interna)</Label>
+          <Input value={form.client_name} onChange={(e) => setForm({ ...form, client_name: e.target.value })} placeholder="ex.: Ana & João" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Tipo</Label>
           <Select value={form.event_type} onValueChange={(v) => setForm({ ...form, event_type: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
-        </F>
-        <F label="Pacote">
-          <Select value={form.package_id} onValueChange={onPkg}>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Pacote (opcional)</Label>
+          <Select value={form.package_id || "none"} onValueChange={(v) => setForm({ ...form, package_id: v === "none" ? "" : v })}>
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} v{p.version} ({p.base_price}€)</SelectItem>)}</SelectContent>
+            <SelectContent>
+              <SelectItem value="none">—</SelectItem>
+              {packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} v{p.version} ({p.base_price}€)</SelectItem>)}
+            </SelectContent>
           </Select>
-        </F>
-        <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>
-        
-        <F label="Wedding Planner">
-          <Select value={form.wedding_planner_id || "none"} onValueChange={(v) => onWp(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="none">Nenhum</SelectItem>{wps.map((w: any) => <SelectItem key={w.id} value={w.id}>{w.name} ({w.commission_percentage}%)</SelectItem>)}</SelectContent>
-          </Select>
-        </F>
-        {form.wedding_planner_id && (
-          <F label="Comissão WP"><Input type="number" step="0.01" value={form.wp_commission_value} onChange={(e) => setForm({ ...form, wp_commission_value: e.target.value })} /></F>
-        )}
-        <div className="md:col-span-2 flex items-center gap-2 py-2">
-          <Checkbox checked={form.has_pens_caixa} onCheckedChange={(c) => setForm({ ...form, has_pens_caixa: !!c })} id="pc" />
-          <label htmlFor="pc" className="text-sm">Pens em caixa (+100€)</label>
         </div>
-
-        <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Pagamentos</h4></div>
-
-        <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-          <div className="text-xs font-semibold uppercase text-muted-foreground">Adjudicação & Sinal</div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>
-            <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
-            <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
-            <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-          </div>
-        </div>
-
-        <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-          <div className="text-xs font-semibold uppercase text-muted-foreground">Pagamento final</div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <F label="Pagamento final (€)">
-              <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
-              <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
-                {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
-                  <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
-                )}
-              </div>
-            </F>
-            <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
-            <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
-          </div>
-        </div>
-
-        <div className="md:col-span-2 border-t pt-3 mt-2"><h4 className="text-sm font-semibold mb-2">Fotógrafos</h4></div>
-        {(form.slots as any[]).map((s, i) => {
-          const slotDist = distribution[i];
-          const external = isExternalSlot(i);
-          const labelPrefix = external ? "Externo" : `Prism ${i + 1}`;
-          const labelSuffix = slotDist ? ` — ${slotLabel(slotDist)}` : "";
-          return (
-            <PhotogSlot
-              key={i}
-              label={`${labelPrefix}${labelSuffix}`}
-              photographers={photographers}
-              slot={s}
-              isExternal={external}
-              onChange={(patch: any) => {
-                const next = [...form.slots];
-                const merged = { ...next[i], ...patch };
-                if (external) {
-                  merged.photographer_id = "";
-                  merged.prism_commission = 0;
-                } else {
-                  if ("photographer_id" in patch) {
-                    const p = photographers.find((x: any) => x.id === merged.photographer_id);
-                    merged.prism_commission = Number(p?.prism_commission || 0);
-                  }
-                  merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission, next);
-                }
-                next[i] = merged;
-                setForm({ ...form, slots: next });
-              }}
-            />
-          );
-        })}
-
-        {(() => {
-          const rows = (form.slots as any[]).map((s, i) => {
-            const external = isExternalSlot(i);
-            const filled = external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id;
-            if (!filled) return null;
-            const fee = Number(s.fee || 0);
-            const depositCredit = s.deposit_paid ? Number(s.deposit_amount || 0) : 0;
-            const finalCredit = s.final_payment_received
-              ? (external ? fee : Number(s.final_payment_value || 0))
-              : 0;
-            const paid = depositCredit + finalCredit;
-            const missing = fee - paid;
-            if (missing <= 0) return null;
-            const photog = photographers.find((p: any) => p.id === s.photographer_id);
-            const name = external
-              ? `Externo — ${s.external_name}`
-              : `Prism ${i + 1}${photog ? ` (${photog.initials})` : ""}`;
-            return { name, fee, paid, missing, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
-          }).filter(Boolean) as any[];
-          if (rows.length === 0) return null;
-          const totalMissing = rows.reduce((acc, r) => acc + r.missing, 0);
-          return (
-            <div className="md:col-span-2 rounded-md border p-3 bg-muted/20">
-              <h4 className="text-sm font-semibold mb-2">Por pagar aos fotógrafos</h4>
-              <div className="space-y-1.5 text-sm">
-                {rows.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate">{r.name}</span>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        fee {EUR(r.fee)} · sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
-                      </span>
-                    </div>
-                    <div className="text-right tabular-nums whitespace-nowrap">
-                      <span className="font-medium text-destructive">falta {EUR(r.missing)}</span>
-                      {r.paid > 0 && <span className="text-xs text-muted-foreground ml-2">(pago {EUR(r.paid)})</span>}
-                    </div>
-                  </div>
-                ))}
-                <div className="border-t pt-1.5 mt-1.5 flex items-center justify-between font-medium">
-                  <span>Total em falta</span>
-                  <span className="tabular-nums text-destructive">{EUR(totalMissing)}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
-        <div className="md:col-span-2 border-t pt-3 mt-2 flex items-center justify-between">
-          <h4 className="text-sm font-semibold">Extras</h4>
-          <Button type="button" size="sm" variant="outline" onClick={addExtra}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>
-        </div>
-        {extras.map((x, i) => (
-          <div key={i} className="md:col-span-2 grid grid-cols-12 gap-2 items-end p-2 rounded bg-muted/40">
-            <div className="col-span-3">
-              <Label className="text-xs">Tipo</Label>
-              <Select value={x.extra_type} onValueChange={(v) => updateExtra(i, { extra_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{EXTRA_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-3">
-              <Label className="text-xs">Descrição</Label>
-              <Input value={x.description ?? ""} onChange={(e) => updateExtra(i, { description: e.target.value })} />
-            </div>
-            <div className="col-span-1">
-              <Label className="text-xs">Qt</Label>
-              <Input type="number" step="0.01" value={x.quantity} onChange={(e) => updateExtra(i, { quantity: e.target.value })} />
-            </div>
-            <div className="col-span-2">
-              <Label className="text-xs">Preço un.</Label>
-              <Input type="number" step="0.01" value={x.unit_price} onChange={(e) => updateExtra(i, { unit_price: e.target.value })} />
-            </div>
-            <div className="col-span-2">
-              <Label className="text-xs">Fotógrafo</Label>
-              <Select value={x.photographer_id || "none"} onValueChange={(v) => updateExtra(i, { photographer_id: v === "none" ? null : v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-1 flex justify-end">
-              <Button type="button" size="icon" variant="ghost" onClick={() => removeExtra(i)}><Trash2 className="h-4 w-4" /></Button>
-            </div>
-            <div className="col-span-12 text-xs text-right text-muted-foreground">Subtotal: {EUR(Number(x.quantity || 0) * Number(x.unit_price || 0))}</div>
-          </div>
-        ))}
-        <div className="md:col-span-2 flex justify-between items-center text-sm bg-muted/40 px-3 py-2 rounded">
-          <span>Subtotal extras</span><span className="tabular-nums font-medium">{EUR(extrasTotal)}</span>
-        </div>
-        <div className="md:col-span-2 flex justify-between items-center text-base bg-primary/10 px-3 py-2 rounded">
-          <span className="font-medium">Total evento (pacote + extras)</span>
-          <span className="tabular-nums font-semibold">{EUR(Number(form.total_value || 0) + extrasTotal)}</span>
-        </div>
-
-        <F label="Notas internas" className="md:col-span-2"><Textarea rows={3} value={form.internal_notes} onChange={(e) => setForm({ ...form, internal_notes: e.target.value })} /></F>
-        <F label="Notas evento (calendário)" className="md:col-span-2"><Textarea rows={3} value={form.event_notes} onChange={(e) => setForm({ ...form, event_notes: e.target.value })} /></F>
+        <p className="text-xs text-muted-foreground">Depois de criar, abre-se a página completa com todos os detalhes do casamento.</p>
       </div>
-      <DialogFooter><Button onClick={save}>Guardar</Button></DialogFooter>
+      <DialogFooter>
+        <Button onClick={create} disabled={saving}>{saving ? "A criar…" : "Criar e abrir"}</Button>
+      </DialogFooter>
     </DialogContent>
   );
-}
-
-function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
-  const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
-  const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
-  const hasPhotog = !!slot.photographer_id;
-  const hasExternalName = !!(slot.external_name && String(slot.external_name).trim());
-  const filled = isExternal ? hasExternalName : hasPhotog;
-  return (
-    <div className="md:col-span-2 rounded-md border p-3 space-y-3 bg-muted/20">
-      <div className="grid grid-cols-12 gap-2 items-end">
-        <div className="col-span-5">
-          <Label className="text-xs">{label}</Label>
-          {isExternal ? (
-            <Input
-              placeholder="Nome / iniciais do externo"
-              value={slot.external_name ?? ""}
-              onChange={(e) => onChange({ external_name: e.target.value })}
-            />
-          ) : (
-            <Select value={slot.photographer_id || "none"} onValueChange={(v) => onChange({ photographer_id: v === "none" ? "" : v })}>
-              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent><SelectItem value="none">—</SelectItem>{photographers.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials} · {p.full_name}</SelectItem>)}</SelectContent>
-            </Select>
-          )}
-        </div>
-        {!isExternal && (
-          <div className="col-span-2">
-            <Label className="text-xs">Comissão €</Label>
-            <Input
-              type="number"
-              step="0.01"
-              disabled={!hasPhotog}
-              value={slot.prism_commission ?? 0}
-              onChange={(e) => onChange({ prism_commission: e.target.value })}
-            />
-          </div>
-        )}
-        <div className={isExternal ? "col-span-5" : "col-span-3"}>
-          <Label className="text-xs">{isExternal ? "Valor a pagar €" : "Fee (auto)"}</Label>
-          {isExternal ? (
-            <Input
-              type="number"
-              step="0.01"
-              value={slot.fee ?? 0}
-              onChange={(e) => onChange({ fee: Number(e.target.value) || 0 })}
-            />
-          ) : (
-            <div className="h-9 px-3 rounded-md border bg-muted/50 text-sm flex items-center justify-end tabular-nums font-medium text-muted-foreground">
-              {hasPhotog ? EUR(Number(slot.fee || 0)) : "—"}
-            </div>
-          )}
-        </div>
-        {!isExternal && (
-          <div className="col-span-2 flex justify-end">
-            <Badge variant={statusVariant}>{status}</Badge>
-          </div>
-        )}
-      </div>
-
-      {!isExternal && filled && (
-        <>
-          <div className="border-t pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <Checkbox id={`dp-${label}`} checked={slot.deposit_paid} onCheckedChange={(c) => onChange({ deposit_paid: !!c })} />
-              <label htmlFor={`dp-${label}`} className="text-xs font-medium">Sinal devolvido ao fotógrafo</label>
-            </div>
-            {slot.deposit_paid && (
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">Valor sinal €</Label>
-                  <Input type="number" step="0.01" value={slot.deposit_amount} onChange={(e) => onChange({ deposit_amount: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Data</Label>
-                  <Input type="date" value={slot.deposit_paid_date} onChange={(e) => onChange({ deposit_paid_date: e.target.value })} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <Checkbox id={`fp-${label}`} checked={slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
-              <label htmlFor={`fp-${label}`} className="text-xs font-medium">Pagamento final do cliente recebido</label>
-            </div>
-            {slot.final_payment_received && (
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Valor €</Label>
-                  <Input type="number" step="0.01" value={slot.final_payment_value} onChange={(e) => onChange({ final_payment_value: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Data</Label>
-                  <Input type="date" value={slot.final_payment_date} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs">Método</Label>
-                  <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="prism">PRISM/Revolut</SelectItem>
-                      <SelectItem value="fotografo">Direto ao fotógrafo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {isExternal && filled && (
-        <div className="border-t pt-2">
-          <div className="flex items-center gap-2 mb-2">
-            <Checkbox id={`fp-ext-${label}`} checked={!!slot.final_payment_received} onCheckedChange={(c) => onChange({ final_payment_received: !!c })} />
-            <label htmlFor={`fp-ext-${label}`} className="text-xs font-medium">Pago ao externo</label>
-          </div>
-          {slot.final_payment_received && (
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Data</Label>
-                <Input type="date" value={slot.final_payment_date ?? ""} onChange={(e) => onChange({ final_payment_date: e.target.value })} />
-              </div>
-              <div>
-                <Label className="text-xs">Método</Label>
-                <Select value={slot.final_payment_method || "prism"} onValueChange={(v) => onChange({ final_payment_method: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="prism">PRISM/Revolut</SelectItem>
-                    <SelectItem value="cliente">Direto pelo cliente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function F({ label, children, className = "" }: any) {
-  return <div className={`space-y-1.5 ${className}`}><Label className="text-xs">{label}</Label>{children}</div>;
 }
