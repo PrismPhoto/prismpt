@@ -79,7 +79,7 @@ function EventsPage() {
                 <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
                 <QuickCreateDialog
                   packages={packages}
-                  onCreated={(id) => {
+                  onCreated={(id: string) => {
                     setCreateOpen(false);
                     qc.invalidateQueries({ queryKey: ["events"] });
                     navigate({ to: "/eventos/$id", params: { id } });
