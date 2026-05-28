@@ -1,26 +1,31 @@
-## Alinhar `/financeiro` com a vista do fotógrafo
+## Remover a "data de adjudicação"
 
-Hoje o `financeiro.tsx` só conta o pagamento final como crédito quando `final_payment_method === "prism"`. Por isso aparece "falta" nos badges (e nos KPIs) sempre que o fotógrafo recebeu directo do cliente ou quando é um externo já pago. Vamos passar tudo para a perspectiva do fotógrafo: se `final_payment_received` está marcado, está pago.
+Hoje há dois campos quase redundantes em `events`:
+- `adjudication_date` — preenchida automaticamente quando uma lead é adjudicada (= dia da conversão).
+- `deposit_paid_date` — quando o sinal foi efectivamente pago.
 
-### Mudanças em `src/routes/_authenticated/financeiro.tsx`
+Na prática coincidem. Vamos manter só o sinal e tratar a adjudicação como implícita (lead em estado "Adjudicado" + evento criado).
 
-1. **`paidToPhotographer` / `owedToPhotographer`** — remover a condição `final_payment_method === "prism"`. Crédito do final passa a ser:
-   - Externos: se `final_payment_received`, conta `fee` (não há split sinal/final).
-   - PRISM: se `final_payment_received`, conta `final_payment_value`.
-   - Sinal: continua a contar `deposit_amount` quando `deposit_paid`.
+### Mudanças
 
-2. **Badges no "Detalhe por evento"** — passam a usar a mesma lógica; deixa de aparecer "falta" quando o fotógrafo já recebeu (PRISM ou directo).
+**1. UI — `src/components/event-form.tsx`**
+- Remover o campo "Data adjudicação" do bloco Pagamentos. Fica só Sinal (valor / pago / data / método) + Pagamento final.
 
-3. **KPIs "Fees pagos" / "Por pagar"** — passam a reflectir a vista do fotógrafo (alinhado com o resumo dentro do evento).
+**2. Lista — `src/routes/_authenticated/eventos.index.tsx`**
+- Se houver coluna/ordenação por `adjudication_date`, passar a usar `deposit_paid_date` (ou `event_date`, conforme já está). Verificar e ajustar.
 
-4. **"Caixa por fotógrafo"** — continua a agregar só os slots PRISM (já filtra `photographer_id` nulo), mas com a nova lógica de pago. Saldo `owed - paid` fica coerente.
+**3. Leads — `src/routes/_authenticated/leads.tsx`**
+- Ao adjudicar, deixar de escrever `adjudication_date` no insert do evento. O estado "Adjudicado" + existência do evento já comunicam isso.
 
-### Sem alterações
+**4. Financeiro — `src/routes/_authenticated/financeiro.tsx`**
+- Confirmar que nada depende de `adjudication_date` nos KPIs/filtros. Se sim, trocar para `event_date` ou `deposit_paid_date`.
 
-- Schema (todos os campos já existem).
-- `eventos.tsx` (já está nesta lógica).
-- `fee-distribution.ts`.
+**5. Migração — drop da coluna**
+- `ALTER TABLE public.events DROP COLUMN adjudication_date;`
+- Faz-se *depois* de todas as referências em código estarem removidas, para evitar quebrar selects (`select *`).
 
-### Ficheiros tocados
+### Notas
 
-- `src/routes/_authenticated/financeiro.tsx` — só funções `paidToPhotographer` e `owedToPhotographer`.
+- Não mexe em `leads` (não tem este campo).
+- Não mexe em RLS nem em outros fluxos.
+- Os dados históricos de `adjudication_date` perdem-se. Se quiseres preservar, diz-me antes de aprovar — copio para `deposit_paid_date` quando este estiver vazio, antes do drop.

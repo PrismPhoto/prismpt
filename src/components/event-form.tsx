@@ -50,7 +50,6 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
       pre_wedding_notes: event?.pre_wedding_notes ?? "",
       photo_permission: event?.photo_permission ?? "",
       // pagamentos
-      adjudication_date: event?.adjudication_date ?? "",
       deposit_amount: event?.deposit_amount ?? 400,
       deposit_method: event?.deposit_method ?? "",
       deposit_paid_date: event?.deposit_paid_date ?? "",
@@ -216,7 +215,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
       total_value: grandTotal,
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
-      has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
+      has_pens_caixa: form.has_pens_caixa,
       couple_names: form.couple_names || null,
       bride_phone: form.bride_phone || null,
       groom_phone: form.groom_phone || null,
@@ -374,12 +373,11 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
       <Section title="Pagamentos">
         <div className="grid md:grid-cols-2 gap-3">
           <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Adjudicação & Sinal</div>
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Sinal</div>
             <div className="grid md:grid-cols-2 gap-3">
-              <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>
               <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
-              <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
               <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
+              <F label="Método sinal" className="md:col-span-2"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
             </div>
           </div>
 

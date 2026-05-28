@@ -67,7 +67,7 @@ function LeadsPage() {
         package_snapshot: pkg ? { name: pkg.name, version: pkg.version, base_price: pkg.base_price } : null,
         total_value: pkg?.base_price ?? 0,
         wedding_planner_id: lead.wedding_planner_id,
-        adjudication_date: new Date().toISOString().slice(0, 10),
+        
         status: "Aguarda Sinal",
       }).select().single();
       if (error) throw error;
