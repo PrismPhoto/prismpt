@@ -374,12 +374,11 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
       <Section title="Pagamentos">
         <div className="grid md:grid-cols-2 gap-3">
           <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Adjudicação & Sinal</div>
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Sinal</div>
             <div className="grid md:grid-cols-2 gap-3">
-              <F label="Data adjudicação"><Input type="date" value={form.adjudication_date} onChange={(e) => setForm({ ...form, adjudication_date: e.target.value })} /></F>
               <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
-              <F label="Método sinal"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
               <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
+              <F label="Método sinal" className="md:col-span-2"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
             </div>
           </div>
 
