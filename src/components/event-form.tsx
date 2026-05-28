@@ -215,7 +215,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
       total_value: grandTotal,
       wedding_planner_id: form.wedding_planner_id || null,
       wp_commission_value: Number(form.wp_commission_value || 0),
-      has_pens_caixa: form.has_pens_caixa, adjudication_date: form.adjudication_date || null,
+      has_pens_caixa: form.has_pens_caixa,
       couple_names: form.couple_names || null,
       bride_phone: form.bride_phone || null,
       groom_phone: form.groom_phone || null,
