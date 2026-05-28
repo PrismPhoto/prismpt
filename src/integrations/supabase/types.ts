@@ -324,7 +324,6 @@ export type Database = {
       }
       events: {
         Row: {
-          adjudication_date: string | null
           bride_dress: string | null
           bride_phone: string | null
           bride_prep_address: string | null
@@ -375,7 +374,6 @@ export type Database = {
           wp_commission_value: number | null
         }
         Insert: {
-          adjudication_date?: string | null
           bride_dress?: string | null
           bride_phone?: string | null
           bride_prep_address?: string | null
@@ -426,7 +424,6 @@ export type Database = {
           wp_commission_value?: number | null
         }
         Update: {
-          adjudication_date?: string | null
           bride_dress?: string | null
           bride_phone?: string | null
           bride_prep_address?: string | null
