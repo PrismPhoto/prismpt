@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.1",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://lowzfcjtoxigsruvipol.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "prism-lightbox",
+      "version": "0.1.0",
+      "title": "PRISM Lightbox"
+    },
+    "tools": [
+      {
+        "name": "list_events",
+        "title": "Listar eventos",
+        "description": "Lista os eventos (casamentos) visíveis para o utilizador, com data, cliente, estado de pagamento e valor. Pode filtrar por ano e por texto do cliente.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "year": {
+              "description": "Ano do evento, ex. 2027.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "search": {
+              "description": "Texto a procurar no nome do cliente.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Máximo de eventos a devolver (por omissão 25).",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_event",
+        "title": "Detalhe do evento",
+        "description": "Devolve todos os detalhes de um evento (dados do casamento, logística, pagamentos), os fotógrafos atribuídos e os extras.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "event_id": {
+              "type": "string",
+              "description": "ID do evento."
+            }
+          },
+          "required": [
+            "event_id"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_leads",
+        "title": "Listar leads",
+        "description": "Lista os pedidos/leads recebidos, com estado, data do evento e origem. Pode filtrar por estado e ano.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "status": {
+              "description": "Estado da lead, ex. Novo, Proposta, Adjudicado, Perdido.",
+              "type": "string"
+            },
+            "year": {
+              "description": "Ano do evento.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "limit": {
+              "description": "Máximo de leads (por omissão 25).",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_lead",
+        "title": "Criar lead",
+        "description": "Cria uma nova lead (pedido de orçamento) na PRISM com os dados do cliente e do evento.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "client_name": {
+              "type": "string",
+              "description": "Nome do cliente ou casal."
+            },
+            "email": {
+              "description": "Email de contacto.",
+              "type": "string"
+            },
+            "event_date": {
+              "description": "Data do evento em formato YYYY-MM-DD.",
+              "type": "string"
+            },
+            "location": {
+              "description": "Local do evento.",
+              "type": "string"
+            },
+            "pax": {
+              "description": "Número de convidados.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "notes": {
+              "description": "Notas sobre o pedido.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "client_name"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_photographers",
+        "title": "Listar fotógrafos",
+        "description": "Lista os fotógrafos da PRISM com iniciais, email e comissão PRISM por evento.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "include_inactive": {
+              "description": "Incluir fotógrafos inactivos.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "financial_summary",
+        "title": "Resumo financeiro",
+        "description": "Resumo financeiro de um ano: receita total dos eventos, sinais recebidos, valor pendente, fees dos fotógrafos e comissões PRISM.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "year": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991,
+              "description": "Ano a analisar, ex. 2027."
+            }
+          },
+          "required": [
+            "year"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
