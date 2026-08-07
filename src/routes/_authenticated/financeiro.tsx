@@ -15,7 +15,7 @@ function FinancePage() {
   const { role, photographerId } = useAuth();
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
-  const [photogF, setPhotogF] = useState(role === "manager" ? "all" : photographerId ?? "");
+  const [photogF, setPhotogF] = useState("all");
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs-all"], queryFn: async () => (await supabase.from("photographers").select("*")).data ?? [] });
 
@@ -32,9 +32,9 @@ function FinancePage() {
     },
   });
 
-  const filtered = role === "manager" && photogF === "all"
+  const filtered = role !== "photographer" && photogF === "all"
     ? rows
-    : rows.filter((e: any) => e.event_photographers?.some((ep: any) => ep.photographer_id === (role === "manager" ? photogF : photographerId)));
+    : rows.filter((e: any) => e.event_photographers?.some((ep: any) => ep.photographer_id === (role === "photographer" ? photographerId : photogF)));
 
   // Extras attributed to a specific photographer count toward their fee
   const extrasForPhotographer = (e: any, photographerId: string) =>
