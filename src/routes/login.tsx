@@ -8,11 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
+  }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const goNext = () => {
+    if (next) window.location.href = next;
+    else navigate({ to: "/" });
+  };
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,9 +29,12 @@ function LoginPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/" });
+      if (data.session) {
+        if (next) window.location.href = next;
+        else navigate({ to: "/" });
+      }
     });
-  }, [navigate]);
+  }, [navigate, next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +43,12 @@ function LoginPage() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/" });
+        goNext();
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin, data: { full_name: fullName } },
+          options: { emailRedirectTo: next ? window.location.origin + next : window.location.origin, data: { full_name: fullName } },
         });
         if (error) throw error;
         toast.success("Conta criada. Já pode iniciar sessão.");
