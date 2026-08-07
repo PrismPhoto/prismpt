@@ -15,7 +15,7 @@ function FinancePage() {
   const { role, photographerId } = useAuth();
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
-  const [photogF, setPhotogF] = useState(role === "manager" ? "all" : photographerId ?? "");
+  const [photogF, setPhotogF] = useState("all");
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs-all"], queryFn: async () => (await supabase.from("photographers").select("*")).data ?? [] });
 
