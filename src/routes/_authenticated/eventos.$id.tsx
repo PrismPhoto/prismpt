@@ -34,7 +34,7 @@ function EventDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*, packages(name), wedding_planners(name), event_photographers(*, photographers(initials, full_name))")
+        .select("*, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))")
         .eq("id", id)
         .single();
       if (error) throw error;

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate } from "@/lib/format";
+import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
 import { Plus, Download } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ function EventsPage() {
   const { data: events = [] } = useQuery({
     queryKey: ["events", year, typeF, statusF],
     queryFn: async () => {
-      let q = supabase.from("events").select("*, packages(name), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
+      let q = supabase.from("events").select("*, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
       if (typeF !== "all") q = q.eq("event_type", typeF as any);
       if (statusF !== "all") q = q.eq("status", statusF as any);
       const { data } = await q;
@@ -45,7 +45,7 @@ function EventsPage() {
     const rows = [
       ["Data", "Cliente", "Tipo", "Pacote", "Valor", "WP", "Comissão WP", "Status"],
       ...events.map((e: any) => [
-        e.event_date, e.client_name, e.event_type, e.packages?.name ?? "", e.total_value,
+        e.event_date, e.client_name, e.event_type, e.packages ? packageLabel(e.packages.name, e.packages.version) : "", e.total_value,
         e.wedding_planners?.name ?? "", e.wp_commission_value ?? 0, e.status,
       ]),
     ];
@@ -116,7 +116,7 @@ function EventsPage() {
                     <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
                     <td className="p-3 font-medium">{e.client_name}</td>
                     <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
-                    <td className="p-3 text-muted-foreground">{e.packages?.name ?? "—"}</td>
+                    <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                     <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                     <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                     <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
@@ -187,7 +187,7 @@ function QuickCreateDialog({ packages, onCreated }: any) {
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">—</SelectItem>
-              {packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} v{p.version} ({p.base_price}€)</SelectItem>)}
+              {sortPackages(packages as any[]).map((p: any) => <SelectItem key={p.id} value={p.id}>{packageLabelWithPrice(p.name, p.version, p.base_price)}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

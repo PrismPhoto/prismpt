@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EVENT_STATUSES, EVENT_TYPES, EUR } from "@/lib/format";
+import { EVENT_STATUSES, EVENT_TYPES, EUR, packageLabelWithPrice, sortPackages } from "@/lib/format";
 import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -317,7 +317,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
           <F label="Pacote">
             <Select value={form.package_id} onValueChange={onPkg}>
               <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-              <SelectContent>{packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} v{p.version} ({p.base_price}€)</SelectItem>)}</SelectContent>
+              <SelectContent>{sortPackages(packages as any[]).map((p: any) => <SelectItem key={p.id} value={p.id}>{packageLabelWithPrice(p.name, p.version, p.base_price)}</SelectItem>)}</SelectContent>
             </Select>
           </F>
           <F label="Valor pacote"><Input type="number" step="0.01" value={form.total_value} onChange={(e) => setForm({ ...form, total_value: e.target.value })} /></F>

@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EVENT_TYPES, LEAD_STATUSES, LEAD_SOURCES, fmtDate } from "@/lib/format";
+import { EVENT_TYPES, LEAD_STATUSES, LEAD_SOURCES, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
 import { Plus, Mail, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ function LeadsPage() {
   const { data: leads = [] } = useQuery({
     queryKey: ["leads", year, typeFilter],
     queryFn: async () => {
-      let q = supabase.from("leads").select("*, packages(name), wedding_planners(name)").order("event_date", { ascending: true });
+      let q = supabase.from("leads").select("*, packages(name, version), wedding_planners(name)").order("event_date", { ascending: true });
       const { data } = await q;
       return (data ?? []).filter((l) =>
         (!l.event_year || l.event_year === year) &&
@@ -149,7 +149,7 @@ function LeadsPage() {
                       <Badge variant="outline" className="text-xs">{l.event_type}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground">{fmtDate(l.event_date)} · {l.pax ?? "?"} pax</div>
-                    {l.packages && <div className="text-xs">{l.packages.name}</div>}
+                    {l.packages && <div className="text-xs">{packageLabel(l.packages.name, l.packages.version)}</div>}
                     {l.wedding_planners && <div className="text-xs text-muted-foreground">WP: {l.wedding_planners.name}</div>}
                     <div className="flex gap-1 flex-wrap pt-1" onClick={(e) => e.stopPropagation()}>
                       <Select value={l.status} onValueChange={(v) => updateStatus.mutate({ lead: l, status: v })}>
@@ -226,7 +226,7 @@ function LeadForm({ lead, packages, wps, onSaved }: any) {
         <Field label="Pacote">
           <Select value={form.package_id} onValueChange={(v) => setForm({ ...form, package_id: v })}>
             <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-            <SelectContent>{packages.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.name} ({p.base_price}€)</SelectItem>)}</SelectContent>
+            <SelectContent>{sortPackages(packages as any[]).map((p: any) => <SelectItem key={p.id} value={p.id}>{packageLabelWithPrice(p.name, p.version, p.base_price)}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
         <Field label="Fonte">
