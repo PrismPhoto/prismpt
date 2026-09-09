@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { EUR, fmtDate } from "@/lib/format";
+import { EUR, fmtDate, packageLabel } from "@/lib/format";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
@@ -28,7 +28,7 @@ function PhotogProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("event_photographers")
-        .select("*, events!inner(id, event_date, client_name, event_type, status, packages(name))")
+        .select("*, events!inner(id, event_date, client_name, event_type, status, packages(name, version))")
         .eq("photographer_id", id)
         .gte("events.event_date", `${year}-01-01`)
         .lte("events.event_date", `${year}-12-31`)
@@ -165,7 +165,7 @@ function EventTable({ rows }: { rows: any[] }) {
               <tr key={r.id} className="border-t">
                 <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
-                <td className="p-3 text-muted-foreground">{r.events.packages?.name ?? "—"}</td>
+                <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
                 <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
