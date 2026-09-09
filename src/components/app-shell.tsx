@@ -37,7 +37,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
+    if (!loading && !user) navigate({ to: "/login", search: {} as any });
   }, [loading, user, navigate]);
 
   if (loading || !user) {
