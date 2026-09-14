@@ -8,11 +8,27 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
+import { computeSlotFee, type SlotDistribution } from "@/lib/fee-distribution";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
 const YEARS = [2027, 2028, 2029, 2030];
+
+/** Fee guardado no evento; se ainda não existir, calcula-o pela distribuição do pacote. */
+function effectiveFee(row: any, photog: any): number {
+  const stored = Number(row?.fee || 0);
+  if (stored > 0) return stored;
+  const dist = row?.events?.packages?.fee_distribution;
+  if (!Array.isArray(dist) || dist.length === 0) return 0;
+  const idx = Math.max(0, (Number(row?.position) || 1) - 1);
+  return computeSlotFee(
+    dist as SlotDistribution[],
+    idx,
+    Number(row?.events?.total_value || 0),
+    Number(photog?.prism_commission || 0),
+  );
+}
 
 function PhotogProfile() {
   const { id } = Route.useParams();
@@ -24,16 +40,20 @@ function PhotogProfile() {
   });
 
   const { data: assignments = [] } = useQuery({
-    queryKey: ["photog-events", id, year],
+    queryKey: ["photog-events", id, year, photog?.prism_commission],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("event_photographers")
-        .select("*, events!inner(id, event_date, client_name, event_type, status, packages(name, version))")
+        .select(
+          "*, events!inner(id, event_date, client_name, event_type, status, total_value, packages(name, version, fee_distribution))",
+        )
         .eq("photographer_id", id)
         .gte("events.event_date", `${year}-01-01`)
-        .lte("events.event_date", `${year}-12-31`)
-        .order("event_date", { foreignTable: "events" });
-      return data ?? [];
+        .lte("events.event_date", `${year}-12-31`);
+      if (error) throw error;
+      const rows = (data ?? []).map((r: any) => ({ ...r, effFee: effectiveFee(r, photog) }));
+      rows.sort((a: any, b: any) => a.events.event_date.localeCompare(b.events.event_date));
+      return rows;
     },
   });
 
@@ -51,7 +71,7 @@ function PhotogProfile() {
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
     return dep + fin;
   };
-  const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
+  const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.effFee || 0), 0);
   const totalPaid = assignments.reduce((s: number, a: any) => s + paidFor(a), 0);
   const totalPending = totalFees - totalPaid;
 
@@ -166,7 +186,7 @@ function EventTable({ rows }: { rows: any[] }) {
                 <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
+                <td className="p-3 text-right tabular-nums">{EUR(r.effFee ?? r.fee)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
