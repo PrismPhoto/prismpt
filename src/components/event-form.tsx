@@ -526,7 +526,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             const totalMissing = rows.reduce((acc, r) => acc + r.missing, 0);
             return (
               <div className="rounded-md border p-3 bg-muted/20">
-                <h4 className="text-sm font-semibold mb-2">Por pagar aos fotógrafos</h4>
+                <h4 className="text-sm font-semibold mb-2">Valor final do fotógrafo</h4>
                 <div className="space-y-1.5 text-sm">
                   {rows.map((r, i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
