@@ -8,27 +8,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
-import { computeSlotFee, type SlotDistribution } from "@/lib/fee-distribution";
+import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution } from "@/lib/fee-distribution";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
 const YEARS = [2027, 2028, 2029, 2030];
 
-/** Fee guardado no evento; se ainda não existir, calcula-o pela distribuição do pacote. */
-function effectiveFee(row: any, photog: any): number {
+/** Parte do pacote (sem extras): fee guardado no evento, ou calculado pela distribuição do pacote. */
+function packageFee(row: any, photog: any): number {
   const stored = Number(row?.fee || 0);
   if (stored > 0) return stored;
   const dist = row?.events?.packages?.fee_distribution;
   if (!Array.isArray(dist) || dist.length === 0) return 0;
   const idx = Math.max(0, (Number(row?.position) || 1) - 1);
+  const baseValue = Number(row?.events?.total_value || 0) - sumExtras(row?.events?.event_extras);
   return computeSlotFee(
     dist as SlotDistribution[],
     idx,
-    Number(row?.events?.total_value || 0),
+    baseValue,
     Number(photog?.prism_commission || 0),
   );
 }
+
 
 function PhotogProfile() {
   const { id } = Route.useParams();
