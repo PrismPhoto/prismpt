@@ -421,7 +421,34 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             <div className="grid md:grid-cols-2 gap-3">
               <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
               <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-              <F label="Método sinal" className="md:col-span-2"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
+              <F label="Destino do sinal">
+                <Select
+                  value={depositDest}
+                  onValueChange={(v) =>
+                    setForm({
+                      ...form,
+                      deposit_method: v === "revolut_prism" ? "revolut_prism" : `directo:${assignedPhotogs[0]?.value ?? ""}`,
+                    })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revolut_prism">Revolut PRISM</SelectItem>
+                    <SelectItem value="directo">Directo ao fotógrafo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </F>
+              {depositDest === "directo" && (
+                <F label="Qual fotógrafo">
+                  <Select value={depositPhotog || "none"} onValueChange={(v) => setForm({ ...form, deposit_method: `directo:${v === "none" ? "" : v}` })}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">—</SelectItem>
+                      {assignedPhotogs.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </F>
+              )}
             </div>
           </div>
 
