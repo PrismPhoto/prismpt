@@ -24,16 +24,20 @@ function PhotogProfile() {
   });
 
   const { data: assignments = [] } = useQuery({
-    queryKey: ["photog-events", id, year],
+    queryKey: ["photog-events", id, year, photog?.prism_commission],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("event_photographers")
-        .select("*, events!inner(id, event_date, client_name, event_type, status, packages(name, version))")
+        .select(
+          "*, events!inner(id, event_date, client_name, event_type, status, total_value, packages(name, version, fee_distribution))",
+        )
         .eq("photographer_id", id)
         .gte("events.event_date", `${year}-01-01`)
-        .lte("events.event_date", `${year}-12-31`)
-        .order("event_date", { foreignTable: "events" });
-      return data ?? [];
+        .lte("events.event_date", `${year}-12-31`);
+      if (error) throw error;
+      const rows = (data ?? []).map((r: any) => ({ ...r, effFee: effectiveFee(r, photog) }));
+      rows.sort((a: any, b: any) => a.events.event_date.localeCompare(b.events.event_date));
+      return rows;
     },
   });
 

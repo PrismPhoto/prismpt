@@ -36,7 +36,7 @@ function PhotogPage() {
       <PageHeader title="Fotógrafos" actions={
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Novo</Button></DialogTrigger>
-          <PhotogForm initial={editing} onSave={save} />
+          <PhotogForm key={editing?.id ?? "new"} initial={editing} onSave={save} />
         </Dialog>
       } />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
