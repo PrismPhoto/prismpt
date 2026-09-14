@@ -16,7 +16,7 @@ import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution }
 
 const EMPTY_EXTRAS: any[] = [];
 
-export function EventForm({ event, packages, wps, photographers, onSaved }: any) {
+export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef }: any) {
   const isEdit = !!event;
   const [form, setForm] = useState<any>(() => {
     const existingPhotogs = event?.event_photographers ?? [];
