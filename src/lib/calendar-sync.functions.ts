@@ -15,8 +15,11 @@ export function parseClientName(title: string): string {
   let t = title.replace(/^\s*\/\/\s*/, "").trim();
   // remover número inicial (ex.: "12 - Ana & João" ou "12 Ana & João")
   t = t.replace(/^\d+\s*[-–—.:]?\s*/, "");
-  // remover iniciais de fotógrafos no fim (tokens maiúsculos 2-4 letras, separados por / ou espaço)
-  t = t.replace(/[\s\-–—|(]*\b(?:[A-Z]{2,4})(?:\s*[/+,]\s*[A-Z]{2,4})*\s*\)?\s*$/, "");
+  // remover iniciais de fotógrafos no fim (ex.: "- RCD +1", "SC/FLC", "SP + 1")
+  t = t.replace(
+    /[\s\-–—|(]*\b(?:[A-Z]{2,4}|\+\s*\d+)(?:\s*[/+,]?\s*(?:[A-Z]{2,4}|\+\s*\d+))*\s*\)?\s*$/,
+    "",
+  );
   // remover separadores residuais
   t = t.replace(/[\s\-–—|/]+$/, "").trim();
   return t || title.replace(/^\s*\/\/\s*/, "").trim();
