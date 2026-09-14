@@ -12,7 +12,7 @@ import { EVENT_STATUSES, EVENT_TYPES, EUR, packageLabelWithPrice, sortPackages }
 import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution } from "@/lib/fee-distribution";
+import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, type SlotDistribution } from "@/lib/fee-distribution";
 
 const EMPTY_EXTRAS: any[] = [];
 
