@@ -8,27 +8,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
-import { computeSlotFee, type SlotDistribution } from "@/lib/fee-distribution";
+import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution } from "@/lib/fee-distribution";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
 const YEARS = [2027, 2028, 2029, 2030];
 
-/** Fee guardado no evento; se ainda não existir, calcula-o pela distribuição do pacote. */
-function effectiveFee(row: any, photog: any): number {
+/** Parte do pacote (sem extras): fee guardado no evento, ou calculado pela distribuição do pacote. */
+function packageFee(row: any, photog: any): number {
   const stored = Number(row?.fee || 0);
   if (stored > 0) return stored;
   const dist = row?.events?.packages?.fee_distribution;
   if (!Array.isArray(dist) || dist.length === 0) return 0;
   const idx = Math.max(0, (Number(row?.position) || 1) - 1);
+  const baseValue = Number(row?.events?.total_value || 0) - sumExtras(row?.events?.event_extras);
   return computeSlotFee(
     dist as SlotDistribution[],
     idx,
-    Number(row?.events?.total_value || 0),
+    baseValue,
     Number(photog?.prism_commission || 0),
   );
 }
+
 
 function PhotogProfile() {
   const { id } = Route.useParams();
@@ -45,15 +47,20 @@ function PhotogProfile() {
       const { data, error } = await supabase
         .from("event_photographers")
         .select(
-          "*, events!inner(id, event_date, client_name, event_type, status, total_value, packages(name, version, fee_distribution))",
+          "*, events!inner(id, event_date, client_name, event_type, status, total_value, event_extras(*), packages(name, version, fee_distribution))",
         )
         .eq("photographer_id", id)
         .gte("events.event_date", `${year}-01-01`)
         .lte("events.event_date", `${year}-12-31`);
       if (error) throw error;
-      const rows = (data ?? []).map((r: any) => ({ ...r, effFee: effectiveFee(r, photog) }));
+      const rows = (data ?? []).map((r: any) => {
+        const base = packageFee(r, photog);
+        const extras = extrasForPhotographer(r?.events?.event_extras, r.photographer_id);
+        return { ...r, baseFee: base, extrasFee: extras, effFee: base + extras };
+      });
       rows.sort((a: any, b: any) => a.events.event_date.localeCompare(b.events.event_date));
       return rows;
+
     },
   });
 
@@ -171,7 +178,9 @@ function EventTable({ rows }: { rows: any[] }) {
             <th className="text-left p-3">Data</th>
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
+            <th className="text-right p-3">Extras</th>
             <th className="text-right p-3">Fee</th>
+
             <th className="text-left p-3">Sinal devolvido</th>
             <th className="text-left p-3">Pag. final</th>
             <th className="text-left p-3">Estado</th>
@@ -186,7 +195,9 @@ function EventTable({ rows }: { rows: any[] }) {
                 <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(r.effFee ?? r.fee)}</td>
+                <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
+                <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
+
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>

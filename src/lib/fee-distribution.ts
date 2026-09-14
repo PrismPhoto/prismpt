@@ -62,3 +62,18 @@ export function computeSlotFee(
 export function slotLabel(slot: SlotDistribution): string {
   return slot.mode === "fixed" ? `€${slot.value} fixo` : `${slot.value}%`;
 }
+
+/** Soma de todos os extras de um evento. */
+export function sumExtras(extras: any[] | null | undefined): number {
+  return (extras ?? []).reduce(
+    (s, x) => s + (x?.total != null ? Number(x.total) || 0 : (Number(x?.quantity || 0) * Number(x?.unit_price || 0))),
+    0,
+  );
+}
+
+/** Soma dos extras atribuídos a um fotógrafo específico (100% para ele). */
+export function extrasForPhotographer(extras: any[] | null | undefined, photographerId?: string | null): number {
+  if (!photographerId) return 0;
+  return sumExtras((extras ?? []).filter((x: any) => x?.photographer_id === photographerId));
+}
+

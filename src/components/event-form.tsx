@@ -12,7 +12,7 @@ import { EVENT_STATUSES, EVENT_TYPES, EUR, packageLabelWithPrice, sortPackages }
 import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution } from "@/lib/fee-distribution";
+import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, type SlotDistribution } from "@/lib/fee-distribution";
 
 const EMPTY_EXTRAS: any[] = [];
 
@@ -508,22 +508,23 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
               const external = isExternalSlot(i);
               const filled = external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id;
               if (!filled) return null;
-              const fee = Number(s.fee || 0);
+              const baseFee = Number(s.fee || 0);
+              const extrasFee = external ? 0 : extrasForPhotographer(extras, s.photographer_id);
+              const fee = baseFee + extrasFee;
               const depositCredit = s.deposit_paid ? Number(s.deposit_amount || 0) : 0;
               const finalCredit = s.final_payment_received
-                ? (external ? fee : Number(s.final_payment_value || 0))
+                ? (external ? baseFee : Number(s.final_payment_value || 0))
                 : 0;
               const paid = depositCredit + finalCredit;
               const missing = fee - paid;
-              if (missing <= 0) return null;
               const photog = photographers.find((p: any) => p.id === s.photographer_id);
               const name = external
                 ? `Externo — ${s.external_name}`
                 : `Prism ${i + 1}${photog ? ` (${photog.initials})` : ""}`;
-              return { name, fee, paid, missing, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
+              return { name, baseFee, extrasFee, fee, paid, missing, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
             }).filter(Boolean) as any[];
             if (rows.length === 0) return null;
-            const totalMissing = rows.reduce((acc, r) => acc + r.missing, 0);
+            const totalMissing = rows.reduce((acc, r) => acc + Math.max(0, r.missing), 0);
             return (
               <div className="rounded-md border p-3 bg-muted/20">
                 <h4 className="text-sm font-semibold mb-2">Valor final do fotógrafo</h4>
@@ -533,11 +534,14 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="truncate">{r.name}</span>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          fee {EUR(r.fee)} · sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
+                          pacote {EUR(r.baseFee)}
+                          {r.extrasFee > 0 ? ` + extras ${EUR(r.extrasFee)}` : ""}
+                          {" · "}sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
                         </span>
                       </div>
                       <div className="text-right tabular-nums whitespace-nowrap">
-                        <span className="font-medium text-destructive">falta {EUR(r.missing)}</span>
+                        <span className="font-semibold">{EUR(r.fee)}</span>
+                        {r.missing > 0 && <span className="text-xs text-destructive ml-2">falta {EUR(r.missing)}</span>}
                         {r.paid > 0 && <span className="text-xs text-muted-foreground ml-2">(pago {EUR(r.paid)})</span>}
                       </div>
                     </div>
@@ -550,6 +554,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
               </div>
             );
           })()}
+
         </div>
       </Section>
 
