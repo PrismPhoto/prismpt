@@ -55,7 +55,7 @@ function PhotogProfile() {
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
     return dep + fin;
   };
-  const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.fee || 0), 0);
+  const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.effFee || 0), 0);
   const totalPaid = assignments.reduce((s: number, a: any) => s + paidFor(a), 0);
   const totalPending = totalFees - totalPaid;
 
@@ -170,7 +170,7 @@ function EventTable({ rows }: { rows: any[] }) {
                 <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(r.fee)}</td>
+                <td className="p-3 text-right tabular-nums">{EUR(r.effFee ?? r.fee)}</td>
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
