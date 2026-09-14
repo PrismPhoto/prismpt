@@ -123,6 +123,30 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
   const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
   const distributionKey = JSON.stringify(distribution);
 
+  const photographerNames = (form.slots as any[])
+    .map((s) => {
+      if (s.photographer_id) {
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        return p ? `${p.initials}` : null;
+      }
+      return s.external_name ? String(s.external_name).trim() : null;
+    })
+    .filter(Boolean) as string[];
+  const photographerNamesKey = photographerNames.join(" · ");
+  const packageText = selectedPackage
+    ? packageLabelWithPrice(selectedPackage.name, selectedPackage.version, selectedPackage.base_price)
+    : "";
+
+  useEffect(() => {
+    onSummaryChange?.({
+      client_name: form.client_name,
+      event_date: form.event_date,
+      photographers: photographerNamesKey,
+      packageLabel: packageText,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.client_name, form.event_date, photographerNamesKey, packageText]);
+
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
