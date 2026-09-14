@@ -95,6 +95,12 @@ function EventsPage() {
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
             {role === "manager" && (
+              <Button variant="outline" onClick={handleSync} disabled={syncing}>
+                {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                {syncing ? "A sincronizar…" : "Sincronizar Calendário"}
+              </Button>
+            )}
+            {role === "manager" && (
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
                 <QuickCreateDialog
