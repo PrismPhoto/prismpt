@@ -195,7 +195,9 @@ function EventTable({ rows }: { rows: any[] }) {
                 <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums">{EUR(r.effFee ?? r.fee)}</td>
+                <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
+                <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
+
                 <td className="p-3 text-xs">
                   {r.deposit_paid
                     ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
