@@ -47,15 +47,20 @@ function PhotogProfile() {
       const { data, error } = await supabase
         .from("event_photographers")
         .select(
-          "*, events!inner(id, event_date, client_name, event_type, status, total_value, packages(name, version, fee_distribution))",
+          "*, events!inner(id, event_date, client_name, event_type, status, total_value, event_extras(*), packages(name, version, fee_distribution))",
         )
         .eq("photographer_id", id)
         .gte("events.event_date", `${year}-01-01`)
         .lte("events.event_date", `${year}-12-31`);
       if (error) throw error;
-      const rows = (data ?? []).map((r: any) => ({ ...r, effFee: effectiveFee(r, photog) }));
+      const rows = (data ?? []).map((r: any) => {
+        const base = packageFee(r, photog);
+        const extras = extrasForPhotographer(r?.events?.event_extras, r.photographer_id);
+        return { ...r, baseFee: base, extrasFee: extras, effFee: base + extras };
+      });
       rows.sort((a: any, b: any) => a.events.event_date.localeCompare(b.events.event_date));
       return rows;
+
     },
   });
 
