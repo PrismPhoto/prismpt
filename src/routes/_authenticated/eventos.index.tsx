@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { syncGoogleCalendar } from "@/lib/calendar-sync.functions";
 
 export const Route = createFileRoute("/_authenticated/eventos/")({ component: EventsPage });
 
@@ -25,6 +27,24 @@ function EventsPage() {
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const runSync = useServerFn(syncGoogleCalendar);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await runSync({ data: undefined } as any);
+      if (res.imported > 0) toast.success(`${res.imported} eventos novos importados`);
+      else toast.info("Nenhum evento novo encontrado");
+      qc.invalidateQueries({ queryKey: ["events"] });
+    } catch (err: any) {
+      const msg = String(err?.message ?? err);
+      if (msg.includes("NOT_CONNECTED")) toast.error("Liga primeiro o Google Calendar nas Definições");
+      else toast.error(`Falha na sincronização: ${msg}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: events = [] } = useQuery({
     queryKey: ["events", year, typeF, statusF],
@@ -74,6 +94,12 @@ function EventsPage() {
               <SelectContent><SelectItem value="all">Todos status</SelectItem>{EVENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
+            {role === "manager" && (
+              <Button variant="outline" onClick={handleSync} disabled={syncing}>
+                {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                {syncing ? "A sincronizar…" : "Sincronizar Calendário"}
+              </Button>
+            )}
             {role === "manager" && (
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Novo evento</Button></DialogTrigger>
