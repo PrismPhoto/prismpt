@@ -116,7 +116,7 @@ export const syncGoogleCalendar = createServerFn({ method: "POST" })
         .from("events")
         .insert({
           event_date: c.date!,
-          event_year: Number(c.date!.slice(0, 4)),
+          
           client_name: clientName,
           event_type: "Casamento" as any,
           status: "Confirmado" as any,
