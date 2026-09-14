@@ -190,10 +190,8 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [distributionKey]);
 
-  const suggestedFinalPayment = Math.max(
-    0,
-    Number(form.total_value || 0) + extrasTotal - (form.deposit_paid_date ? Number(form.deposit_amount || 0) : 0)
-  );
+  const eventTotal = Number(form.total_value || 0) + extrasTotal;
+  const suggestedFinalPayment = Math.max(0, eventTotal - Number(form.deposit_amount || 0));
 
   useEffect(() => {
     setForm((f: any) => {
