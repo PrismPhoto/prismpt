@@ -1,31 +1,34 @@
-## Remover a "data de adjudicação"
+# Extras atribuídos e valor do fotógrafo (Inês e Nicolas)
 
-Hoje há dois campos quase redundantes em `events`:
-- `adjudication_date` — preenchida automaticamente quando uma lead é adjudicada (= dia da conversão).
-- `deposit_paid_date` — quando o sinal foi efectivamente pago.
+## O que encontrei nos dados
 
-Na prática coincidem. Vamos manter só o sinal e tratar a adjudicação como implícita (lead em estado "Adjudicado" + evento criado).
+Existem **dois eventos "Inês e Nicolas"**, ambos criados no mesmo instante, ambos com o mesmo pacote (Prestige, 5.450€), os mesmos fotógrafos (JMC + RCD) e o mesmo extra Pre-Wedding de 550€ atribuído ao JMC:
 
-### Mudanças
+- 18 Jun 2027 — notas "1 fotógrafo (a definir)" — fee gravado do JMC: **2.075€**
+- 19 Jun 2027 — notas "JMC + RCD + 1" — fee gravado do JMC: **2.225€**
 
-**1. UI — `src/components/event-form.tsx`**
-- Remover o campo "Data adjudicação" do bloco Pagamentos. Fica só Sinal (valor / pago / data / método) + Pagamento final.
+Daí o 2.225€ no painel do fotógrafo: é o outro evento da lista, não o que está aberto. A diferença de 150€ é a comissão PRISM, que está gravada no primeiro (150€) e a zero no segundo.
 
-**2. Lista — `src/routes/_authenticated/eventos.index.tsx`**
-- Se houver coluna/ordenação por `adjudication_date`, passar a usar `deposit_paid_date` (ou `event_date`, conforme já está). Verificar e ajustar.
+Além disso, confirmei que **os extras nunca entram no valor do fotógrafo**: o cálculo divide apenas o valor do pacote pelos slots, e o campo "fotógrafo" do extra é guardado mas nunca usado em nenhum cálculo. Por isso os 550€ do Pre-Wedding do JMC não aparecem em lado nenhum.
 
-**3. Leads — `src/routes/_authenticated/leads.tsx`**
-- Ao adjudicar, deixar de escrever `adjudication_date` no insert do evento. O estado "Adjudicado" + existência do evento já comunicam isso.
+## O que proponho fazer
 
-**4. Financeiro — `src/routes/_authenticated/financeiro.tsx`**
-- Confirmar que nada depende de `adjudication_date` nos KPIs/filtros. Se sim, trocar para `event_date` ou `deposit_paid_date`.
+1. **Extra atribuído passa a somar ao fotógrafo**
+   - Os extras com fotógrafo atribuído são retirados do bolo a dividir e somados inteiros a esse fotógrafo.
+   - Extras sem fotógrafo continuam a ser receita do evento, divididos pela distribuição normal do pacote.
+   - Mostrar na linha de cada fotógrafo uma decomposição: "Pacote X€ + Extras Y€ − Comissão PRISM Z€ = Valor final".
 
-**5. Migração — drop da coluna**
-- `ALTER TABLE public.events DROP COLUMN adjudication_date;`
-- Faz-se *depois* de todas as referências em código estarem removidas, para evitar quebrar selects (`select *`).
+2. **Mesmo cálculo no painel do fotógrafo e no financeiro**
+   - Hoje o painel usa o valor gravado no evento; passa a usar o mesmo cálculo (pacote + extras atribuídos − comissão), para não haver dois números diferentes para o mesmo casamento.
+   - Coluna de extras visível na tabela do painel do fotógrafo.
 
-### Notas
+3. **Recalcular os valores já gravados** dos eventos existentes, para os números antigos (gravados antes dos extras terem sido adicionados) passarem a bater certo.
 
-- Não mexe em `leads` (não tem este campo).
-- Não mexe em RLS nem em outros fluxos.
-- Os dados históricos de `adjudication_date` perdem-se. Se quiseres preservar, diz-me antes de aprovar — copio para `deposit_paid_date` quando este estiver vazio, antes do drop.
+4. **Duplicado**: preciso de saber o que fazer — ver pergunta abaixo.
+
+## Detalhes técnicos
+
+- `src/lib/fee-distribution.ts`: `computeSlotFee` passa a receber os extras do evento; deduz do `totalValue` a soma dos extras com `photographer_id` e soma ao slot correspondente o total dos seus extras.
+- `src/components/event-form.tsx`: passa `extras` ao cálculo (já os tem em estado, logo actualiza em tempo real) e grava `fee` com esse valor; decomposição no bloco "Valor final do fotógrafo".
+- `src/routes/_authenticated/fotografos/$id.tsx`: `effectiveFee` deixa de preferir o `fee` gravado e passa a calcular sempre com `event_extras` incluídos na query.
+- `src/routes/_authenticated/financeiro.tsx`: alinhado com a mesma função.
