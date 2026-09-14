@@ -178,7 +178,9 @@ function EventTable({ rows }: { rows: any[] }) {
             <th className="text-left p-3">Data</th>
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
+            <th className="text-right p-3">Extras</th>
             <th className="text-right p-3">Fee</th>
+
             <th className="text-left p-3">Sinal devolvido</th>
             <th className="text-left p-3">Pag. final</th>
             <th className="text-left p-3">Estado</th>
