@@ -317,6 +317,26 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     onSaved(eventId);
   };
 
+  if (saveRef) saveRef.current = save;
+
+  const depositDest = String(form.deposit_method || "").startsWith("directo") ? "directo" : "revolut_prism";
+  const depositPhotog = String(form.deposit_method || "").startsWith("directo:")
+    ? String(form.deposit_method).split(":")[1]
+    : "";
+  const assignedPhotogs = (form.slots as any[])
+    .map((s) => {
+      if (s.photographer_id) {
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        return p ? { value: p.initials, label: `${p.initials} · ${p.full_name}` } : null;
+      }
+      if (s.external_name && String(s.external_name).trim()) {
+        const v = String(s.external_name).trim();
+        return { value: v, label: `Externo — ${v}` };
+      }
+      return null;
+    })
+    .filter(Boolean) as { value: string; label: string }[];
+
   return (
     <div className="space-y-6">
       <Section title="Informação do evento">
