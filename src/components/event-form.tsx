@@ -16,7 +16,7 @@ import { computeSlotFee, defaultDistribution, slotLabel, type SlotDistribution }
 
 const EMPTY_EXTRAS: any[] = [];
 
-export function EventForm({ event, packages, wps, photographers, onSaved }: any) {
+export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef }: any) {
   const isEdit = !!event;
   const [form, setForm] = useState<any>(() => {
     const existingPhotogs = event?.event_photographers ?? [];
@@ -123,6 +123,30 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
   const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
   const distributionKey = JSON.stringify(distribution);
 
+  const photographerNames = (form.slots as any[])
+    .map((s) => {
+      if (s.photographer_id) {
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        return p ? `${p.initials}` : null;
+      }
+      return s.external_name ? String(s.external_name).trim() : null;
+    })
+    .filter(Boolean) as string[];
+  const photographerNamesKey = photographerNames.join(" · ");
+  const packageText = selectedPackage
+    ? packageLabelWithPrice(selectedPackage.name, selectedPackage.version, selectedPackage.base_price)
+    : "";
+
+  useEffect(() => {
+    onSummaryChange?.({
+      client_name: form.client_name,
+      event_date: form.event_date,
+      photographers: photographerNamesKey,
+      packageLabel: packageText,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.client_name, form.event_date, photographerNamesKey, packageText]);
+
   useEffect(() => {
     setForm((f: any) => {
       let changed = false;
@@ -166,10 +190,8 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [distributionKey]);
 
-  const suggestedFinalPayment = Math.max(
-    0,
-    Number(form.total_value || 0) + extrasTotal - (form.deposit_paid_date ? Number(form.deposit_amount || 0) : 0)
-  );
+  const eventTotal = Number(form.total_value || 0) + extrasTotal;
+  const suggestedFinalPayment = Math.max(0, eventTotal - Number(form.deposit_amount || 0));
 
   useEffect(() => {
     setForm((f: any) => {
@@ -293,6 +315,26 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
     onSaved(eventId);
   };
 
+  if (saveRef) saveRef.current = save;
+
+  const depositDest = String(form.deposit_method || "").startsWith("directo") ? "directo" : "revolut_prism";
+  const depositPhotog = String(form.deposit_method || "").startsWith("directo:")
+    ? String(form.deposit_method).split(":")[1]
+    : "";
+  const assignedPhotogs = (form.slots as any[])
+    .map((s) => {
+      if (s.photographer_id) {
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        return p ? { value: p.initials, label: `${p.initials} · ${p.full_name}` } : null;
+      }
+      if (s.external_name && String(s.external_name).trim()) {
+        const v = String(s.external_name).trim();
+        return { value: v, label: `Externo — ${v}` };
+      }
+      return null;
+    })
+    .filter(Boolean) as { value: string; label: string }[];
+
   return (
     <div className="space-y-6">
       <Section title="Informação do evento">
@@ -377,7 +419,34 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
             <div className="grid md:grid-cols-2 gap-3">
               <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
               <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-              <F label="Método sinal" className="md:col-span-2"><Input value={form.deposit_method} onChange={(e) => setForm({ ...form, deposit_method: e.target.value })} placeholder="Revolut / Transferência / Cyclik / Outro" /></F>
+              <F label="Destino do sinal">
+                <Select
+                  value={depositDest}
+                  onValueChange={(v) =>
+                    setForm({
+                      ...form,
+                      deposit_method: v === "revolut_prism" ? "revolut_prism" : `directo:${assignedPhotogs[0]?.value ?? ""}`,
+                    })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revolut_prism">Revolut PRISM</SelectItem>
+                    <SelectItem value="directo">Directo ao fotógrafo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </F>
+              {depositDest === "directo" && (
+                <F label="Qual fotógrafo">
+                  <Select value={depositPhotog || "none"} onValueChange={(v) => setForm({ ...form, deposit_method: `directo:${v === "none" ? "" : v}` })}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">—</SelectItem>
+                      {assignedPhotogs.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </F>
+              )}
             </div>
           </div>
 
@@ -387,7 +456,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
               <F label="Pagamento final (€)">
                 <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
                 <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
+                  <span>Sugerido: {EUR(suggestedFinalPayment)} (valor total {EUR(eventTotal)} − sinal {EUR(Number(form.deposit_amount || 0))})</span>
                   {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
                     <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
                   )}
@@ -457,7 +526,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved }: any)
             const totalMissing = rows.reduce((acc, r) => acc + r.missing, 0);
             return (
               <div className="rounded-md border p-3 bg-muted/20">
-                <h4 className="text-sm font-semibold mb-2">Por pagar aos fotógrafos</h4>
+                <h4 className="text-sm font-semibold mb-2">Valor final do fotógrafo</h4>
                 <div className="space-y-1.5 text-sm">
                   {rows.map((r, i) => (
                     <div key={i} className="flex items-center justify-between gap-3">
