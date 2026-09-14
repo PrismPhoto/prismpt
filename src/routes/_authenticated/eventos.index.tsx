@@ -27,6 +27,24 @@ function EventsPage() {
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
   const [createOpen, setCreateOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const runSync = useServerFn(syncGoogleCalendar);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await runSync({ data: undefined } as any);
+      if (res.imported > 0) toast.success(`${res.imported} eventos novos importados`);
+      else toast.info("Nenhum evento novo encontrado");
+      qc.invalidateQueries({ queryKey: ["events"] });
+    } catch (err: any) {
+      const msg = String(err?.message ?? err);
+      if (msg.includes("NOT_CONNECTED")) toast.error("Liga primeiro o Google Calendar nas Definições");
+      else toast.error(`Falha na sincronização: ${msg}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const { data: events = [] } = useQuery({
     queryKey: ["events", year, typeF, statusF],
