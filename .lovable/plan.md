@@ -13,8 +13,8 @@ Além disso, confirmei que **os extras nunca entram no valor do fotógrafo**: o 
 
 ## O que proponho fazer
 
-1. **Extra atribuído passa a somar ao fotógrafo**
-   - Os extras com fotógrafo atribuído são retirados do bolo a dividir e somados inteiros a esse fotógrafo.
+1. **Extra atribuído passa a somar ao fotógrafo (100%)**
+   - Os extras com fotógrafo atribuído são retirados do bolo a dividir e somados inteiros a esse fotógrafo, sem desconto de comissão.
    - Extras sem fotógrafo continuam a ser receita do evento, divididos pela distribuição normal do pacote.
    - Mostrar na linha de cada fotógrafo uma decomposição: "Pacote X€ + Extras Y€ − Comissão PRISM Z€ = Valor final".
 
@@ -24,7 +24,8 @@ Além disso, confirmei que **os extras nunca entram no valor do fotógrafo**: o 
 
 3. **Recalcular os valores já gravados** dos eventos existentes, para os números antigos (gravados antes dos extras terem sido adicionados) passarem a bater certo.
 
-4. **Duplicado**: preciso de saber o que fazer — ver pergunta abaixo.
+4. **Apagar o duplicado de 18 Jun 2027**, com os seus fotógrafos e extras associados. Fica o de 19 Jun ("JMC + RCD + 1"). Para o JMC esse evento passa a mostrar 2.225€ + 550€ do Pre-Wedding − 150€ de comissão = **2.625€**.
+
 
 ## Detalhes técnicos
 
