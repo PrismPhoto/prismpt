@@ -456,7 +456,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
               <F label="Pagamento final (€)">
                 <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
                 <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <span>Sugerido: {EUR(suggestedFinalPayment)}</span>
+                  <span>Sugerido: {EUR(suggestedFinalPayment)} (valor total {EUR(eventTotal)} − sinal {EUR(Number(form.deposit_amount || 0))})</span>
                   {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
                     <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
                   )}
