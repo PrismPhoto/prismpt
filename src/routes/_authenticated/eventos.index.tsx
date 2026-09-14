@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, RefreshCw, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { syncGoogleCalendar } from "@/lib/calendar-sync.functions";
 
 export const Route = createFileRoute("/_authenticated/eventos/")({ component: EventsPage });
 
