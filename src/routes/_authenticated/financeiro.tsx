@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({ component: 
 
 function FinancePage() {
   const { role, photographerId } = useAuth();
+  const navigate = useNavigate();
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [photogF, setPhotogF] = useState("all");
@@ -169,7 +170,11 @@ function FinancePage() {
               </thead>
               <tbody>
                 {filtered.map((e: any) => (
-                  <tr key={e.id} className="border-t">
+                  <tr
+                    key={e.id}
+                    className="border-t cursor-pointer hover:bg-muted/40 transition-colors"
+                    onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
+                  >
                     <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
                     <td className="p-3">{e.client_name}</td>
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>}
