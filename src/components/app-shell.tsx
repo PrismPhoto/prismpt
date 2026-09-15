@@ -57,8 +57,10 @@ export function AppShell() {
   const SidebarContent = (
     <div className="flex flex-col h-full">
       <div className="px-6 py-5 border-b border-sidebar-border">
-        <div className="text-lg font-semibold tracking-tight text-sidebar-foreground">PRISM</div>
-        <div className="text-xs text-muted-foreground">Management</div>
+        <div className="flex items-center gap-3">
+          <img src="/favicon.svg" alt="PRISM" className="h-9 w-9 rounded-full" />
+          <div className="text-lg font-semibold tracking-tight text-sidebar-foreground">PRISM</div>
+        </div>
       </div>
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {visible.map((item) => {
