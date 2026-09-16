@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -67,17 +67,24 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             Boolean(pkg?.has_external_photographer || pkg?.has_external),
           );
         const n = Math.max(dist.length, existingPhotogs.length);
+        const directInitials = String(event?.deposit_method || "").startsWith("directo:")
+          ? String(event.deposit_method).split(":")[1]
+          : "";
         return Array.from({ length: n }, (_, i) => {
           const ep = existingPhotogs.find((p: any) => p.position === i + 1);
           const slotDist = dist[i];
           const isExt = slotDist?.mode === "fixed";
+          const photog = !isExt && ep?.photographer_id
+            ? photographers.find((p: any) => p.id === ep.photographer_id)
+            : null;
+          const isDirectTarget = !!photog && photog.initials === directInitials;
           return {
             photographer_id: ep?.photographer_id ?? "",
             external_name: ep?.external_name ?? "",
             fee: ep?.fee ?? (isExt ? Number(slotDist?.value ?? 0) : 0),
             prism_commission: ep?.prism_commission ?? 0,
             deposit_amount: ep?.deposit_amount ?? 0,
-            deposit_paid: ep?.deposit_paid ?? false,
+            deposit_paid: ep?.deposit_paid ?? (isDirectTarget || false),
             deposit_paid_date: ep?.deposit_paid_date ?? "",
             final_payment_received: ep?.final_payment_received ?? false,
             final_payment_value: ep?.final_payment_value ?? 0,
@@ -206,6 +213,30 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggestedFinalPayment]);
+
+  const directPhotogInitials = String(form.deposit_method || "").startsWith("directo:")
+    ? String(form.deposit_method).split(":")[1]
+    : "";
+  const prevDirectPhotogRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!directPhotogInitials) {
+      prevDirectPhotogRef.current = directPhotogInitials;
+      return;
+    }
+    if (prevDirectPhotogRef.current === directPhotogInitials) return;
+    setForm((f: any) => {
+      let changed = false;
+      const next = (f.slots as any[]).map((s: any) => {
+        if (s.deposit_paid || !s.photographer_id) return s;
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        if (!p || p.initials !== directPhotogInitials) return s;
+        changed = true;
+        return { ...s, deposit_paid: true };
+      });
+      return changed ? { ...f, slots: next } : f;
+    });
+    prevDirectPhotogRef.current = directPhotogInitials;
+  }, [directPhotogInitials, photographers]);
 
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
@@ -486,6 +517,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 photographers={photographers}
                 slot={s}
                 isExternal={external}
+                directPhotog={depositPhotog}
                 onChange={(patch: any) => {
                   const next = [...form.slots];
                   const merged = { ...next[i], ...patch };
@@ -496,6 +528,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                     if ("photographer_id" in patch) {
                       const p = photographers.find((x: any) => x.id === merged.photographer_id);
                       merged.prism_commission = Number(p?.prism_commission || 0);
+                      if (p && depositPhotog && p.initials === depositPhotog && !merged.deposit_paid) {
+                        merged.deposit_paid = true;
+                      }
                     }
                     merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission, next);
                   }
@@ -648,12 +683,14 @@ function F({ label, children, className = "" }: any) {
   return <div className={`space-y-1.5 ${className}`}><Label className="text-xs">{label}</Label>{children}</div>;
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
   const hasExternalName = !!(slot.external_name && String(slot.external_name).trim());
   const filled = isExternal ? hasExternalName : hasPhotog;
+  const photog = isExternal ? null : photographers.find((p: any) => p.id === slot.photographer_id) || null;
+  const isDirectTarget = !isExternal && !!directPhotog && !!photog && photog.initials === directPhotog;
   return (
     <div className="rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
@@ -709,9 +746,12 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
       {!isExternal && filled && (
         <>
           <div className="border-t pt-2">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Checkbox id={`dp-${label}`} checked={slot.deposit_paid} onCheckedChange={(c) => onChange({ deposit_paid: !!c })} />
               <label htmlFor={`dp-${label}`} className="text-xs font-medium">Sinal devolvido ao fotógrafo</label>
+              {isDirectTarget && (
+                <span className="text-xs text-muted-foreground">— Marcado por defeito porque o sinal foi pago directamente a este fotógrafo.</span>
+              )}
             </div>
             {slot.deposit_paid && (
               <div className="grid grid-cols-2 gap-2">
