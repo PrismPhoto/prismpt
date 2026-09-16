@@ -63,8 +63,56 @@ function EventsPage() {
   });
 
   const { data: packages = [] } = useQuery({ queryKey: ["packages-all"], queryFn: async () => (await supabase.from("packages").select("*")).data ?? [] });
+  const { data: photographers = [] } = useQuery({ queryKey: ["photogs-list"], queryFn: async () => (await supabase.from("photographers").select("id, initials, full_name").order("initials")).data ?? [] });
 
   const years = [2027, 2028, 2029, 2030];
+
+  const filtered = useMemo(() => {
+    return (events as any[]).filter((e) => {
+      if (pkgF !== "all" && e.package_id !== pkgF) return false;
+      if (photogF !== "all" && !(e.event_photographers ?? []).some((ep: any) => ep.photographer_id === photogF)) return false;
+      if (dateFrom && String(e.event_date) < dateFrom) return false;
+      if (dateTo && String(e.event_date) > dateTo) return false;
+      return true;
+    });
+  }, [events, pkgF, photogF, dateFrom, dateTo]);
+
+  const groups = useMemo(() => {
+    const list = filtered;
+    if (groupBy === "none") return [{ key: "all", label: "Todos os eventos", rows: list }];
+    const map = new Map<string, { label: string; rows: any[] }>();
+    const push = (key: string, label: string, row: any) => {
+      if (!map.has(key)) map.set(key, { label, rows: [] });
+      map.get(key)!.rows.push(row);
+    };
+    for (const e of list) {
+      if (groupBy === "month") {
+        const d = new Date(e.event_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const label = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(d);
+        push(key, label.charAt(0).toUpperCase() + label.slice(1), e);
+      } else if (groupBy === "photographer") {
+        const eps = e.event_photographers ?? [];
+        if (eps.length === 0) push("zz-none", "Sem fotógrafo", e);
+        else
+          eps.forEach((ep: any) => {
+            const label = ep.photographers?.full_name ?? ep.photographers?.initials ?? ep.external_name ?? "Externo";
+            push(`p-${ep.photographer_id ?? label}`, label, e);
+          });
+      } else if (groupBy === "package") {
+        push(e.package_id ?? "zz-none", e.packages ? packageLabel(e.packages.name, e.packages.version) : "Sem pacote", e);
+      } else if (groupBy === "type") {
+        push(e.event_type ?? "zz-none", e.event_type ?? "Sem tipo", e);
+      } else if (groupBy === "status") {
+        push(e.status ?? "zz-none", e.status ?? "Sem status", e);
+      }
+    }
+    return [...map.entries()]
+      .sort((a, b) =>
+        groupBy === "month" ? a[0].localeCompare(b[0]) : a[1].label.localeCompare(b[1].label, "pt-PT"),
+      )
+      .map(([key, v]) => ({ key, label: v.label, rows: v.rows }));
+  }, [filtered, groupBy]);
 
   const exportCsv = () => {
     const rows = [
