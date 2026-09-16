@@ -214,6 +214,30 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suggestedFinalPayment]);
 
+  const directPhotogInitials = String(form.deposit_method || "").startsWith("directo:")
+    ? String(form.deposit_method).split(":")[1]
+    : "";
+  const prevDirectPhotogRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!directPhotogInitials) {
+      prevDirectPhotogRef.current = directPhotogInitials;
+      return;
+    }
+    if (prevDirectPhotogRef.current === directPhotogInitials) return;
+    setForm((f: any) => {
+      let changed = false;
+      const next = (f.slots as any[]).map((s: any) => {
+        if (s.deposit_paid || !s.photographer_id) return s;
+        const p = photographers.find((x: any) => x.id === s.photographer_id);
+        if (!p || p.initials !== directPhotogInitials) return s;
+        changed = true;
+        return { ...s, deposit_paid: true };
+      });
+      return changed ? { ...f, slots: next } : f;
+    });
+    prevDirectPhotogRef.current = directPhotogInitials;
+  }, [directPhotogInitials, photographers]);
+
   const onPkg = (id: string) => {
     const p = packages.find((x: any) => x.id === id);
     setForm({ ...form, package_id: id, total_value: p?.base_price ?? form.total_value });
