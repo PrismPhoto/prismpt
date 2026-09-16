@@ -518,13 +518,19 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
               const finalCredit = s.final_payment_received
                 ? (external ? baseFee : Number(s.final_payment_value || 0))
                 : 0;
-              const paid = depositCredit + finalCredit;
-              const missing = fee - paid;
               const photog = photographers.find((p: any) => p.id === s.photographer_id);
+              // Sinal do cliente pago directamente a este fotógrafo
+              const clientDeposit =
+                !external && depositDest === "directo" && photog && depositPhotog && photog.initials === depositPhotog
+                  ? Number(form.deposit_amount || 0)
+                  : 0;
+              const paid = depositCredit + finalCredit + clientDeposit;
+              const missing = fee - paid;
               const name = external
                 ? `Externo — ${s.external_name}`
                 : `Prism ${i + 1}${photog ? ` (${photog.initials})` : ""}`;
-              return { name, baseFee, extrasFee, fee, paid, missing, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
+              return { name, baseFee, extrasFee, fee, paid, missing, clientDeposit, deposit_paid: s.deposit_paid, final_paid: s.final_payment_received };
+
             }).filter(Boolean) as any[];
             if (rows.length === 0) return null;
             const totalMissing = rows.reduce((acc, r) => acc + Math.max(0, r.missing), 0);
@@ -539,7 +545,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           pacote {EUR(r.baseFee)}
                           {r.extrasFee > 0 ? ` + extras ${EUR(r.extrasFee)}` : ""}
+                          {r.clientDeposit > 0 ? ` · sinal recebido directo ${EUR(r.clientDeposit)}` : ""}
                           {" · "}sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
+
                         </span>
                       </div>
                       <div className="text-right tabular-nums whitespace-nowrap">
