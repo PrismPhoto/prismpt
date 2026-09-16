@@ -545,7 +545,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
                           pacote {EUR(r.baseFee)}
                           {r.extrasFee > 0 ? ` + extras ${EUR(r.extrasFee)}` : ""}
+                          {r.clientDeposit > 0 ? ` · sinal recebido directo ${EUR(r.clientDeposit)}` : ""}
                           {" · "}sinal {r.deposit_paid ? "✓" : "—"} · final {r.final_paid ? "✓" : "—"}
+
                         </span>
                       </div>
                       <div className="text-right tabular-nums whitespace-nowrap">
