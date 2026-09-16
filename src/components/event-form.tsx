@@ -517,6 +517,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 photographers={photographers}
                 slot={s}
                 isExternal={external}
+                directPhotog={depositPhotog}
                 onChange={(patch: any) => {
                   const next = [...form.slots];
                   const merged = { ...next[i], ...patch };
@@ -527,6 +528,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                     if ("photographer_id" in patch) {
                       const p = photographers.find((x: any) => x.id === merged.photographer_id);
                       merged.prism_commission = Number(p?.prism_commission || 0);
+                      if (p && depositPhotog && p.initials === depositPhotog && !merged.deposit_paid) {
+                        merged.deposit_paid = true;
+                      }
                     }
                     merged.fee = computeFee(merged.photographer_id, i, form.total_value, merged.prism_commission, next);
                   }
