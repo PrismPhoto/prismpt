@@ -26,6 +26,11 @@ function EventsPage() {
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
+  const [pkgF, setPkgF] = useState("all");
+  const [photogF, setPhotogF] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [groupBy, setGroupBy] = useState("month");
   const [createOpen, setCreateOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const runSync = useServerFn(syncGoogleCalendar);
