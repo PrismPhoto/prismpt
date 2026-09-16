@@ -50,7 +50,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       pre_wedding_notes: event?.pre_wedding_notes ?? "",
       photo_permission: event?.photo_permission ?? "",
       // pagamentos
-      deposit_amount: event?.deposit_amount ?? 400,
+      deposit_amount: event?.deposit_amount ?? 0,
       deposit_method: event?.deposit_method ?? "",
       deposit_paid_date: event?.deposit_paid_date ?? "",
       final_payment_value: event?.final_payment_value ?? "",
