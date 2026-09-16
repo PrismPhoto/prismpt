@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,11 @@ function EventsPage() {
   const [year, setYear] = useState(2027);
   const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
+  const [pkgF, setPkgF] = useState("all");
+  const [photogF, setPhotogF] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [groupBy, setGroupBy] = useState("month");
   const [createOpen, setCreateOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const runSync = useServerFn(syncGoogleCalendar);
@@ -58,13 +63,61 @@ function EventsPage() {
   });
 
   const { data: packages = [] } = useQuery({ queryKey: ["packages-all"], queryFn: async () => (await supabase.from("packages").select("*")).data ?? [] });
+  const { data: photographers = [] } = useQuery({ queryKey: ["photogs-list"], queryFn: async () => (await supabase.from("photographers").select("id, initials, full_name").order("initials")).data ?? [] });
 
   const years = [2027, 2028, 2029, 2030];
+
+  const filtered = useMemo(() => {
+    return (events as any[]).filter((e) => {
+      if (pkgF !== "all" && e.package_id !== pkgF) return false;
+      if (photogF !== "all" && !(e.event_photographers ?? []).some((ep: any) => ep.photographer_id === photogF)) return false;
+      if (dateFrom && String(e.event_date) < dateFrom) return false;
+      if (dateTo && String(e.event_date) > dateTo) return false;
+      return true;
+    });
+  }, [events, pkgF, photogF, dateFrom, dateTo]);
+
+  const groups = useMemo(() => {
+    const list = filtered;
+    if (groupBy === "none") return [{ key: "all", label: "Todos os eventos", rows: list }];
+    const map = new Map<string, { label: string; rows: any[] }>();
+    const push = (key: string, label: string, row: any) => {
+      if (!map.has(key)) map.set(key, { label, rows: [] });
+      map.get(key)!.rows.push(row);
+    };
+    for (const e of list) {
+      if (groupBy === "month") {
+        const d = new Date(e.event_date);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        const label = new Intl.DateTimeFormat("pt-PT", { month: "long", year: "numeric" }).format(d);
+        push(key, label.charAt(0).toUpperCase() + label.slice(1), e);
+      } else if (groupBy === "photographer") {
+        const eps = e.event_photographers ?? [];
+        if (eps.length === 0) push("zz-none", "Sem fotógrafo", e);
+        else
+          eps.forEach((ep: any) => {
+            const label = ep.photographers?.full_name ?? ep.photographers?.initials ?? ep.external_name ?? "Externo";
+            push(`p-${ep.photographer_id ?? label}`, label, e);
+          });
+      } else if (groupBy === "package") {
+        push(e.package_id ?? "zz-none", e.packages ? packageLabel(e.packages.name, e.packages.version) : "Sem pacote", e);
+      } else if (groupBy === "type") {
+        push(e.event_type ?? "zz-none", e.event_type ?? "Sem tipo", e);
+      } else if (groupBy === "status") {
+        push(e.status ?? "zz-none", e.status ?? "Sem status", e);
+      }
+    }
+    return [...map.entries()]
+      .sort((a, b) =>
+        groupBy === "month" ? a[0].localeCompare(b[0]) : a[1].label.localeCompare(b[1].label, "pt-PT"),
+      )
+      .map(([key, v]) => ({ key, label: v.label, rows: v.rows }));
+  }, [filtered, groupBy]);
 
   const exportCsv = () => {
     const rows = [
       ["Data", "Cliente", "Tipo", "Pacote", "Valor", "WP", "Comissão WP", "Status"],
-      ...events.map((e: any) => [
+      ...filtered.map((e: any) => [
         e.event_date, e.client_name, e.event_type, e.packages ? packageLabel(e.packages.name, e.packages.version) : "", e.total_value,
         e.wedding_planners?.name ?? "", e.wp_commission_value ?? 0, e.status,
       ]),
@@ -117,6 +170,61 @@ function EventsPage() {
         }
       />
 
+      <Card className="mb-4">
+        <CardContent className="p-4 flex flex-wrap items-end gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Pacote</Label>
+            <Select value={pkgF} onValueChange={setPkgF}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os pacotes</SelectItem>
+                {sortPackages(packages as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{packageLabel(p.name, p.version)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Fotógrafo</Label>
+            <Select value={photogF} onValueChange={setPhotogF}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os fotógrafos</SelectItem>
+                {(photographers as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{p.initials} — {p.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">De</Label>
+            <Input type="date" className="w-40" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Até</Label>
+            <Input type="date" className="w-40" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Agrupar por</Label>
+            <Select value={groupBy} onValueChange={setGroupBy}>
+              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Mês</SelectItem>
+                <SelectItem value="photographer">Fotógrafo</SelectItem>
+                <SelectItem value="package">Pacote</SelectItem>
+                <SelectItem value="type">Tipo</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="none">Sem agrupamento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {(pkgF !== "all" || photogF !== "all" || dateFrom || dateTo) && (
+            <Button variant="ghost" onClick={() => { setPkgF("all"); setPhotogF("all"); setDateFrom(""); setDateTo(""); }}>Limpar filtros</Button>
+          )}
+          <div className="ml-auto text-sm text-muted-foreground">{filtered.length} eventos</div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -133,22 +241,36 @@ function EventsPage() {
                 </tr>
               </thead>
               <tbody>
-                {events.map((e: any) => (
-                  <tr
-                    key={e.id}
-                    className="border-t hover:bg-muted/30 cursor-pointer"
-                    onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
-                  >
-                    <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
-                    <td className="p-3 font-medium">{e.client_name}</td>
-                    <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
-                    <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
-                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
-                    <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
-                    <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
-                  </tr>
+                {groups.map((g) => (
+                  <Fragment key={g.key}>
+                    {groupBy !== "none" && (
+                      <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
+                        <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                          {g.label}
+                          <span className="ml-2 font-normal text-muted-foreground normal-case">
+                            {g.rows.length} evento{g.rows.length === 1 ? "" : "s"} · {EUR(g.rows.reduce((s: number, r: any) => s + Number(r.total_value || 0), 0))}
+                          </span>
+                        </td>
+                      </tr>
+                    )}
+                    {g.rows.map((e: any) => (
+                      <tr
+                        key={`${g.key}-${e.id}`}
+                        className="border-t hover:bg-muted/30 cursor-pointer"
+                        onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
+                      >
+                        <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
+                        <td className="p-3 font-medium">{e.client_name}</td>
+                        <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
+                        <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
+                        <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
+                        <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
+                        <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
+                      </tr>
+                    ))}
+                  </Fragment>
                 ))}
-                {events.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
             </table>
           </div>
