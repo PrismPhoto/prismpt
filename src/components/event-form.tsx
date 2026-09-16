@@ -746,9 +746,12 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
       {!isExternal && filled && (
         <>
           <div className="border-t pt-2">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Checkbox id={`dp-${label}`} checked={slot.deposit_paid} onCheckedChange={(c) => onChange({ deposit_paid: !!c })} />
               <label htmlFor={`dp-${label}`} className="text-xs font-medium">Sinal devolvido ao fotógrafo</label>
+              {isDirectTarget && (
+                <span className="text-xs text-muted-foreground">— Marcado por defeito porque o sinal foi pago directamente a este fotógrafo.</span>
+              )}
             </div>
             {slot.deposit_paid && (
               <div className="grid grid-cols-2 gap-2">
