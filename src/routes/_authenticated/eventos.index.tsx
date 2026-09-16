@@ -117,7 +117,7 @@ function EventsPage() {
   const exportCsv = () => {
     const rows = [
       ["Data", "Cliente", "Tipo", "Pacote", "Valor", "WP", "Comissão WP", "Status"],
-      ...events.map((e: any) => [
+      ...filtered.map((e: any) => [
         e.event_date, e.client_name, e.event_type, e.packages ? packageLabel(e.packages.name, e.packages.version) : "", e.total_value,
         e.wedding_planners?.name ?? "", e.wp_commission_value ?? 0, e.status,
       ]),
