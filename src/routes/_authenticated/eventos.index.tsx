@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -242,7 +242,7 @@ function EventsPage() {
               </thead>
               <tbody>
                 {groups.map((g) => (
-                  <>
+                  <Fragment key={g.key}>
                     {groupBy !== "none" && (
                       <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
                         <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
@@ -268,7 +268,7 @@ function EventsPage() {
                         <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
                       </tr>
                     ))}
-                  </>
+                  </Fragment>
                 ))}
                 {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
