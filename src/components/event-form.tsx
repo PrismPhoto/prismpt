@@ -64,7 +64,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
         const dist: SlotDistribution[] = (pkg?.fee_distribution as SlotDistribution[] | null)
           ?? defaultDistribution(
             Math.max(existingPhotogs.length || 1, pkg?.num_prism_photographers ?? 1),
-            pkg?.has_external_photographer ?? false,
+            Boolean(pkg?.has_external_photographer || pkg?.has_external),
           );
         const n = Math.max(dist.length, existingPhotogs.length);
         return Array.from({ length: n }, (_, i) => {
@@ -107,7 +107,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
 
   const selectedPackage = packages.find((p: any) => p.id === form.package_id);
   const distribution: SlotDistribution[] = (selectedPackage?.fee_distribution as SlotDistribution[] | null)
-    ?? defaultDistribution(form.slots.length || 1, false);
+    ?? defaultDistribution(
+      Number(selectedPackage?.num_prism_photographers) || form.slots.length || 1,
+      Boolean(selectedPackage?.has_external_photographer || selectedPackage?.has_external),
+    );
   const fixedOverrides = (slots: any[]) => {
     const o: Record<number, number> = {};
     slots.forEach((s, i) => { if (distribution[i]?.mode === "fixed") o[i] = Number(s.fee || 0); });
