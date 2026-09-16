@@ -170,6 +170,61 @@ function EventsPage() {
         }
       />
 
+      <Card className="mb-4">
+        <CardContent className="p-4 flex flex-wrap items-end gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs">Pacote</Label>
+            <Select value={pkgF} onValueChange={setPkgF}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os pacotes</SelectItem>
+                {sortPackages(packages as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{packageLabel(p.name, p.version)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Fotógrafo</Label>
+            <Select value={photogF} onValueChange={setPhotogF}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os fotógrafos</SelectItem>
+                {(photographers as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={p.id}>{p.initials} — {p.full_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">De</Label>
+            <Input type="date" className="w-40" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Até</Label>
+            <Input type="date" className="w-40" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Agrupar por</Label>
+            <Select value={groupBy} onValueChange={setGroupBy}>
+              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Mês</SelectItem>
+                <SelectItem value="photographer">Fotógrafo</SelectItem>
+                <SelectItem value="package">Pacote</SelectItem>
+                <SelectItem value="type">Tipo</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+                <SelectItem value="none">Sem agrupamento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {(pkgF !== "all" || photogF !== "all" || dateFrom || dateTo) && (
+            <Button variant="ghost" onClick={() => { setPkgF("all"); setPhotogF("all"); setDateFrom(""); setDateTo(""); }}>Limpar filtros</Button>
+          )}
+          <div className="ml-auto text-sm text-muted-foreground">{filtered.length} eventos</div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -186,22 +241,36 @@ function EventsPage() {
                 </tr>
               </thead>
               <tbody>
-                {events.map((e: any) => (
-                  <tr
-                    key={e.id}
-                    className="border-t hover:bg-muted/30 cursor-pointer"
-                    onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
-                  >
-                    <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
-                    <td className="p-3 font-medium">{e.client_name}</td>
-                    <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
-                    <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
-                    <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
-                    <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
-                    <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
-                  </tr>
+                {groups.map((g) => (
+                  <>
+                    {groupBy !== "none" && (
+                      <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
+                        <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                          {g.label}
+                          <span className="ml-2 font-normal text-muted-foreground normal-case">
+                            {g.rows.length} evento{g.rows.length === 1 ? "" : "s"} · {EUR(g.rows.reduce((s: number, r: any) => s + Number(r.total_value || 0), 0))}
+                          </span>
+                        </td>
+                      </tr>
+                    )}
+                    {g.rows.map((e: any) => (
+                      <tr
+                        key={`${g.key}-${e.id}`}
+                        className="border-t hover:bg-muted/30 cursor-pointer"
+                        onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
+                      >
+                        <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
+                        <td className="p-3 font-medium">{e.client_name}</td>
+                        <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
+                        <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
+                        <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
+                        <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
+                        <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
+                      </tr>
+                    ))}
+                  </>
                 ))}
-                {events.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
             </table>
           </div>
