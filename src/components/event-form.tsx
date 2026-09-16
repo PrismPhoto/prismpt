@@ -67,17 +67,24 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             Boolean(pkg?.has_external_photographer || pkg?.has_external),
           );
         const n = Math.max(dist.length, existingPhotogs.length);
+        const directInitials = String(event?.deposit_method || "").startsWith("directo:")
+          ? String(event.deposit_method).split(":")[1]
+          : "";
         return Array.from({ length: n }, (_, i) => {
           const ep = existingPhotogs.find((p: any) => p.position === i + 1);
           const slotDist = dist[i];
           const isExt = slotDist?.mode === "fixed";
+          const photog = !isExt && ep?.photographer_id
+            ? photographers.find((p: any) => p.id === ep.photographer_id)
+            : null;
+          const isDirectTarget = !!photog && photog.initials === directInitials;
           return {
             photographer_id: ep?.photographer_id ?? "",
             external_name: ep?.external_name ?? "",
             fee: ep?.fee ?? (isExt ? Number(slotDist?.value ?? 0) : 0),
             prism_commission: ep?.prism_commission ?? 0,
             deposit_amount: ep?.deposit_amount ?? 0,
-            deposit_paid: ep?.deposit_paid ?? false,
+            deposit_paid: ep?.deposit_paid ?? (isDirectTarget || false),
             deposit_paid_date: ep?.deposit_paid_date ?? "",
             final_payment_received: ep?.final_payment_received ?? false,
             final_payment_value: ep?.final_payment_value ?? 0,
