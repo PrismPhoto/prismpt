@@ -683,12 +683,14 @@ function F({ label, children, className = "" }: any) {
   return <div className={`space-y-1.5 ${className}`}><Label className="text-xs">{label}</Label>{children}</div>;
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, isExternal }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
   const hasExternalName = !!(slot.external_name && String(slot.external_name).trim());
   const filled = isExternal ? hasExternalName : hasPhotog;
+  const photog = isExternal ? null : photographers.find((p: any) => p.id === slot.photographer_id) || null;
+  const isDirectTarget = !isExternal && !!directPhotog && !!photog && photog.initials === directPhotog;
   return (
     <div className="rounded-md border p-3 space-y-3 bg-muted/20">
       <div className="grid grid-cols-12 gap-2 items-end">
