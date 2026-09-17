@@ -262,12 +262,12 @@ function EventsPage() {
                         <td className="p-3">
                           {e.deposit_paid ? (
                             <span className="inline-flex items-center gap-1.5 text-xs">
-                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              <span className="h-2 w-2 rounded-full bg-primary" />
                               <span className="tabular-nums">{EUR(e.deposit_amount)}</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-amber-500">
-                              <span className="h-2 w-2 rounded-full bg-amber-500" />
+                            <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
+                              <span className="h-2 w-2 rounded-full bg-destructive" />
                               Em falta
                             </span>
                           )}
