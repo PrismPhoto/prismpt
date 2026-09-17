@@ -241,7 +241,7 @@ function EventsPage() {
                   <Fragment key={g.key}>
                     {groupBy !== "none" && (
                       <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
-                        <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                        <td colSpan={6} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
                           {g.label}
                           <span className="ml-2 font-normal text-muted-foreground normal-case">
                             {g.rows.length} evento{g.rows.length === 1 ? "" : "s"} · {EUR(g.rows.reduce((s: number, r: any) => s + Number(r.total_value || 0), 0))}
