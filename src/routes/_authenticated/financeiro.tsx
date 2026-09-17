@@ -6,7 +6,7 @@ import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { EUR, EVENT_TYPES, fmtDate } from "@/lib/format";
+import { EUR, fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({ component: FinancePage });
@@ -15,20 +15,17 @@ function FinancePage() {
   const { role, photographerId } = useAuth();
   const navigate = useNavigate();
   const [year, setYear] = useState(2027);
-  const [typeF, setTypeF] = useState<string>(EVENT_TYPES[0]);
   const [photogF, setPhotogF] = useState("all");
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs-all"], queryFn: async () => (await supabase.from("photographers").select("*")).data ?? [] });
 
   const { data: rows = [] } = useQuery({
-    queryKey: ["finance", year, typeF, photogF],
+    queryKey: ["finance", year, photogF],
     queryFn: async () => {
-      let q = supabase.from("events")
+      const { data } = await supabase.from("events")
         .select("*, event_photographers(*, photographers(initials, full_name)), event_extras(*), wedding_planners(name)")
         .eq("event_year", year)
         .order("event_date");
-      if (typeF !== "all") q = q.eq("event_type", typeF as any);
-      const { data } = await q;
       return data ?? [];
     },
   });
@@ -69,7 +66,6 @@ function FinancePage() {
     : (photogF !== "all" ? photogF : null);
 
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
-  const totalWp = filtered.reduce((s, e) => s + Number(e.wp_commission_value || 0), 0);
   const allFeeRows = filtered.flatMap((e: any) =>
     (e.event_photographers || [])
       .filter((ep: any) => !activePhotographerId || ep.photographer_id === activePhotographerId)
@@ -106,10 +102,6 @@ function FinancePage() {
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={typeF} onValueChange={setTypeF}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
             {role === "manager" && (
               <Select value={photogF} onValueChange={setPhotogF}>
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -124,7 +116,6 @@ function FinancePage() {
         {role === "manager" && !activePhotographerId && <KPI label="Receita" value={EUR(totalRevenue)} />}
         {role === "manager" && !activePhotographerId && <KPI label="Recebido" value={EUR(totalReceived)} />}
         {role === "manager" && !activePhotographerId && <KPI label="Pendente" value={EUR(totalPending)} />}
-        {role === "manager" && !activePhotographerId && <KPI label="Comissões WP" value={EUR(totalWp)} />}
         <KPI label="Fees totais" value={EUR(totalFees)} />
         <KPI label="Fees pagos" value={EUR(totalFeesPaid)} />
         <KPI label="Por pagar" value={EUR(totalFees - totalFeesPaid)} />
@@ -164,7 +155,6 @@ function FinancePage() {
                   {role === "manager" && <th className="text-right p-3">Valor</th>}
                   {role === "manager" && <th className="text-right p-3">Sinal</th>}
                   {role === "manager" && <th className="text-right p-3">Final</th>}
-                  {role === "manager" && <th className="text-right p-3">WP</th>}
                   <th className="text-left p-3">Fees</th>
                 </tr>
               </thead>
@@ -180,7 +170,6 @@ function FinancePage() {
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>}
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{e.deposit_paid_date ? EUR(e.deposit_amount) : <span className="text-muted-foreground">—</span>}</td>}
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{e.final_payment_date ? EUR(e.final_payment_value) : <span className="text-muted-foreground">—</span>}</td>}
-                    {role === "manager" && <td className="p-3 text-right tabular-nums">{e.wp_commission_value ? EUR(e.wp_commission_value) : <span className="text-muted-foreground">—</span>}</td>}
                     <td className="p-3">
                       <div className="flex gap-1 flex-wrap">
                         {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => {
@@ -197,7 +186,7 @@ function FinancePage() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem dados</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Sem dados</td></tr>}
               </tbody>
             </table>
           </div>
