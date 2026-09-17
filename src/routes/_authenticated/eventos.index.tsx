@@ -52,10 +52,9 @@ function EventsPage() {
   };
 
   const { data: events = [] } = useQuery({
-    queryKey: ["events", year, typeF, statusF],
+    queryKey: ["events", year, statusF],
     queryFn: async () => {
-      let q = supabase.from("events").select("*, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
-      if (typeF !== "all") q = q.eq("event_type", typeF as any);
+      let q = supabase.from("events").select("*, deposit_amount, deposit_paid, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
       if (statusF !== "all") q = q.eq("status", statusF as any);
       const { data } = await q;
       return data ?? [];
