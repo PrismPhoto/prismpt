@@ -24,8 +24,8 @@ function EventsPage() {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [year, setYear] = useState(2027);
-  const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
+
   const [pkgF, setPkgF] = useState("all");
   const [photogF, setPhotogF] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
