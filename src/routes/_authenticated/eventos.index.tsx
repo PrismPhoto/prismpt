@@ -229,9 +229,9 @@ function EventsPage() {
                 <tr>
                   <th className="text-left p-3">Data</th>
                   <th className="text-left p-3">Cliente</th>
-                  <th className="text-left p-3">Tipo</th>
                   <th className="text-left p-3">Pacote</th>
                   <th className="text-left p-3">Fotógrafos</th>
+                  <th className="text-left p-3">Sinal</th>
                   <th className="text-right p-3">Valor</th>
                   <th className="text-left p-3">Status</th>
                 </tr>
