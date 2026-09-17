@@ -257,9 +257,21 @@ function EventsPage() {
                       >
                         <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
                         <td className="p-3 font-medium">{e.client_name}</td>
-                        <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
                         <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
+                        <td className="p-3">
+                          {e.deposit_paid ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              <span className="tabular-nums">{EUR(e.deposit_amount)}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-amber-500">
+                              <span className="h-2 w-2 rounded-full bg-amber-500" />
+                              Em falta
+                            </span>
+                          )}
+                        </td>
                         <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                         <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
                       </tr>
