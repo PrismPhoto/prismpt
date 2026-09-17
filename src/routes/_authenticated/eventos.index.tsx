@@ -137,11 +137,8 @@ function EventsPage() {
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={typeF} onValueChange={setTypeF}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">Todos</SelectItem>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
             <Select value={statusF} onValueChange={setStatusF}>
+
               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="all">Todos status</SelectItem>{EVENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
