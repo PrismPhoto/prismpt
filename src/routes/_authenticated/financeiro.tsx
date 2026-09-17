@@ -15,7 +15,7 @@ function FinancePage() {
   const { role, photographerId } = useAuth();
   const navigate = useNavigate();
   const [year, setYear] = useState(2027);
-  const [typeF, setTypeF] = useState("all");
+  const [typeF, setTypeF] = useState<string>(EVENT_TYPES[0]);
   const [photogF, setPhotogF] = useState("all");
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs-all"], queryFn: async () => (await supabase.from("photographers").select("*")).data ?? [] });
@@ -108,7 +108,7 @@ function FinancePage() {
             </Select>
             <Select value={typeF} onValueChange={setTypeF}>
               <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">Todos</SelectItem>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              <SelectContent>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
             {role === "manager" && (
               <Select value={photogF} onValueChange={setPhotogF}>
@@ -136,7 +136,7 @@ function FinancePage() {
           <CardHeader><CardTitle className="text-base">Caixa por fotógrafo</CardTitle></CardHeader>
           <CardContent>
             <table className="w-full text-sm">
-              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">A pagar</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Comissão PRISM</th><th className="text-right p-2">Saldo</th></tr></thead>
+              <thead className="text-xs uppercase text-muted-foreground"><tr><th className="text-left p-2">Fotógrafo</th><th className="text-right p-2">a receber</th><th className="text-right p-2">Pago</th><th className="text-right p-2">Comissão PRISM</th><th className="text-right p-2">Saldo</th></tr></thead>
               <tbody>
                 {Object.values(balances).map((b) => (
                   <tr key={b.initials} className="border-t">
