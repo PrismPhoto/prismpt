@@ -78,7 +78,7 @@ export const syncGoogleCalendar = createServerFn({ method: "POST" })
     } while (pageToken);
 
     const candidates = items
-      .filter((e) => typeof e.summary === "string" && e.summary.trim().startsWith("//"))
+      .filter((e) => typeof e.summary === "string" && /^\/\/[^\/]/.test(e.summary.trim()))
       .map((e) => ({
         gid: e.id as string,
         title: (e.summary as string).trim(),
