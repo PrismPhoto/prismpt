@@ -24,8 +24,8 @@ function EventsPage() {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [year, setYear] = useState(2027);
-  const [typeF, setTypeF] = useState("all");
   const [statusF, setStatusF] = useState("all");
+
   const [pkgF, setPkgF] = useState("all");
   const [photogF, setPhotogF] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -52,10 +52,9 @@ function EventsPage() {
   };
 
   const { data: events = [] } = useQuery({
-    queryKey: ["events", year, typeF, statusF],
+    queryKey: ["events", year, statusF],
     queryFn: async () => {
-      let q = supabase.from("events").select("*, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
-      if (typeF !== "all") q = q.eq("event_type", typeF as any);
+      let q = supabase.from("events").select("*, deposit_amount, deposit_paid, packages(name, version), wedding_planners(name), event_photographers(*, photographers(initials, full_name))").eq("event_year", year).order("event_date");
       if (statusF !== "all") q = q.eq("status", statusF as any);
       const { data } = await q;
       return data ?? [];
@@ -137,10 +136,6 @@ function EventsPage() {
             <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-            </Select>
-            <Select value={typeF} onValueChange={setTypeF}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="all">Todos</SelectItem>{EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={statusF} onValueChange={setStatusF}>
               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -233,9 +228,9 @@ function EventsPage() {
                 <tr>
                   <th className="text-left p-3">Data</th>
                   <th className="text-left p-3">Cliente</th>
-                  <th className="text-left p-3">Tipo</th>
                   <th className="text-left p-3">Pacote</th>
                   <th className="text-left p-3">Fotógrafos</th>
+                  <th className="text-left p-3">Sinal</th>
                   <th className="text-right p-3">Valor</th>
                   <th className="text-left p-3">Status</th>
                 </tr>
@@ -245,7 +240,7 @@ function EventsPage() {
                   <Fragment key={g.key}>
                     {groupBy !== "none" && (
                       <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
-                        <td colSpan={7} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                        <td colSpan={6} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
                           {g.label}
                           <span className="ml-2 font-normal text-muted-foreground normal-case">
                             {g.rows.length} evento{g.rows.length === 1 ? "" : "s"} · {EUR(g.rows.reduce((s: number, r: any) => s + Number(r.total_value || 0), 0))}
@@ -261,16 +256,28 @@ function EventsPage() {
                       >
                         <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
                         <td className="p-3 font-medium">{e.client_name}</td>
-                        <td className="p-3"><Badge variant="outline">{e.event_type}</Badge></td>
                         <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
+                        <td className="p-3">
+                          {e.deposit_paid ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs">
+                              <span className="h-2 w-2 rounded-full bg-primary" />
+                              <span className="tabular-nums">{EUR(e.deposit_amount)}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
+                              <span className="h-2 w-2 rounded-full bg-destructive" />
+                              Em falta
+                            </span>
+                          )}
+                        </td>
                         <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                         <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
                       </tr>
                     ))}
                   </Fragment>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
             </table>
           </div>
