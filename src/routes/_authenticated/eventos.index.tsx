@@ -278,7 +278,7 @@ function EventsPage() {
                     ))}
                   </Fragment>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
             </table>
           </div>
