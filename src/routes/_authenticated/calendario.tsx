@@ -112,10 +112,19 @@ function CalendarPage() {
                   onClick={() => its.length && setDayOpen(iso)}
                   className={cn(
                     "min-h-[88px] border rounded-md p-1.5 text-left flex flex-col gap-1 hover:border-primary/40 transition",
-                    isToday && "border-primary"
+                    isToday && "border-primary",
+                    conflictsByDate[iso] && "border-destructive"
                   )}
                 >
-                  <div className="text-xs font-medium">{d.getDate()}</div>
+                  <div className="text-xs font-medium flex items-center justify-between gap-1">
+                    <span>{d.getDate()}</span>
+                    {conflictsByDate[iso] && (
+                      <AlertTriangle
+                        className="h-3.5 w-3.5 text-destructive"
+                        title={`Fotógrafo repetido: ${conflictsByDate[iso].join(", ")}`}
+                      />
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1 overflow-hidden">
                     {its.slice(0, 3).map((i) => (
                       <span key={`${i.type}-${i.id}`} className={cn("text-[10px] px-1.5 py-0.5 rounded truncate", STATUS_COLOR[i.status])}>
