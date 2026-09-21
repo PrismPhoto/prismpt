@@ -287,6 +287,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
 
   const save = async () => {
     if (!form.event_date || !form.client_name) return toast.error("Data e cliente obrigatórios");
+    if (blockingConflicts.length) return toast.error(`Conflito de agenda: ${blockingConflicts.join(" · ")}`);
     const baseTotal = Number(form.total_value || 0);
     const grandTotal = baseTotal + extrasTotal;
     const payload = {
@@ -543,6 +544,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 slot={s}
                 isExternal={external}
                 directPhotog={depositPhotog}
+                conflict={s.photographer_id ? conflicts[s.photographer_id] : undefined}
                 onChange={(patch: any) => {
                   const next = [...form.slots];
                   const merged = { ...next[i], ...patch };
@@ -708,7 +710,7 @@ function F({ label, children, className = "" }: any) {
   return <div className={`space-y-1.5 ${className}`}><Label className="text-xs">{label}</Label>{children}</div>;
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog, conflict }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
