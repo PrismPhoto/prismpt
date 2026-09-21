@@ -73,6 +73,19 @@ function PhotogProfile() {
   const upcoming = assignments.filter((a: any) => a.events.event_date >= today);
   const past = assignments.filter((a: any) => a.events.event_date < today);
 
+  // Datas em que este fotógrafo está atribuído a mais do que um evento
+  const conflictDates = new Set(
+    Object.entries(
+      assignments.reduce((acc: Record<string, number>, a: any) => {
+        if (a.events?.status === "Cancelado") return acc;
+        acc[a.events.event_date] = (acc[a.events.event_date] ?? 0) + 1;
+        return acc;
+      }, {}),
+    )
+      .filter(([, n]) => (n as number) > 1)
+      .map(([d]) => d),
+  );
+
   const paidFor = (a: any) => {
     const dep = a.deposit_paid ? Number(a.deposit_amount || 0) : 0;
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
