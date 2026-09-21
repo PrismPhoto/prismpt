@@ -265,7 +265,6 @@ function EventsPage() {
                               <AlertTriangle
                                 className="h-4 w-4 text-destructive"
                                 aria-label="Conflito de fotógrafo"
-                                titleAccess=""
                                 title={`Fotógrafo repetido nesta data: ${conflictsByEvent[e.id].join(", ")}`}
                               />
                             )}
