@@ -145,14 +145,14 @@ function PhotogProfile() {
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} />
+          <EventTable rows={upcoming} conflictDates={conflictDates} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} />
+          <EventTable rows={past} conflictDates={conflictDates} />
         </CardContent>
       </Card>
 
@@ -181,7 +181,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows }: { rows: any[] }) {
+function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<string> }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -205,7 +205,14 @@ function EventTable({ rows }: { rows: any[] }) {
             const variant: any = r.final_payment_received ? "default" : r.deposit_paid ? "secondary" : "outline";
             return (
               <tr key={r.id} className="border-t">
-                <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
+                <td className="p-3 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5">
+                    {fmtDate(r.events.event_date)}
+                    {conflictDates?.has(r.events.event_date) && (
+                      <AlertTriangle className="h-4 w-4 text-destructive" title="Tem mais do que um evento nesta data" />
+                    )}
+                  </span>
+                </td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
                 <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
