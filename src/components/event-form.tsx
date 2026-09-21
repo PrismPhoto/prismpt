@@ -16,6 +16,18 @@ import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, 
 
 const EMPTY_EXTRAS: any[] = [];
 
+// Normaliza formatos antigos de deposit_method para o formato canónico "directo:XX".
+function normalizeDepositMethod(raw: any): string {
+  const s = String(raw ?? "").trim();
+  if (!s) return "";
+  let m = s.match(/^directo:([A-Za-z]+)$/);
+  if (m) return `directo:${m[1].toUpperCase()}`;
+  m = s.match(/directo ao fot[oó]grafo\s*\(([^)]+)\)/i);
+  if (m) return `directo:${m[1].trim().toUpperCase()}`;
+  if (/^rui$/i.test(s)) return "directo:RV";
+  return s;
+}
+
 export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef }: any) {
   const isEdit = !!event;
   const [form, setForm] = useState<any>(() => {
