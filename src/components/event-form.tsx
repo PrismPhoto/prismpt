@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, packageLabelWithPrice, sortPackages } from "@/lib/format";
 import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, type SlotDistribution } from "@/lib/fee-distribution";
+import { usePhotographerConflicts } from "@/lib/conflicts";
 
 const EMPTY_EXTRAS: any[] = [];
 
