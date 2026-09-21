@@ -209,7 +209,7 @@ function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<
                   <span className="inline-flex items-center gap-1.5">
                     {fmtDate(r.events.event_date)}
                     {conflictDates?.has(r.events.event_date) && (
-                      <AlertTriangle className="h-4 w-4 text-destructive" title="Tem mais do que um evento nesta data" />
+                      <span title="Tem mais do que um evento nesta data"><AlertTriangle className="h-4 w-4 text-destructive" /></span>
                     )}
                   </span>
                 </td>
