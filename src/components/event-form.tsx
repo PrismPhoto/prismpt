@@ -141,6 +141,18 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0), fixedOverrides(slots));
   };
   const isExternalSlot = (idx: number) => distribution[idx]?.mode === "fixed";
+
+  // Conflitos de agenda: mesmo fotógrafo noutro evento na mesma data / indisponível
+  const conflicts = usePhotographerConflicts(form.event_date || undefined, event?.id);
+  const blockingConflicts = (form.slots as any[])
+    .map((s, i) => {
+      if (isExternalSlot(i) || !s.photographer_id) return null;
+      const c = conflicts[s.photographer_id];
+      if (!c || c.events.length === 0) return null;
+      const p = photographers.find((x: any) => x.id === s.photographer_id);
+      return `${p?.initials ?? "?"} já está em ${c.events.map((e: any) => e.client_name).join(", ")}`;
+    })
+    .filter(Boolean) as string[];
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
   const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
