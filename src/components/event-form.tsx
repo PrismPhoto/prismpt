@@ -51,7 +51,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       photo_permission: event?.photo_permission ?? "",
       // pagamentos
       deposit_amount: event?.deposit_amount ?? 0,
-      deposit_method: event?.deposit_method ?? "",
+      deposit_method: normalizeDepositMethod(event?.deposit_method),
       deposit_paid_date: event?.deposit_paid_date ?? "",
       final_payment_value: event?.final_payment_value ?? "",
       final_payment_date: event?.final_payment_date ?? "",
