@@ -35,12 +35,14 @@ function CalendarPage() {
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs"], queryFn: async () => (await supabase.from("photographers").select("*").eq("active", true)).data ?? [] });
 
-  const { data: items = [] } = useQuery({
+  const { data: payload } = useQuery({
     queryKey: ["calendar", startISO, endISO, photogFilter],
     queryFn: async () => {
       const { data: events } = await supabase.from("events").select("*, event_photographers(photographer_id, photographers(initials))").gte("event_date", startISO).lte("event_date", endISO);
       const { data: leads } = await supabase.from("leads").select("*").gte("event_date", startISO).lte("event_date", endISO).neq("status", "Arquivo");
       const { data: offs } = await supabase.from("photographer_unavailability").select("*, photographers(initials)").gte("date", startISO).lte("date", endISO);
+
+      const conflicts = findDuplicatePhotographers(events ?? []).byDate;
 
       const arr: any[] = [];
       (events ?? []).forEach((e: any) => {
@@ -52,9 +54,11 @@ function CalendarPage() {
         if (photogFilter !== "all" && o.photographer_id !== photogFilter) return;
         arr.push({ date: o.date, type: "off", id: o.id, label: `${o.photographers?.initials} off`, status: "Off", data: o });
       });
-      return arr;
+      return { arr, conflicts };
     },
   });
+  const items = payload?.arr ?? [];
+  const conflictsByDate: Record<string, string[]> = payload?.conflicts ?? {};
 
   const grid = useMemo(() => {
     const firstDow = (start.getDay() + 6) % 7; // monday-first
