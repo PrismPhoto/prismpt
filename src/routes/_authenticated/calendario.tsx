@@ -119,10 +119,9 @@ function CalendarPage() {
                   <div className="text-xs font-medium flex items-center justify-between gap-1">
                     <span>{d.getDate()}</span>
                     {conflictsByDate[iso] && (
-                      <AlertTriangle
-                        className="h-3.5 w-3.5 text-destructive"
-                        title={`Fotógrafo repetido: ${conflictsByDate[iso].join(", ")}`}
-                      />
+                      <span title={`Fotógrafo repetido: ${conflictsByDate[iso].join(", ")}`}>
+                        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                      </span>
                     )}
                   </div>
                   <div className="flex flex-col gap-1 overflow-hidden">

@@ -262,11 +262,12 @@ function EventsPage() {
                           <span className="inline-flex items-center gap-1.5">
                             {e.client_name}
                             {conflictsByEvent[e.id] && (
-                              <AlertTriangle
-                                className="h-4 w-4 text-destructive"
+                              <span
                                 aria-label="Conflito de fotógrafo"
                                 title={`Fotógrafo repetido nesta data: ${conflictsByEvent[e.id].join(", ")}`}
-                              />
+                              >
+                                <AlertTriangle className="h-4 w-4 text-destructive" />
+                              </span>
                             )}
                           </span>
                         </td>
