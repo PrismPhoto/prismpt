@@ -67,6 +67,8 @@ function EventsPage() {
 
   const years = [2027, 2028, 2029, 2030];
 
+  const conflictsByEvent = useMemo(() => findDuplicatePhotographers(events as any[]).byEvent, [events]);
+
   const filtered = useMemo(() => {
     return (events as any[]).filter((e) => {
       if (pkgF !== "all" && e.package_id !== pkgF) return false;
@@ -256,7 +258,19 @@ function EventsPage() {
                         onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
                       >
                         <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
-                        <td className="p-3 font-medium">{e.client_name}</td>
+                        <td className="p-3 font-medium">
+                          <span className="inline-flex items-center gap-1.5">
+                            {e.client_name}
+                            {conflictsByEvent[e.id] && (
+                              <AlertTriangle
+                                className="h-4 w-4 text-destructive"
+                                aria-label="Conflito de fotógrafo"
+                                titleAccess=""
+                                title={`Fotógrafo repetido nesta data: ${conflictsByEvent[e.id].join(", ")}`}
+                              />
+                            )}
+                          </span>
+                        </td>
                         <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                         <td className="p-3">
