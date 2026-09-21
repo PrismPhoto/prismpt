@@ -684,8 +684,14 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
         </div>
       </Section>
 
-      <div className="flex justify-end sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
-        <Button onClick={save}>Guardar</Button>
+      <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
+        {blockingConflicts.length > 0 && (
+          <span className="text-xs text-destructive flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4" />
+            Não é possível guardar: {blockingConflicts.join(" · ")}
+          </span>
+        )}
+        <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
       </div>
     </div>
   );
@@ -718,8 +724,22 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
   const filled = isExternal ? hasExternalName : hasPhotog;
   const photog = isExternal ? null : photographers.find((p: any) => p.id === slot.photographer_id) || null;
   const isDirectTarget = !isExternal && !!directPhotog && !!photog && photog.initials === directPhotog;
+  const conflictEvents: any[] = !isExternal && conflict ? conflict.events ?? [] : [];
+  const isUnavailable = !isExternal && !!conflict?.unavailable;
   return (
-    <div className="rounded-md border p-3 space-y-3 bg-muted/20">
+    <div className={`rounded-md border p-3 space-y-3 bg-muted/20 ${conflictEvents.length ? "border-destructive" : ""}`}>
+      {(conflictEvents.length > 0 || isUnavailable) && (
+        <div className={`flex items-start gap-2 text-xs rounded-md px-2 py-1.5 ${conflictEvents.length ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {conflictEvents.length > 0 && (
+              <>Já está no evento {conflictEvents.map((e: any) => e.client_name).join(", ")} nesta data.{" "}</>
+            )}
+            {isUnavailable && <>Marcado como indisponível nesta data.</>}
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-12 gap-2 items-end">
         <div className="col-span-5">
           <Label className="text-xs">{label}</Label>
