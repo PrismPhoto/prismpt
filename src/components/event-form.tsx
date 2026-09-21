@@ -10,9 +10,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, packageLabelWithPrice, sortPackages } from "@/lib/format";
 import { EXTRA_TYPES, EXTRA_DEFAULT_PRICE, type ExtraType } from "@/lib/extras";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, type SlotDistribution } from "@/lib/fee-distribution";
+import { usePhotographerConflicts } from "@/lib/conflicts";
 
 const EMPTY_EXTRAS: any[] = [];
 
@@ -140,6 +141,18 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     return computeSlotFee(distribution, idx, Number(totalValue || 0), Number(prismCommission || 0), fixedOverrides(slots));
   };
   const isExternalSlot = (idx: number) => distribution[idx]?.mode === "fixed";
+
+  // Conflitos de agenda: mesmo fotógrafo noutro evento na mesma data / indisponível
+  const conflicts = usePhotographerConflicts(form.event_date || undefined, event?.id);
+  const blockingConflicts = (form.slots as any[])
+    .map((s, i) => {
+      if (isExternalSlot(i) || !s.photographer_id) return null;
+      const c = conflicts[s.photographer_id];
+      if (!c || c.events.length === 0) return null;
+      const p = photographers.find((x: any) => x.id === s.photographer_id);
+      return `${p?.initials ?? "?"} já está em ${c.events.map((e: any) => e.client_name).join(", ")}`;
+    })
+    .filter(Boolean) as string[];
   const selectedPhotographerIdsKey = form.slots.map((slot: any) => slot.photographer_id || "").join(",");
   const slotCommissionsKey = form.slots.map((slot: any) => Number(slot.prism_commission || 0)).join(",");
   const externalFeesKey = form.slots.map((slot: any, i: number) => isExternalSlot(i) ? Number(slot.fee || 0) : "").join(",");
@@ -274,6 +287,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
 
   const save = async () => {
     if (!form.event_date || !form.client_name) return toast.error("Data e cliente obrigatórios");
+    if (blockingConflicts.length) return toast.error(`Conflito de agenda: ${blockingConflicts.join(" · ")}`);
     const baseTotal = Number(form.total_value || 0);
     const grandTotal = baseTotal + extrasTotal;
     const payload = {
@@ -530,6 +544,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 slot={s}
                 isExternal={external}
                 directPhotog={depositPhotog}
+                conflict={s.photographer_id ? conflicts[s.photographer_id] : undefined}
                 onChange={(patch: any) => {
                   const next = [...form.slots];
                   const merged = { ...next[i], ...patch };
@@ -669,8 +684,14 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
         </div>
       </Section>
 
-      <div className="flex justify-end sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
-        <Button onClick={save}>Guardar</Button>
+      <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
+        {blockingConflicts.length > 0 && (
+          <span className="text-xs text-destructive flex items-center gap-1.5">
+            <AlertTriangle className="h-4 w-4" />
+            Não é possível guardar: {blockingConflicts.join(" · ")}
+          </span>
+        )}
+        <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
       </div>
     </div>
   );
@@ -695,7 +716,7 @@ function F({ label, children, className = "" }: any) {
   return <div className={`space-y-1.5 ${className}`}><Label className="text-xs">{label}</Label>{children}</div>;
 }
 
-function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog }: any) {
+function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog, conflict }: any) {
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -703,8 +724,22 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
   const filled = isExternal ? hasExternalName : hasPhotog;
   const photog = isExternal ? null : photographers.find((p: any) => p.id === slot.photographer_id) || null;
   const isDirectTarget = !isExternal && !!directPhotog && !!photog && photog.initials === directPhotog;
+  const conflictEvents: any[] = !isExternal && conflict ? conflict.events ?? [] : [];
+  const isUnavailable = !isExternal && !!conflict?.unavailable;
   return (
-    <div className="rounded-md border p-3 space-y-3 bg-muted/20">
+    <div className={`rounded-md border p-3 space-y-3 bg-muted/20 ${conflictEvents.length ? "border-destructive" : ""}`}>
+      {(conflictEvents.length > 0 || isUnavailable) && (
+        <div className={`flex items-start gap-2 text-xs rounded-md px-2 py-1.5 ${conflictEvents.length ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"}`}>
+          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            {conflictEvents.length > 0 && (
+              <>Já está no evento {conflictEvents.map((e: any) => e.client_name).join(", ")} nesta data.{" "}</>
+            )}
+            {isUnavailable && <>Marcado como indisponível nesta data.</>}
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-12 gap-2 items-end">
         <div className="col-span-5">
           <Label className="text-xs">{label}</Label>

@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
-import { Plus, Download, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, Download, RefreshCw, Loader2, AlertTriangle } from "lucide-react";
+import { findDuplicatePhotographers } from "@/lib/conflicts";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
@@ -65,6 +66,8 @@ function EventsPage() {
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs-list"], queryFn: async () => (await supabase.from("photographers").select("id, initials, full_name").order("initials")).data ?? [] });
 
   const years = [2027, 2028, 2029, 2030];
+
+  const conflictsByEvent = useMemo(() => findDuplicatePhotographers(events as any[]).byEvent, [events]);
 
   const filtered = useMemo(() => {
     return (events as any[]).filter((e) => {
@@ -255,7 +258,19 @@ function EventsPage() {
                         onClick={() => navigate({ to: "/eventos/$id", params: { id: e.id } })}
                       >
                         <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
-                        <td className="p-3 font-medium">{e.client_name}</td>
+                        <td className="p-3 font-medium">
+                          <span className="inline-flex items-center gap-1.5">
+                            {e.client_name}
+                            {conflictsByEvent[e.id] && (
+                              <span
+                                aria-label="Conflito de fotógrafo"
+                                title={`Fotógrafo repetido nesta data: ${conflictsByEvent[e.id].join(", ")}`}
+                              >
+                                <AlertTriangle className="h-4 w-4 text-destructive" />
+                              </span>
+                            )}
+                          </span>
+                        </td>
                         <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                         <td className="p-3">

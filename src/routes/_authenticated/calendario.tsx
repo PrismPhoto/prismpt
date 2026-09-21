@@ -6,7 +6,8 @@ import { PageContainer, PageHeader } from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { findDuplicatePhotographers } from "@/lib/conflicts";
 import { cn } from "@/lib/utils";
 import { fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -34,12 +35,14 @@ function CalendarPage() {
 
   const { data: photographers = [] } = useQuery({ queryKey: ["photogs"], queryFn: async () => (await supabase.from("photographers").select("*").eq("active", true)).data ?? [] });
 
-  const { data: items = [] } = useQuery({
+  const { data: payload } = useQuery({
     queryKey: ["calendar", startISO, endISO, photogFilter],
     queryFn: async () => {
       const { data: events } = await supabase.from("events").select("*, event_photographers(photographer_id, photographers(initials))").gte("event_date", startISO).lte("event_date", endISO);
       const { data: leads } = await supabase.from("leads").select("*").gte("event_date", startISO).lte("event_date", endISO).neq("status", "Arquivo");
       const { data: offs } = await supabase.from("photographer_unavailability").select("*, photographers(initials)").gte("date", startISO).lte("date", endISO);
+
+      const conflicts = findDuplicatePhotographers(events ?? []).byDate;
 
       const arr: any[] = [];
       (events ?? []).forEach((e: any) => {
@@ -51,9 +54,11 @@ function CalendarPage() {
         if (photogFilter !== "all" && o.photographer_id !== photogFilter) return;
         arr.push({ date: o.date, type: "off", id: o.id, label: `${o.photographers?.initials} off`, status: "Off", data: o });
       });
-      return arr;
+      return { arr, conflicts };
     },
   });
+  const items = payload?.arr ?? [];
+  const conflictsByDate: Record<string, string[]> = payload?.conflicts ?? {};
 
   const grid = useMemo(() => {
     const firstDow = (start.getDay() + 6) % 7; // monday-first
@@ -107,10 +112,18 @@ function CalendarPage() {
                   onClick={() => its.length && setDayOpen(iso)}
                   className={cn(
                     "min-h-[88px] border rounded-md p-1.5 text-left flex flex-col gap-1 hover:border-primary/40 transition",
-                    isToday && "border-primary"
+                    isToday && "border-primary",
+                    conflictsByDate[iso] && "border-destructive"
                   )}
                 >
-                  <div className="text-xs font-medium">{d.getDate()}</div>
+                  <div className="text-xs font-medium flex items-center justify-between gap-1">
+                    <span>{d.getDate()}</span>
+                    {conflictsByDate[iso] && (
+                      <span title={`Fotógrafo repetido: ${conflictsByDate[iso].join(", ")}`}>
+                        <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                      </span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1 overflow-hidden">
                     {its.slice(0, 3).map((i) => (
                       <span key={`${i.type}-${i.id}`} className={cn("text-[10px] px-1.5 py-0.5 rounded truncate", STATUS_COLOR[i.status])}>

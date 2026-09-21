@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
 import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution } from "@/lib/fee-distribution";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
@@ -73,6 +73,19 @@ function PhotogProfile() {
   const upcoming = assignments.filter((a: any) => a.events.event_date >= today);
   const past = assignments.filter((a: any) => a.events.event_date < today);
 
+  // Datas em que este fotógrafo está atribuído a mais do que um evento
+  const conflictDates = new Set(
+    Object.entries(
+      assignments.reduce((acc: Record<string, number>, a: any) => {
+        if (a.events?.status === "Cancelado") return acc;
+        acc[a.events.event_date] = (acc[a.events.event_date] ?? 0) + 1;
+        return acc;
+      }, {}),
+    )
+      .filter(([, n]) => (n as number) > 1)
+      .map(([d]) => d),
+  );
+
   const paidFor = (a: any) => {
     const dep = a.deposit_paid ? Number(a.deposit_amount || 0) : 0;
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
@@ -132,14 +145,14 @@ function PhotogProfile() {
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} />
+          <EventTable rows={upcoming} conflictDates={conflictDates} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} />
+          <EventTable rows={past} conflictDates={conflictDates} />
         </CardContent>
       </Card>
 
@@ -168,7 +181,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows }: { rows: any[] }) {
+function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<string> }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -192,7 +205,14 @@ function EventTable({ rows }: { rows: any[] }) {
             const variant: any = r.final_payment_received ? "default" : r.deposit_paid ? "secondary" : "outline";
             return (
               <tr key={r.id} className="border-t">
-                <td className="p-3 whitespace-nowrap">{fmtDate(r.events.event_date)}</td>
+                <td className="p-3 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5">
+                    {fmtDate(r.events.event_date)}
+                    {conflictDates?.has(r.events.event_date) && (
+                      <span title="Tem mais do que um evento nesta data"><AlertTriangle className="h-4 w-4 text-destructive" /></span>
+                    )}
+                  </span>
+                </td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
                 <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
