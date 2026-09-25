@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -187,6 +187,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
 }
 
 function EventTable({ rows, conflictDates, showMoney = true }: { rows: any[]; conflictDates?: Set<string>; showMoney?: boolean }) {
+  const navigate = useNavigate();
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -210,7 +211,11 @@ function EventTable({ rows, conflictDates, showMoney = true }: { rows: any[]; co
             const status = r.final_payment_received ? "Pago" : r.deposit_paid ? "Sinal" : "Pendente";
             const variant: any = r.final_payment_received ? "default" : r.deposit_paid ? "secondary" : "outline";
             return (
-              <tr key={r.id} className="border-t">
+              <tr
+                key={r.id}
+                className="border-t cursor-pointer hover:bg-muted/40 transition-colors"
+                onClick={() => navigate({ to: "/eventos/$id", params: { id: r.events.id } })}
+              >
                 <td className="p-3 whitespace-nowrap">
                   <span className="inline-flex items-center gap-1.5">
                     {fmtDate(r.events.event_date)}
