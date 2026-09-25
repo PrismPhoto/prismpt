@@ -283,7 +283,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
   };
   const onWp = (id: string) => {
     const wp = wps.find((x: any) => x.id === id);
-    const commission = wp ? Number(form.total_value) * (wp.commission_percentage / 100) : 0;
+    const commission = !wp ? 0
+      : wp.commission_type === "fixed" ? Number(wp.commission_default_value || 0)
+      : Math.round(Number(eventTotal || form.total_value || 0) * (Number(wp.commission_percentage || 0) / 100) * 100) / 100;
     setForm({ ...form, wedding_planner_id: id, wp_commission_value: commission });
   };
 
@@ -583,11 +585,13 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
                 editor_id: form.editor_id, editor_cost: form.editor_cost,
                 commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
+                wedding_planner_id: form.wedding_planner_id, wp_commission_value: form.wp_commission_value,
               });
               const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
               return (
                 <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
                   <Row l="Receita bruta" v={EUR(b.gross)} />
+                  {form.wedding_planner_id && <Row l="– Comissão WP" v={EUR(b.wp)} />}
                   <Row l="– Comissão PRISM" v={EUR(b.commission)} />
                   <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
                   <Row l="– Custo editor" v={EUR(b.editor)} />
