@@ -1,3 +1,4 @@
+import { DELIVERY_LABELS, daysUntil, countdownClass } from "@/lib/delivery";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +72,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       final_payment_method: event?.final_payment_method ?? "",
       internal_notes: event?.internal_notes ?? "",
       event_notes: event?.event_notes ?? "",
+      delivery_status: event?.delivery_status ?? "pending",
+      delivery_date: event?.delivery_date ?? "",
+      gallery_link: event?.gallery_link ?? "",
       status: event?.status ?? "Aguarda Sinal",
       slots: (() => {
         const pkg = packages.find((p: any) => p.id === (event?.package_id ?? ""));
@@ -319,6 +323,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       final_payment_value: form.final_payment_value ? Number(form.final_payment_value) : null,
       final_payment_date: form.final_payment_date || null, final_payment_method: form.final_payment_method || null,
       internal_notes: form.internal_notes || null, event_notes: form.event_notes || null,
+      delivery_status: form.delivery_status || "pending",
+      delivery_date: form.delivery_date || null,
+      gallery_link: form.gallery_link || null,
       status: form.status,
     };
     let eventId = event?.id;
@@ -680,6 +687,41 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             <span className="tabular-nums font-semibold">{EUR(Number(form.total_value || 0) + extrasTotal)}</span>
           </div>
         </div>
+      </Section>
+
+      <Section title="Entrega">
+        {(() => {
+          const days = daysUntil(event?.delivery_deadline);
+          return (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+              <F label="Estado da entrega">
+                <Select value={form.delivery_status} onValueChange={(v) => setForm({ ...form, delivery_status: v, delivery_date: v === "delivered" && !form.delivery_date ? new Date().toISOString().slice(0, 10) : form.delivery_date })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(DELIVERY_LABELS).map(([k, l]) => <SelectItem key={k} value={k}>{l}</SelectItem>)}</SelectContent>
+                </Select>
+              </F>
+              <F label="Prazo de entrega">
+                <div className="h-9 flex items-center gap-2 text-sm">
+                  <span>{event?.delivery_deadline ?? "Calculado ao guardar"}</span>
+                  {days !== null && form.delivery_status !== "delivered" && (
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${countdownClass(days)}`}>
+                      {days < 0 ? `Vencido há ${-days} dias` : `${days} dias`}
+                    </span>
+                  )}
+                </div>
+              </F>
+              <F label="Data de entrega"><Input type="date" value={form.delivery_date} onChange={(e) => setForm({ ...form, delivery_date: e.target.value })} /></F>
+              <F label="Link da galeria">
+                <Input value={form.gallery_link} placeholder="https://…" onChange={(e) => setForm({ ...form, gallery_link: e.target.value })}
+                  onBlur={() => {
+                    if (form.gallery_link && form.delivery_status !== "delivered" && window.confirm("Link da galeria preenchido. Marcar como Entregue com a data de hoje?")) {
+                      setForm((f: any) => ({ ...f, delivery_status: "delivered", delivery_date: new Date().toISOString().slice(0, 10) }));
+                    }
+                  }} />
+              </F>
+            </div>
+          );
+        })()}
       </Section>
 
       <Section title="Notas">

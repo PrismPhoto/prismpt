@@ -1,3 +1,4 @@
+import { DELIVERY_BADGE, deliveryKey } from "@/lib/delivery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
@@ -26,6 +27,7 @@ function EventsPage() {
   const { role } = useAuth();
   const [year, setYear] = useState(2027);
   const [statusF, setStatusF] = useState("all");
+  const [deliveryF, setDeliveryF] = useState("all");
 
   const [pkgF, setPkgF] = useState("all");
   const [photogF, setPhotogF] = useState("all");
@@ -72,12 +74,16 @@ function EventsPage() {
   const filtered = useMemo(() => {
     return (events as any[]).filter((e) => {
       if (pkgF !== "all" && e.package_id !== pkgF) return false;
+      if (deliveryF !== "all") {
+        const k = deliveryKey(e);
+        if (deliveryF === "late" ? k !== "late" : e.delivery_status !== deliveryF) return false;
+      }
       if (photogF !== "all" && !(e.event_photographers ?? []).some((ep: any) => ep.photographer_id === photogF)) return false;
       if (dateFrom && String(e.event_date) < dateFrom) return false;
       if (dateTo && String(e.event_date) > dateTo) return false;
       return true;
     });
-  }, [events, pkgF, photogF, dateFrom, dateTo]);
+  }, [events, pkgF, photogF, dateFrom, dateTo, deliveryF]);
 
   const groups = useMemo(() => {
     const list = filtered;
@@ -143,6 +149,16 @@ function EventsPage() {
             <Select value={statusF} onValueChange={setStatusF}>
               <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="all">Todos status</SelectItem>{EVENT_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={deliveryF} onValueChange={setDeliveryF}>
+              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas entregas</SelectItem>
+                <SelectItem value="pending">Pendente</SelectItem>
+                <SelectItem value="editing">Em edição</SelectItem>
+                <SelectItem value="delivered">Entregue</SelectItem>
+                <SelectItem value="late">Atrasado</SelectItem>
+              </SelectContent>
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
             {role === "manager" && (
@@ -236,6 +252,7 @@ function EventsPage() {
                   <th className="text-left p-3">Sinal</th>
                   <th className="text-right p-3">Valor</th>
                   <th className="text-left p-3">Status</th>
+                  <th className="text-left p-3">Entrega</th>
                 </tr>
               </thead>
               <tbody>
@@ -243,7 +260,7 @@ function EventsPage() {
                   <Fragment key={g.key}>
                     {groupBy !== "none" && (
                       <tr key={`h-${g.key}`} className="bg-muted/40 border-t">
-                        <td colSpan={6} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
+                        <td colSpan={8} className="px-3 py-2 text-xs font-semibold uppercase tracking-wide">
                           {g.label}
                           <span className="ml-2 font-normal text-muted-foreground normal-case">
                             {g.rows.length} evento{g.rows.length === 1 ? "" : "s"} · {EUR(g.rows.reduce((s: number, r: any) => s + Number(r.total_value || 0), 0))}
@@ -288,11 +305,14 @@ function EventsPage() {
                         </td>
                         <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
                         <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DELIVERY_BADGE[deliveryKey(e)].cls}`}>{DELIVERY_BADGE[deliveryKey(e)].label}</span>
+                        </td>
                       </tr>
                     ))}
                   </Fragment>
                 ))}
-                {filtered.length === 0 && <tr><td colSpan={6} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
+                {filtered.length === 0 && <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Sem eventos</td></tr>}
               </tbody>
             </table>
           </div>

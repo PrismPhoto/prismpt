@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,7 +40,7 @@ function SettingsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Definições" description="Apenas Admin" />
+      <PageHeader title="Definições" description="Apenas Admin" actions={<Button variant="outline" asChild><Link to="/settings/audit-log">Registo de alterações</Link></Button>} />
       <Tabs defaultValue="users">
         <TabsList>
           <TabsTrigger value="users">Utilizadores</TabsTrigger>
@@ -115,6 +115,10 @@ function SettingsPage() {
           <AutomationRow label="Lembrete pré-evento" enabled={s.pre_event_reminder_enabled} onToggle={(c: boolean) => setS({ ...s, pre_event_reminder_enabled: c })}>
             <div className="flex items-center gap-2 text-sm"><Input className="w-20" type="number" value={s.pre_event_reminder_days} onChange={(e) => setS({ ...s, pre_event_reminder_days: Number(e.target.value) })} /><span>dias antes</span></div>
           </AutomationRow>
+          <Card><CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="font-medium">Prazo de entrega das fotos</div>
+            <div className="flex items-center gap-2 text-sm"><Input className="w-20" type="number" value={s.delivery_deadline_days} onChange={(e) => setS({ ...s, delivery_deadline_days: Number(e.target.value) })} /><span>dias após o evento</span></div>
+          </CardContent></Card>
           <Button onClick={saveSettings}>Guardar</Button>
         </TabsContent>
       </Tabs>
