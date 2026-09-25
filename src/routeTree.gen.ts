@@ -25,6 +25,7 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedFotografosIndexRouteImport } from './routes/_authenticated/fotografos/index'
 import { Route as AuthenticatedEventosIndexRouteImport } from './routes/_authenticated/eventos.index'
+import { Route as AuthenticatedSettingsAuditLogRouteImport } from './routes/_authenticated/settings_.audit-log'
 import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos/$id'
 import { Route as AuthenticatedEventosIdRouteImport } from './routes/_authenticated/eventos.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
@@ -114,6 +115,12 @@ const AuthenticatedEventosIndexRoute =
     path: '/eventos/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSettingsAuditLogRoute =
+  AuthenticatedSettingsAuditLogRouteImport.update({
+    id: '/settings_/audit-log',
+    path: '/settings/audit-log',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedFotografosIdRoute =
   AuthenticatedFotografosIdRouteImport.update({
     id: '/fotografos/$id',
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/settings/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/eventos/': typeof AuthenticatedEventosIndexRoute
   '/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/settings/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/eventos': typeof AuthenticatedEventosIndexRoute
   '/fotografos': typeof AuthenticatedFotografosIndexRoute
 }
@@ -199,6 +208,7 @@ export interface FileRoutesById {
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/eventos/$id': typeof AuthenticatedEventosIdRoute
   '/_authenticated/fotografos/$id': typeof AuthenticatedFotografosIdRoute
+  '/_authenticated/settings_/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/_authenticated/eventos/': typeof AuthenticatedEventosIndexRoute
   '/_authenticated/fotografos/': typeof AuthenticatedFotografosIndexRoute
 }
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/eventos/$id'
     | '/fotografos/$id'
+    | '/settings/audit-log'
     | '/eventos/'
     | '/fotografos/'
   fileRoutesByTo: FileRoutesByTo
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/eventos/$id'
     | '/fotografos/$id'
+    | '/settings/audit-log'
     | '/eventos'
     | '/fotografos'
   id:
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/eventos/$id'
     | '/_authenticated/fotografos/$id'
+    | '/_authenticated/settings_/audit-log'
     | '/_authenticated/eventos/'
     | '/_authenticated/fotografos/'
   fileRoutesById: FileRoutesById
@@ -393,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventosIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings_/audit-log': {
+      id: '/_authenticated/settings_/audit-log'
+      path: '/settings/audit-log'
+      fullPath: '/settings/audit-log'
+      preLoaderRoute: typeof AuthenticatedSettingsAuditLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/fotografos/$id': {
       id: '/_authenticated/fotografos/$id'
       path: '/fotografos/$id'
@@ -436,6 +456,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedEventosIdRoute: typeof AuthenticatedEventosIdRoute
   AuthenticatedFotografosIdRoute: typeof AuthenticatedFotografosIdRoute
+  AuthenticatedSettingsAuditLogRoute: typeof AuthenticatedSettingsAuditLogRoute
   AuthenticatedEventosIndexRoute: typeof AuthenticatedEventosIndexRoute
   AuthenticatedFotografosIndexRoute: typeof AuthenticatedFotografosIndexRoute
 }
@@ -452,6 +473,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedEventosIdRoute: AuthenticatedEventosIdRoute,
   AuthenticatedFotografosIdRoute: AuthenticatedFotografosIdRoute,
+  AuthenticatedSettingsAuditLogRoute: AuthenticatedSettingsAuditLogRoute,
   AuthenticatedEventosIndexRoute: AuthenticatedEventosIndexRoute,
   AuthenticatedFotografosIndexRoute: AuthenticatedFotografosIndexRoute,
 }
