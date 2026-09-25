@@ -591,7 +591,6 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                   <Row l="– Comissão PRISM" v={EUR(b.commission)} />
                   <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
                   <Row l="– Custo editor" v={EUR(b.editor)} />
-                  <Row l="– Sinal PRISM" v={EUR(b.prismDeposit)} />
                   <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
                 </div>
               );
@@ -605,7 +604,9 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           {(form.slots as any[]).map((s, i) => {
             const slotDist = distribution[i];
             const external = isExternalSlot(i);
-            const labelPrefix = external ? "Externo" : `Prism ${i + 1}`;
+            // Slot externo antigo: substituído pela secção "Custos" (2º fotógrafo via Fornecedores)
+            if (external) return null;
+            const labelPrefix = `Prism ${i + 1}`;
             const labelSuffix = slotDist ? ` — ${slotLabel(slotDist)}` : "";
             return (
               <PhotogSlot
@@ -642,7 +643,8 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           {(() => {
             const rows = (form.slots as any[]).map((s, i) => {
               const external = isExternalSlot(i);
-              const filled = external ? !!(s.external_name && String(s.external_name).trim()) : !!s.photographer_id;
+              if (external) return null;
+              const filled = !!s.photographer_id;
               if (!filled) return null;
               const baseFee = Number(s.fee || 0);
               const extrasFee = external ? 0 : extrasForPhotographer(extras, s.photographer_id);
