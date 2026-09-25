@@ -8,13 +8,14 @@ import { useAuth } from "@/hooks/use-auth";
 import { EUR, EVENT_TYPES, fmtDate } from "@/lib/format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { PhotographerDashboard } from "@/components/photographer-dashboard";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  const { role } = useAuth();
+  const { role, photographerId } = useAuth();
   const [year, setYear] = useState(2027);
   const [type, setType] = useState<string>("all");
 
@@ -99,6 +100,9 @@ function DashboardPage() {
         }
       />
 
+      <PhotographerDashboard year={year} isManager={isManager} photographerId={photographerId} />
+
+      <h2 className="text-lg font-semibold mb-3">PRISM — geral</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KPI label="Eventos" value={stats?.totalEvents ?? 0} />
         <KPI label="Adjudicado" value={EUR(stats?.totalRevenue)} />

@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           brand_voice: string | null
           confirmation_enabled: boolean
+          default_editor_cost: number
+          default_second_photographer_cost: number
           delivery_deadline_days: number
           deposit_request_enabled: boolean
           draft_mode: boolean
@@ -33,6 +35,8 @@ export type Database = {
         Insert: {
           brand_voice?: string | null
           confirmation_enabled?: boolean
+          default_editor_cost?: number
+          default_second_photographer_cost?: number
           delivery_deadline_days?: number
           deposit_request_enabled?: boolean
           draft_mode?: boolean
@@ -48,6 +52,8 @@ export type Database = {
         Update: {
           brand_voice?: string | null
           confirmation_enabled?: boolean
+          default_editor_cost?: number
+          default_second_photographer_cost?: number
           delivery_deadline_days?: number
           deposit_request_enabled?: boolean
           draft_mode?: boolean
@@ -380,6 +386,8 @@ export type Database = {
           deposit_method: string | null
           deposit_paid: boolean
           deposit_paid_date: string | null
+          editor_cost: number | null
+          editor_id: string | null
           email: string | null
           event_date: string
           event_notes: string | null
@@ -409,6 +417,8 @@ export type Database = {
           pre_wedding_notes: string | null
           prism_commission: number
           reception_location: string | null
+          second_photographer_cost: number | null
+          second_photographer_id: string | null
           status: Database["public"]["Enums"]["event_status"]
           total_value: number
           updated_at: string
@@ -434,6 +444,8 @@ export type Database = {
           deposit_method?: string | null
           deposit_paid?: boolean
           deposit_paid_date?: string | null
+          editor_cost?: number | null
+          editor_id?: string | null
           email?: string | null
           event_date: string
           event_notes?: string | null
@@ -463,6 +475,8 @@ export type Database = {
           pre_wedding_notes?: string | null
           prism_commission?: number
           reception_location?: string | null
+          second_photographer_cost?: number | null
+          second_photographer_id?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           total_value?: number
           updated_at?: string
@@ -488,6 +502,8 @@ export type Database = {
           deposit_method?: string | null
           deposit_paid?: boolean
           deposit_paid_date?: string | null
+          editor_cost?: number | null
+          editor_id?: string | null
           email?: string | null
           event_date?: string
           event_notes?: string | null
@@ -517,6 +533,8 @@ export type Database = {
           pre_wedding_notes?: string | null
           prism_commission?: number
           reception_location?: string | null
+          second_photographer_cost?: number | null
+          second_photographer_id?: string | null
           status?: Database["public"]["Enums"]["event_status"]
           total_value?: number
           updated_at?: string
@@ -525,6 +543,13 @@ export type Database = {
           wp_commission_value?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "events_editor_id_fkey"
+            columns: ["editor_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_lead_id_fkey"
             columns: ["lead_id"]
@@ -537,6 +562,13 @@ export type Database = {
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_second_photographer_id_fkey"
+            columns: ["second_photographer_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
           {
@@ -868,6 +900,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      suppliers: {
+        Row: {
+          active: boolean
+          created_at: string
+          default_price: number | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          type: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          default_price?: number | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          type: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          default_price?: number | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          type?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

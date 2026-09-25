@@ -15,6 +15,7 @@ import { Plus, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { computeSlotFee, defaultDistribution, slotLabel, extrasForPhotographer, type SlotDistribution } from "@/lib/fee-distribution";
 import { usePhotographerConflicts } from "@/lib/conflicts";
+import { netBreakdown } from "@/lib/net";
 
 const EMPTY_EXTRAS: any[] = [];
 
@@ -32,6 +33,11 @@ function normalizeDepositMethod(raw: any): string {
 
 export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef, readOnly = false }: any) {
   const isEdit = !!event;
+  const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: async () => (await supabase.from("suppliers").select("*").order("name")).data ?? [] });
+  const { data: costDefaults } = useQuery({ queryKey: ["settings"], queryFn: async () => (await supabase.from("app_settings").select("*").eq("id", 1).single()).data, enabled: !event });
+  useEffect(() => {
+    if (!event && costDefaults) setForm((f: any) => ({ ...f, second_photographer_cost: (costDefaults as any).default_second_photographer_cost ?? 450, editor_cost: (costDefaults as any).default_editor_cost ?? 250 }));
+  }, [costDefaults, event]);
   const [form, setForm] = useState<any>(() => {
     const existingPhotogs = event?.event_photographers ?? [];
     return {
@@ -75,6 +81,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       delivery_status: event?.delivery_status ?? "pending",
       delivery_date: event?.delivery_date ?? "",
       gallery_link: event?.gallery_link ?? "",
+      second_photographer_id: event?.second_photographer_id ?? "",
+      second_photographer_cost: event ? (event.second_photographer_cost ?? "") : 450,
+      editor_id: event?.editor_id ?? "",
+      editor_cost: event ? (event.editor_cost ?? "") : 250,
       status: event?.status ?? "Aguarda Sinal",
       slots: (() => {
         const pkg = packages.find((p: any) => p.id === (event?.package_id ?? ""));
@@ -326,6 +336,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       delivery_status: form.delivery_status || "pending",
       delivery_date: form.delivery_date || null,
       gallery_link: form.gallery_link || null,
+      second_photographer_id: form.second_photographer_id || null,
+      second_photographer_cost: form.second_photographer_cost === "" ? null : Number(form.second_photographer_cost),
+      editor_id: form.editor_id || null,
+      editor_cost: form.editor_cost === "" ? null : Number(form.editor_cost),
       status: form.status,
     };
     let eventId = event?.id;
@@ -537,6 +551,51 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
               <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
               <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
             </div>
+          </div>
+
+          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Custos</div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <F label="2º Fotógrafo">
+                <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo 2º fotógrafo (€)"><Input type="number" step="0.01" value={form.second_photographer_cost} onChange={(e) => setForm({ ...form, second_photographer_cost: e.target.value })} /></F>
+              <F label="Editor">
+                <Select value={form.editor_id || "none"} onValueChange={(v) => setForm({ ...form, editor_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem editor</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "editor" && (x.active || x.id === form.editor_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo editor (€)"><Input type="number" step="0.01" value={form.editor_cost} onChange={(e) => setForm({ ...form, editor_cost: e.target.value })} /></F>
+            </div>
+            {(() => {
+              const b = netBreakdown({
+                total_value: eventTotal, deposit_amount: form.deposit_amount, deposit_method: form.deposit_method,
+                second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
+                editor_id: form.editor_id, editor_cost: form.editor_cost,
+                commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
+              });
+              const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
+              return (
+                <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
+                  <Row l="Receita bruta" v={EUR(b.gross)} />
+                  <Row l="– Comissão PRISM" v={EUR(b.commission)} />
+                  <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
+                  <Row l="– Custo editor" v={EUR(b.editor)} />
+                  <Row l="– Sinal PRISM" v={EUR(b.prismDeposit)} />
+                  <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
+                </div>
+              );
+            })()}
           </div>
         </div>
       </Section>
