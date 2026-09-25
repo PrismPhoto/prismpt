@@ -43,6 +43,13 @@
       "when": 1790334488436,
       "tag": "0005_audit_log_and_delivery",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790335916177,
+      "tag": "0006_suppliers_and_event_costs",
+      "breakpoints": true
     }
   ]
 }
