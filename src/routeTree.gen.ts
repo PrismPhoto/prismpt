@@ -19,6 +19,7 @@ import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEquipaRouteImport } from './routes/_authenticated/equipa'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -77,6 +78,11 @@ const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEquipaRoute = AuthenticatedEquipaRouteImport.update({
+  id: '/equipa',
+  path: '/equipa',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
+  '/equipa': typeof AuthenticatedEquipaRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
+  '/equipa': typeof AuthenticatedEquipaRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
+  '/_authenticated/equipa': typeof AuthenticatedEquipaRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/calendario'
+    | '/equipa'
     | '/financeiro'
     | '/leads'
     | '/meu-perfil'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/calendario'
+    | '/equipa'
     | '/financeiro'
     | '/leads'
     | '/meu-perfil'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/_authenticated/calendario'
+    | '/_authenticated/equipa'
     | '/_authenticated/financeiro'
     | '/_authenticated/leads'
     | '/_authenticated/meu-perfil'
@@ -339,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/equipa': {
+      id: '/_authenticated/equipa'
+      path: '/equipa'
+      fullPath: '/equipa'
+      preLoaderRoute: typeof AuthenticatedEquipaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/calendario': {
       id: '/_authenticated/calendario'
       path: '/calendario'
@@ -407,6 +426,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
+  AuthenticatedEquipaRoute: typeof AuthenticatedEquipaRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
@@ -422,6 +442,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
+  AuthenticatedEquipaRoute: AuthenticatedEquipaRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
