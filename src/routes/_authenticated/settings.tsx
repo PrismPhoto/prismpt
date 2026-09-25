@@ -119,6 +119,14 @@ function SettingsPage() {
             <div className="font-medium">Prazo de entrega das fotos</div>
             <div className="flex items-center gap-2 text-sm"><Input className="w-20" type="number" value={s.delivery_deadline_days} onChange={(e) => setS({ ...s, delivery_deadline_days: Number(e.target.value) })} /><span>dias após o evento</span></div>
           </CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="font-medium">Custo padrão do 2º fotógrafo <span className="text-xs text-muted-foreground font-normal">(novos eventos)</span></div>
+            <div className="flex items-center gap-2 text-sm"><Input className="w-24" type="number" value={s.default_second_photographer_cost} onChange={(e) => setS({ ...s, default_second_photographer_cost: Number(e.target.value) })} /><span>€</span></div>
+          </CardContent></Card>
+          <Card><CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="font-medium">Custo padrão do editor <span className="text-xs text-muted-foreground font-normal">(novos eventos)</span></div>
+            <div className="flex items-center gap-2 text-sm"><Input className="w-24" type="number" value={s.default_editor_cost} onChange={(e) => setS({ ...s, default_editor_cost: Number(e.target.value) })} /><span>€</span></div>
+          </CardContent></Card>
           <Button onClick={saveSettings}>Guardar</Button>
         </TabsContent>
       </Tabs>

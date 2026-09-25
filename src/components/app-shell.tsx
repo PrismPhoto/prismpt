@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Users,
+  Truck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth, signOut } from "@/hooks/use-auth";
@@ -29,6 +30,7 @@ const navItems = [
   { to: "/equipa", label: "Equipa", icon: Users, photographerOnly: true },
   { to: "/pacotes", label: "Pacotes", icon: Package, managerOnly: true },
   { to: "/wedding-planners", label: "Wedding Planners", icon: Heart, managerOnly: true },
+  { to: "/suppliers", label: "Fornecedores", icon: Truck, managerOnly: true },
   { to: "/settings", label: "Definições", icon: SettingsIcon, managerOnly: true },
 ];
 
