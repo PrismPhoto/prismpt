@@ -14,8 +14,10 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedWeddingPlannersRouteImport } from './routes/_authenticated/wedding-planners'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
 import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
 import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
@@ -57,6 +59,11 @@ const AuthenticatedWeddingPlannersRoute =
     path: '/wedding-planners',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
   id: '/suppliers',
   path: '/suppliers',
@@ -65,6 +72,11 @@ const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
@@ -162,8 +174,10 @@ export interface FileRoutesByFullPath {
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
+  '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
@@ -184,8 +198,10 @@ export interface FileRoutesByTo {
   '/leads': typeof AuthenticatedLeadsRoute
   '/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/pacotes': typeof AuthenticatedPacotesRoute
+  '/resources': typeof AuthenticatedResourcesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/suppliers': typeof AuthenticatedSuppliersRoute
+  '/team': typeof AuthenticatedTeamRoute
   '/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -209,8 +225,10 @@ export interface FileRoutesById {
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/meu-perfil': typeof AuthenticatedMeuPerfilRoute
   '/_authenticated/pacotes': typeof AuthenticatedPacotesRoute
+  '/_authenticated/resources': typeof AuthenticatedResourcesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/wedding-planners': typeof AuthenticatedWeddingPlannersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -235,8 +253,10 @@ export interface FileRouteTypes {
     | '/leads'
     | '/meu-perfil'
     | '/pacotes'
+    | '/resources'
     | '/settings'
     | '/suppliers'
+    | '/team'
     | '/wedding-planners'
     | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
@@ -257,8 +277,10 @@ export interface FileRouteTypes {
     | '/leads'
     | '/meu-perfil'
     | '/pacotes'
+    | '/resources'
     | '/settings'
     | '/suppliers'
+    | '/team'
     | '/wedding-planners'
     | '/'
     | '/.lovable/oauth/consent'
@@ -281,8 +303,10 @@ export interface FileRouteTypes {
     | '/_authenticated/leads'
     | '/_authenticated/meu-perfil'
     | '/_authenticated/pacotes'
+    | '/_authenticated/resources'
     | '/_authenticated/settings'
     | '/_authenticated/suppliers'
+    | '/_authenticated/team'
     | '/_authenticated/wedding-planners'
     | '/_authenticated/'
     | '/.lovable/oauth/consent'
@@ -341,6 +365,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeddingPlannersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/suppliers': {
       id: '/_authenticated/suppliers'
       path: '/suppliers'
@@ -353,6 +384,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/resources': {
+      id: '/_authenticated/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof AuthenticatedResourcesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/pacotes': {
@@ -470,8 +508,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedMeuPerfilRoute: typeof AuthenticatedMeuPerfilRoute
   AuthenticatedPacotesRoute: typeof AuthenticatedPacotesRoute
+  AuthenticatedResourcesRoute: typeof AuthenticatedResourcesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedWeddingPlannersRoute: typeof AuthenticatedWeddingPlannersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedEventosIdRoute: typeof AuthenticatedEventosIdRoute
@@ -488,8 +528,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedMeuPerfilRoute: AuthenticatedMeuPerfilRoute,
   AuthenticatedPacotesRoute: AuthenticatedPacotesRoute,
+  AuthenticatedResourcesRoute: AuthenticatedResourcesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedWeddingPlannersRoute: AuthenticatedWeddingPlannersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedEventosIdRoute: AuthenticatedEventosIdRoute,
