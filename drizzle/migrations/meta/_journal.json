@@ -22,6 +22,20 @@
       "when": 1790331751558,
       "tag": "0002_read_all_event_extras",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790332646812,
+      "tag": "0003_fix_event_photographers_recursion",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790332662887,
+      "tag": "0004_fix_event_extras_policies",
+      "breakpoints": true
     }
   ]
 }
