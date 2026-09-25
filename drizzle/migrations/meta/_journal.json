@@ -50,6 +50,13 @@
       "when": 1790335916177,
       "tag": "0006_suppliers_and_event_costs",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790340540761,
+      "tag": "0007_wp_commission_type_contributions_expenses",
+      "breakpoints": true
     }
   ]
 }
