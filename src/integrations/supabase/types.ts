@@ -875,6 +875,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_assigned_to_event: {
+        Args: { _event_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_manager: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
