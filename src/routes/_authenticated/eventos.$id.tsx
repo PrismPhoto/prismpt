@@ -45,7 +45,7 @@ function EventDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { role } = useAuth();
+  const { role, photographerId } = useAuth();
   const saveRef = useRef<(() => void) | undefined>(undefined);
   const [summary, setSummary] = useState<any>(null);
 
