@@ -29,7 +29,7 @@ function normalizeDepositMethod(raw: any): string {
   return s;
 }
 
-export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef }: any) {
+export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef, readOnly = false }: any) {
   const isEdit = !!event;
   const [form, setForm] = useState<any>(() => {
     const existingPhotogs = event?.event_photographers ?? [];
@@ -396,7 +396,12 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     .filter(Boolean) as { value: string; label: string }[];
 
   return (
-    <div className="space-y-6">
+    <fieldset disabled={readOnly} className="space-y-6 min-w-0 disabled:opacity-90">
+      {readOnly && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
+          Modo de consulta — só pode editar os casamentos onde está alocado.
+        </div>
+      )}
       <Section title="Informação do evento">
         <div className="grid md:grid-cols-2 gap-3">
           <F label="Data"><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></F>
