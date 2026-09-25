@@ -139,23 +139,25 @@ function PhotogProfile() {
         }
       />
 
-      <div className="grid md:grid-cols-3 gap-3 mb-6">
-        <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
-        <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
-        <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
-      </div>
+      {showMoney && (
+        <div className="grid md:grid-cols-3 gap-3 mb-6">
+          <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
+          <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
+          <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
+        </div>
+      )}
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} conflictDates={conflictDates} />
+          <EventTable rows={upcoming} conflictDates={conflictDates} showMoney={showMoney} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} conflictDates={conflictDates} />
+          <EventTable rows={past} conflictDates={conflictDates} showMoney={showMoney} />
         </CardContent>
       </Card>
 
