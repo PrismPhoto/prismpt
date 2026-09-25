@@ -8,6 +8,20 @@
       "when": 1790330506981,
       "tag": "0000_auth_access_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790331738665,
+      "tag": "0001_photographer_team_visibility_and_edit",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790331751558,
+      "tag": "0002_read_all_event_extras",
+      "breakpoints": true
     }
   ]
 }

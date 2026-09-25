@@ -69,13 +69,9 @@ function DashboardPage() {
     },
   });
 
-  if (role !== "manager") {
-    return (
-      <PageContainer>
-        <PageHeader title="Bem-vindo" description="Aceda aos seus eventos no menu lateral." />
-      </PageContainer>
-    );
-  }
+  const isManager = role === "manager";
+
+
 
   const years = [2027, 2028, 2029, 2030];
 
@@ -126,6 +122,7 @@ function DashboardPage() {
             ))}
           </CardContent>
         </Card>
+        {isManager && (
         <Card>
           <CardHeader><CardTitle className="text-base">Leads recentes</CardTitle></CardHeader>
           <CardContent className="space-y-2">
@@ -141,6 +138,7 @@ function DashboardPage() {
             ))}
           </CardContent>
         </Card>
+        )}
       </div>
 
       <Card className="mt-4">

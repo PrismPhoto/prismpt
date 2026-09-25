@@ -11,6 +11,7 @@ import {
   Settings as SettingsIcon,
   LogOut,
   Menu,
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth, signOut } from "@/hooks/use-auth";
@@ -18,13 +19,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, managerOnly: true },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, managerOnly: false },
   { to: "/leads", label: "Leads", icon: Inbox, managerOnly: true },
   { to: "/eventos", label: "Eventos", icon: CalendarDays, managerOnly: false },
   { to: "/calendario", label: "Calendário", icon: Calendar, managerOnly: false },
   { to: "/financeiro", label: "Financeiro", icon: Wallet, managerOnly: false },
   { to: "/fotografos", label: "Fotógrafos", icon: Camera, managerOnly: true },
   { to: "/meu-perfil", label: "Meu Perfil", icon: Camera, photographerOnly: true },
+  { to: "/equipa", label: "Equipa", icon: Users, photographerOnly: true },
   { to: "/pacotes", label: "Pacotes", icon: Package, managerOnly: true },
   { to: "/wedding-planners", label: "Wedding Planners", icon: Heart, managerOnly: true },
   { to: "/settings", label: "Definições", icon: SettingsIcon, managerOnly: true },

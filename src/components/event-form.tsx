@@ -29,7 +29,7 @@ function normalizeDepositMethod(raw: any): string {
   return s;
 }
 
-export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef }: any) {
+export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef, readOnly = false }: any) {
   const isEdit = !!event;
   const [form, setForm] = useState<any>(() => {
     const existingPhotogs = event?.event_photographers ?? [];
@@ -396,7 +396,12 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     .filter(Boolean) as { value: string; label: string }[];
 
   return (
-    <div className="space-y-6">
+    <fieldset disabled={readOnly} className="space-y-6 min-w-0 disabled:opacity-90">
+      {readOnly && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
+          Modo de consulta — só pode editar os casamentos onde está alocado.
+        </div>
+      )}
       <Section title="Informação do evento">
         <div className="grid md:grid-cols-2 gap-3">
           <F label="Data"><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></F>
@@ -684,16 +689,18 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
         </div>
       </Section>
 
-      <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
-        {blockingConflicts.length > 0 && (
-          <span className="text-xs text-destructive flex items-center gap-1.5">
-            <AlertTriangle className="h-4 w-4" />
-            Não é possível guardar: {blockingConflicts.join(" · ")}
-          </span>
-        )}
-        <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
-      </div>
-    </div>
+      {!readOnly && (
+        <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
+          {blockingConflicts.length > 0 && (
+            <span className="text-xs text-destructive flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4" />
+              Não é possível guardar: {blockingConflicts.join(" · ")}
+            </span>
+          )}
+          <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
+        </div>
+      )}
+    </fieldset>
   );
 }
 

@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
 import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution } from "@/lib/fee-distribution";
 import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
@@ -35,6 +36,8 @@ function packageFee(row: any, photog: any): number {
 function PhotogProfile() {
   const { id } = Route.useParams();
   const [year, setYear] = useState<number>(2027);
+  const { role, photographerId } = useAuth();
+  const showMoney = role === "manager" || photographerId === id;
 
   const { data: photog, isLoading: photogLoading } = useQuery({
     queryKey: ["photog", id],
@@ -136,23 +139,25 @@ function PhotogProfile() {
         }
       />
 
-      <div className="grid md:grid-cols-3 gap-3 mb-6">
-        <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
-        <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
-        <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
-      </div>
+      {showMoney && (
+        <div className="grid md:grid-cols-3 gap-3 mb-6">
+          <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
+          <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
+          <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
+        </div>
+      )}
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={upcoming} conflictDates={conflictDates} />
+          <EventTable rows={upcoming} conflictDates={conflictDates} showMoney={showMoney} />
         </CardContent>
       </Card>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Histórico {year}</CardTitle></CardHeader>
         <CardContent className="p-0">
-          <EventTable rows={past} conflictDates={conflictDates} />
+          <EventTable rows={past} conflictDates={conflictDates} showMoney={showMoney} />
         </CardContent>
       </Card>
 
@@ -181,7 +186,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<string> }) {
+function EventTable({ rows, conflictDates, showMoney = true }: { rows: any[]; conflictDates?: Set<string>; showMoney?: boolean }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -191,12 +196,13 @@ function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<
             <th className="text-left p-3">Data</th>
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
-            <th className="text-right p-3">Extras</th>
-            <th className="text-right p-3">Fee</th>
-
-            <th className="text-left p-3">Sinal devolvido</th>
-            <th className="text-left p-3">Pag. final</th>
-            <th className="text-left p-3">Estado</th>
+            {showMoney && <>
+              <th className="text-right p-3">Extras</th>
+              <th className="text-right p-3">Fee</th>
+              <th className="text-left p-3">Sinal devolvido</th>
+              <th className="text-left p-3">Pag. final</th>
+              <th className="text-left p-3">Estado</th>
+            </>}
           </tr>
         </thead>
         <tbody>
@@ -215,20 +221,21 @@ function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<
                 </td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
-                <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
-
-                <td className="p-3 text-xs">
-                  {r.deposit_paid
-                    ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
-                    : <span className="text-muted-foreground">—</span>}
-                </td>
-                <td className="p-3 text-xs">
-                  {r.final_payment_received
-                    ? <span>{EUR(r.final_payment_value)} · {r.final_payment_method === "fotografo" ? "direto" : "PRISM"}</span>
-                    : <span className="text-muted-foreground">—</span>}
-                </td>
-                <td className="p-3"><Badge variant={variant}>{status}</Badge></td>
+                {showMoney && <>
+                  <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
+                  <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
+                  <td className="p-3 text-xs">
+                    {r.deposit_paid
+                      ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
+                      : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="p-3 text-xs">
+                    {r.final_payment_received
+                      ? <span>{EUR(r.final_payment_value)} · {r.final_payment_method === "fotografo" ? "direto" : "PRISM"}</span>
+                      : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="p-3"><Badge variant={variant}>{status}</Badge></td>
+                </>}
               </tr>
             );
           })}
