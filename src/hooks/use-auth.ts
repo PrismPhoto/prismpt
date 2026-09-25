@@ -10,6 +10,7 @@ export interface AuthState {
   role: AppRole | null;
   photographerId: string | null;
   initials: string | null;
+  fullName: string | null;
 }
 
 export function useAuth(): AuthState {
@@ -18,6 +19,7 @@ export function useAuth(): AuthState {
   const [role, setRole] = useState<AppRole | null>(null);
   const [photographerId, setPhotographerId] = useState<string | null>(null);
   const [initials, setInitials] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -53,10 +55,12 @@ export function useAuth(): AuthState {
         .maybeSingle();
       setPhotographerId(photog?.id ?? null);
       setInitials(photog?.initials ?? null);
+      const { data: prof } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+      setFullName(prof?.full_name ?? user.email ?? null);
     })();
   }, [user]);
 
-  return { user, loading, role, photographerId, initials };
+  return { user, loading, role, photographerId, initials, fullName };
 }
 
 export async function signOut() {
