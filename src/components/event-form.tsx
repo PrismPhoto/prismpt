@@ -689,16 +689,18 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
         </div>
       </Section>
 
-      <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
-        {blockingConflicts.length > 0 && (
-          <span className="text-xs text-destructive flex items-center gap-1.5">
-            <AlertTriangle className="h-4 w-4" />
-            Não é possível guardar: {blockingConflicts.join(" · ")}
-          </span>
-        )}
-        <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
-      </div>
-    </div>
+      {!readOnly && (
+        <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
+          {blockingConflicts.length > 0 && (
+            <span className="text-xs text-destructive flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4" />
+              Não é possível guardar: {blockingConflicts.join(" · ")}
+            </span>
+          )}
+          <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
+        </div>
+      )}
+    </fieldset>
   );
 }
 
