@@ -13,6 +13,8 @@ import {
   Menu,
   Users,
   Truck,
+  MessageSquare,
+  FolderOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth, signOut } from "@/hooks/use-auth";
@@ -31,6 +33,8 @@ const navItems = [
   { to: "/pacotes", label: "Pacotes", icon: Package, managerOnly: true },
   { to: "/wedding-planners", label: "Wedding Planners", icon: Heart, managerOnly: true },
   { to: "/suppliers", label: "Fornecedores", icon: Truck, managerOnly: true },
+  { to: "/team", label: "Conversa", icon: MessageSquare, managerOnly: false },
+  { to: "/resources", label: "Recursos", icon: FolderOpen, managerOnly: false },
   { to: "/settings", label: "Definições", icon: SettingsIcon, managerOnly: true },
 ];
 

@@ -57,6 +57,13 @@
       "when": 1790340540761,
       "tag": "0007_wp_commission_type_contributions_expenses",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790343205856,
+      "tag": "0008_team_comments_and_resources",
+      "breakpoints": true
     }
   ]
 }
