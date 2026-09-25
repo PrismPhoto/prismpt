@@ -781,6 +781,50 @@ export type Database = {
           },
         ]
       }
+      photographer_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          month: number
+          notes: string | null
+          paid: boolean
+          paid_date: string | null
+          photographer_id: string
+          year: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month: number
+          notes?: string | null
+          paid?: boolean
+          paid_date?: string | null
+          photographer_id: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          month?: number
+          notes?: string | null
+          paid?: boolean
+          paid_date?: string | null
+          photographer_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "photographer_contributions_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       photographer_unavailability: {
         Row: {
           date: string
@@ -856,6 +900,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      prism_expenses: {
+        Row: {
+          active: boolean
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          frequency: string
+          id: string
+          notes: string | null
+          start_date: string | null
+        }
+        Insert: {
+          active?: boolean
+          amount?: number
+          category?: string
+          created_at?: string
+          description: string
+          frequency?: string
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+        }
+        Update: {
+          active?: boolean
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          frequency?: string
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -957,7 +1037,9 @@ export type Database = {
       }
       wedding_planners: {
         Row: {
+          commission_default_value: number | null
           commission_percentage: number
+          commission_type: string
           created_at: string
           email: string | null
           id: string
@@ -965,7 +1047,9 @@ export type Database = {
           notes: string | null
         }
         Insert: {
+          commission_default_value?: number | null
           commission_percentage?: number
+          commission_type?: string
           created_at?: string
           email?: string | null
           id?: string
@@ -973,7 +1057,9 @@ export type Database = {
           notes?: string | null
         }
         Update: {
+          commission_default_value?: number | null
           commission_percentage?: number
+          commission_type?: string
           created_at?: string
           email?: string | null
           id?: string

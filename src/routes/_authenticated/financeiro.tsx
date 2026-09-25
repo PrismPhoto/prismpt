@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/use-auth";
 import { EUR, fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { PrismFinance } from "@/components/prism-finance";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({ component: FinancePage });
 
@@ -111,6 +112,8 @@ function FinancePage() {
           </>
         }
       />
+
+      {role === "manager" && !activePhotographerId && <PrismFinance year={year} />}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {role === "manager" && !activePhotographerId && <KPI label="Receita" value={EUR(totalRevenue)} />}
