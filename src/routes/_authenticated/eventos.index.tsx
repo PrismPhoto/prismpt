@@ -1,4 +1,4 @@
-import { DELIVERY_BADGE, deliveryKey } from "@/lib/delivery";
+import { DELIVERY_DOT, DELIVERY_LABELS, deliveryKey } from "@/lib/delivery";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment, useMemo, useState } from "react";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EVENT_STATUSES, EVENT_TYPES, EUR, fmtDate, packageLabel, packageLabelWithPrice, sortPackages } from "@/lib/format";
@@ -18,6 +17,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { syncGoogleCalendar } from "@/lib/calendar-sync.functions";
+
+const STATUS_DOT: Record<string, string> = {
+  Confirmado: "bg-emerald-500",
+  "Aguarda Sinal": "bg-amber-500",
+  Cancelado: "bg-destructive",
+};
 
 export const Route = createFileRoute("/_authenticated/eventos/")({ component: EventsPage });
 
@@ -291,22 +296,23 @@ function EventsPage() {
                         <td className="p-3 text-muted-foreground">{e.packages ? packageLabel(e.packages.name, e.packages.version) : "—"}</td>
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                         <td className="p-3">
-                          {e.deposit_paid ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs">
-                              <span className="h-2 w-2 rounded-full bg-primary" />
-                              <span className="tabular-nums">{EUR(e.deposit_amount)}</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
-                              <span className="h-2 w-2 rounded-full bg-destructive" />
-                              Em falta
-                            </span>
-                          )}
+                          <span
+                            title={e.deposit_paid ? `Sinal pago: ${EUR(e.deposit_amount)}` : "Sinal em falta"}
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${e.deposit_paid ? "bg-primary" : "bg-destructive"}`}
+                          />
                         </td>
                         <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
-                        <td className="p-3"><Badge variant={e.status === "Confirmado" ? "default" : e.status === "Cancelado" ? "destructive" : "secondary"}>{e.status}</Badge></td>
-                        <td className="p-3 whitespace-nowrap">
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${DELIVERY_BADGE[deliveryKey(e)].cls}`}>{DELIVERY_BADGE[deliveryKey(e)].label}</span>
+                        <td className="p-3">
+                          <span
+                            title={e.status ?? ""}
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${STATUS_DOT[e.status] ?? "bg-muted-foreground/40"}`}
+                          />
+                        </td>
+                        <td className="p-3">
+                          <span
+                            title={DELIVERY_LABELS[deliveryKey(e)]}
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${DELIVERY_DOT[deliveryKey(e)]}`}
+                          />
                         </td>
                       </tr>
                     ))}
