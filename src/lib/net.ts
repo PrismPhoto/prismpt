@@ -14,5 +14,6 @@ export function netBreakdown(e: {
   const second = e.second_photographer_id ? Number(e.second_photographer_cost || 0) : 0;
   const editor = e.editor_id ? Number(e.editor_cost || 0) : 0;
   const prismDeposit = isPrismDeposit(e.deposit_method) ? Number(e.deposit_amount || 0) : 0;
-  return { gross, commission, second, editor, prismDeposit, net: gross - commission - second - editor - prismDeposit };
+  // O sinal não é um custo: é parte do pagamento que o fotógrafo recebe (a comissão já é linha separada).
+  return { gross, commission, second, editor, prismDeposit, net: gross - commission - second - editor };
 }
