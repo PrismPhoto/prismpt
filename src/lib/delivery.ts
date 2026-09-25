@@ -2,6 +2,14 @@ export const DELIVERY_LABELS: Record<string, string> = {
   pending: "Pendente",
   editing: "Em edição",
   delivered: "Entregue",
+  late: "Atrasado",
+};
+
+export const DELIVERY_DOT: Record<string, string> = {
+  delivered: "bg-emerald-500",
+  editing: "bg-amber-500",
+  pending: "bg-muted-foreground/40",
+  late: "bg-destructive",
 };
 
 export function daysUntil(date?: string | null): number | null {
