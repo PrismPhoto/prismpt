@@ -783,6 +783,7 @@ export type Database = {
           id: string
           initials: string | null
           personal_email: string | null
+          photographer_id: string | null
           role: Database["public"]["Enums"]["app_role"] | null
         }
         Insert: {
@@ -793,6 +794,7 @@ export type Database = {
           id: string
           initials?: string | null
           personal_email?: string | null
+          photographer_id?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
         }
         Update: {
@@ -803,9 +805,18 @@ export type Database = {
           id?: string
           initials?: string | null
           personal_email?: string | null
+          photographer_id?: string | null
           role?: Database["public"]["Enums"]["app_role"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

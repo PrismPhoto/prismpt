@@ -12,11 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Calendar, Link2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { UsersAdmin } from "@/components/users-admin";
 
 export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
 
 function SettingsPage() {
   const qc = useQueryClient();
+  const { user, role, loading: authLoading } = useAuth();
   const { data: settings } = useQuery({ queryKey: ["settings"], queryFn: async () => (await supabase.from("app_settings").select("*").eq("id", 1).single()).data });
   const { data: templates = [] } = useQuery({ queryKey: ["templates"], queryFn: async () => (await supabase.from("email_templates").select("*").order("name")).data ?? [] });
 
@@ -31,18 +34,23 @@ function SettingsPage() {
     qc.invalidateQueries({ queryKey: ["settings"] });
   };
 
+  if (authLoading || (user && role === null)) return <PageContainer><p>A carregar…</p></PageContainer>;
+  if (role !== "manager") return <PageContainer><p className="text-muted-foreground">Acesso reservado ao Admin.</p></PageContainer>;
   if (!s) return <PageContainer><p>A carregar…</p></PageContainer>;
 
   return (
     <PageContainer>
-      <PageHeader title="Definições" description="Apenas manager" />
-      <Tabs defaultValue="integrations">
+      <PageHeader title="Definições" description="Apenas Admin" />
+      <Tabs defaultValue="users">
         <TabsList>
+          <TabsTrigger value="users">Utilizadores</TabsTrigger>
           <TabsTrigger value="integrations">Integrações</TabsTrigger>
           <TabsTrigger value="comunicacao">Comunicação</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="automations">Automatismos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users" className="mt-4"><UsersAdmin /></TabsContent>
 
         <TabsContent value="integrations" className="space-y-4 mt-4">
           <Card>
