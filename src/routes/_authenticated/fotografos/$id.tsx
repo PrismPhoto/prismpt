@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EUR, fmtDate, packageLabel } from "@/lib/format";
 import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution } from "@/lib/fee-distribution";
 import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
 
@@ -35,6 +36,8 @@ function packageFee(row: any, photog: any): number {
 function PhotogProfile() {
   const { id } = Route.useParams();
   const [year, setYear] = useState<number>(2027);
+  const { role, photographerId } = useAuth();
+  const showMoney = role === "manager" || photographerId === id;
 
   const { data: photog, isLoading: photogLoading } = useQuery({
     queryKey: ["photog", id],
