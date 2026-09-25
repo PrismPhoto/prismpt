@@ -186,7 +186,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "su
   );
 }
 
-function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<string> }) {
+function EventTable({ rows, conflictDates, showMoney = true }: { rows: any[]; conflictDates?: Set<string>; showMoney?: boolean }) {
   if (!rows.length) return <div className="p-6 text-sm text-muted-foreground text-center">Sem eventos.</div>;
   return (
     <div className="overflow-x-auto">
@@ -196,12 +196,13 @@ function EventTable({ rows, conflictDates }: { rows: any[]; conflictDates?: Set<
             <th className="text-left p-3">Data</th>
             <th className="text-left p-3">Cliente</th>
             <th className="text-left p-3">Pacote</th>
-            <th className="text-right p-3">Extras</th>
-            <th className="text-right p-3">Fee</th>
-
-            <th className="text-left p-3">Sinal devolvido</th>
-            <th className="text-left p-3">Pag. final</th>
-            <th className="text-left p-3">Estado</th>
+            {showMoney && <>
+              <th className="text-right p-3">Extras</th>
+              <th className="text-right p-3">Fee</th>
+              <th className="text-left p-3">Sinal devolvido</th>
+              <th className="text-left p-3">Pag. final</th>
+              <th className="text-left p-3">Estado</th>
+            </>}
           </tr>
         </thead>
         <tbody>
