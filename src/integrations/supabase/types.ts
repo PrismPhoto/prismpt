@@ -981,6 +981,36 @@ export type Database = {
           },
         ]
       }
+      shared_resources: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          sort_order: number
+          title: string
+          url: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          sort_order?: number
+          title: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          sort_order?: number
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           active: boolean
@@ -1016,6 +1046,41 @@ export type Database = {
           type?: string
         }
         Relationships: []
+      }
+      team_comments: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          message: string
+          photographer_id: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          photographer_id?: string | null
+          user_id?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          photographer_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_comments_photographer_id_fkey"
+            columns: ["photographer_id"]
+            isOneToOne: false
+            referencedRelation: "photographers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1085,6 +1150,14 @@ export type Database = {
         Returns: boolean
       }
       is_manager: { Args: { _user_id: string }; Returns: boolean }
+      team_comment_authors: {
+        Args: never
+        Returns: {
+          full_name: string
+          id: string
+          initials: string
+        }[]
+      }
     }
     Enums: {
       app_role: "manager" | "photographer"
