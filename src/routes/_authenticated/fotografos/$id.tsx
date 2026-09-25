@@ -221,20 +221,21 @@ function EventTable({ rows, conflictDates, showMoney = true }: { rows: any[]; co
                 </td>
                 <td className="p-3 font-medium">{r.events.client_name}</td>
                 <td className="p-3 text-muted-foreground">{r.events.packages ? packageLabel(r.events.packages.name, r.events.packages.version) : "—"}</td>
-                <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
-                <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
-
-                <td className="p-3 text-xs">
-                  {r.deposit_paid
-                    ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
-                    : <span className="text-muted-foreground">—</span>}
-                </td>
-                <td className="p-3 text-xs">
-                  {r.final_payment_received
-                    ? <span>{EUR(r.final_payment_value)} · {r.final_payment_method === "fotografo" ? "direto" : "PRISM"}</span>
-                    : <span className="text-muted-foreground">—</span>}
-                </td>
-                <td className="p-3"><Badge variant={variant}>{status}</Badge></td>
+                {showMoney && <>
+                  <td className="p-3 text-right tabular-nums text-muted-foreground">{Number(r.extrasFee || 0) > 0 ? `+${EUR(r.extrasFee)}` : "—"}</td>
+                  <td className="p-3 text-right tabular-nums font-medium">{EUR(r.effFee ?? r.fee)}</td>
+                  <td className="p-3 text-xs">
+                    {r.deposit_paid
+                      ? <span>{EUR(r.deposit_amount)}{r.deposit_paid_date ? ` · ${fmtDate(r.deposit_paid_date)}` : ""}</span>
+                      : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="p-3 text-xs">
+                    {r.final_payment_received
+                      ? <span>{EUR(r.final_payment_value)} · {r.final_payment_method === "fotografo" ? "direto" : "PRISM"}</span>
+                      : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="p-3"><Badge variant={variant}>{status}</Badge></td>
+                </>}
               </tr>
             );
           })}
