@@ -77,6 +77,9 @@ function EventDetailPage() {
   if (isLoading) return <PageContainer><div className="p-8 text-muted-foreground">A carregar…</div></PageContainer>;
   if (!event) return <PageContainer><div className="p-8 text-muted-foreground">Evento não encontrado.</div></PageContainer>;
 
+  const isAssigned = !!photographerId && (event.event_photographers ?? []).some((ep: any) => ep.photographer_id === photographerId);
+  const canEdit = role === "manager" || isAssigned;
+
   return (
     <PageContainer>
       <PageHeader
@@ -87,7 +90,7 @@ function EventDetailPage() {
             <Button variant="ghost" size="sm" asChild>
               <Link to="/eventos"><ArrowLeft className="h-4 w-4 mr-1" />Voltar</Link>
             </Button>
-            <Button size="sm" onClick={() => saveRef.current?.()}><Save className="h-4 w-4 mr-1" />Guardar</Button>
+            {canEdit && <Button size="sm" onClick={() => saveRef.current?.()}><Save className="h-4 w-4 mr-1" />Guardar</Button>}
             {role === "manager" && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
@@ -121,6 +124,7 @@ function EventDetailPage() {
         packages={packages}
         wps={wps}
         photographers={photographers}
+        readOnly={!canEdit}
         saveRef={saveRef}
         onSummaryChange={setSummary}
         onSaved={() => {

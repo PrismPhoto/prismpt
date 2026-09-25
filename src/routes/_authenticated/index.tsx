@@ -69,13 +69,9 @@ function DashboardPage() {
     },
   });
 
-  if (role !== "manager") {
-    return (
-      <PageContainer>
-        <PageHeader title="Bem-vindo" description="Aceda aos seus eventos no menu lateral." />
-      </PageContainer>
-    );
-  }
+  const isManager = role === "manager";
+
+
 
   const years = [2027, 2028, 2029, 2030];
 
