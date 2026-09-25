@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           brand_voice: string | null
           confirmation_enabled: boolean
+          delivery_deadline_days: number
           deposit_request_enabled: boolean
           draft_mode: boolean
           followup_days: number
@@ -32,6 +33,7 @@ export type Database = {
         Insert: {
           brand_voice?: string | null
           confirmation_enabled?: boolean
+          delivery_deadline_days?: number
           deposit_request_enabled?: boolean
           draft_mode?: boolean
           followup_days?: number
@@ -46,6 +48,7 @@ export type Database = {
         Update: {
           brand_voice?: string | null
           confirmation_enabled?: boolean
+          delivery_deadline_days?: number
           deposit_request_enabled?: boolean
           draft_mode?: boolean
           followup_days?: number
@@ -56,6 +59,42 @@ export type Database = {
           id?: number
           pre_event_reminder_days?: number
           pre_event_reminder_enabled?: boolean
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -334,6 +373,9 @@ export type Database = {
           couple_names: string | null
           created_at: string
           decoration_company: string | null
+          delivery_date: string | null
+          delivery_deadline: string | null
+          delivery_status: string
           deposit_amount: number | null
           deposit_method: string | null
           deposit_paid: boolean
@@ -349,6 +391,7 @@ export type Database = {
           final_payment_method: string | null
           final_payment_value: number | null
           final_value: number | null
+          gallery_link: string | null
           google_calendar_event_id: string | null
           groom_phone: string | null
           groom_prep_address: string | null
@@ -384,6 +427,9 @@ export type Database = {
           couple_names?: string | null
           created_at?: string
           decoration_company?: string | null
+          delivery_date?: string | null
+          delivery_deadline?: string | null
+          delivery_status?: string
           deposit_amount?: number | null
           deposit_method?: string | null
           deposit_paid?: boolean
@@ -399,6 +445,7 @@ export type Database = {
           final_payment_method?: string | null
           final_payment_value?: number | null
           final_value?: number | null
+          gallery_link?: string | null
           google_calendar_event_id?: string | null
           groom_phone?: string | null
           groom_prep_address?: string | null
@@ -434,6 +481,9 @@ export type Database = {
           couple_names?: string | null
           created_at?: string
           decoration_company?: string | null
+          delivery_date?: string | null
+          delivery_deadline?: string | null
+          delivery_status?: string
           deposit_amount?: number | null
           deposit_method?: string | null
           deposit_paid?: boolean
@@ -449,6 +499,7 @@ export type Database = {
           final_payment_method?: string | null
           final_payment_value?: number | null
           final_value?: number | null
+          gallery_link?: string | null
           google_calendar_event_id?: string | null
           groom_phone?: string | null
           groom_prep_address?: string | null
