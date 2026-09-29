@@ -297,8 +297,8 @@ function EventsPage() {
                         <td className="p-3 text-xs">{e.event_photographers?.map((ep: any) => ep.photographers?.initials ?? ep.external_name ?? "?").join(" · ")}</td>
                         <td className="p-3">
                           <span
-                            title={e.deposit_paid ? `Sinal pago: ${EUR(e.deposit_amount)}` : "Sinal em falta"}
-                            className={`inline-block h-2.5 w-2.5 rounded-full ${e.deposit_paid ? "bg-primary" : "bg-destructive"}`}
+                            title={(e.deposit_paid || e.deposit_paid_date) ? `Sinal pago: ${EUR(e.deposit_amount)}` : "Sinal em falta"}
+                            className={`inline-block h-2.5 w-2.5 rounded-full ${(e.deposit_paid || e.deposit_paid_date) ? "bg-primary" : "bg-destructive"}`}
                           />
                         </td>
                         <td className="p-3 text-right tabular-nums">{EUR(e.total_value)}</td>
