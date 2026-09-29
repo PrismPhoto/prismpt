@@ -47,7 +47,7 @@ function WpPage() {
       <PageHeader title="Wedding Planners" actions={
         <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) setEditing(null); }}>
           <DialogTrigger asChild><Button onClick={() => setEditing(null)}><Plus className="h-4 w-4 mr-2" />Nova</Button></DialogTrigger>
-          <WpForm initial={editing} onSave={save} />
+          <WpForm key={`${editing?.id ?? "new"}-${open}`} initial={editing} onSave={save} />
         </Dialog>
       } />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
