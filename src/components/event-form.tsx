@@ -1,5 +1,6 @@
 import { DELIVERY_LABELS, daysUntil, countdownClass } from "@/lib/delivery";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { usePhotographerConflicts } from "@/lib/conflicts";
 import { netBreakdown } from "@/lib/net";
 
 const EMPTY_EXTRAS: any[] = [];
+const SectionContext = createContext({ accordion: false, readOnly: false });
 
 // Normaliza formatos antigos de deposit_method para o formato canónico "directo:XX".
 function normalizeDepositMethod(raw: any): string {
@@ -31,7 +33,7 @@ function normalizeDepositMethod(raw: any): string {
   return s;
 }
 
-export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef, readOnly = false }: any) {
+export function EventForm({ event, packages, wps, photographers, onSaved, onSummaryChange, saveRef, readOnly = false, accordionSections = false }: any) {
   const isEdit = !!event;
   const { data: suppliers = [] } = useQuery({ queryKey: ["suppliers"], queryFn: async () => (await supabase.from("suppliers").select("*").order("name")).data ?? [] });
   const { data: costDefaults } = useQuery({ queryKey: ["settings"], queryFn: async () => (await supabase.from("app_settings").select("*").eq("id", 1).single()).data, enabled: !event });
@@ -418,15 +420,11 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
     })
     .filter(Boolean) as { value: string; label: string }[];
 
-  return (
-    <fieldset disabled={readOnly} className="space-y-6 min-w-0 disabled:opacity-90">
-      {readOnly && (
-        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
-          Modo de consulta — só pode editar os casamentos onde está alocado.
-        </div>
-      )}
+  const informationSection = (
       <Section title="Informação do evento">
         <div className="grid md:grid-cols-2 gap-3">
+          {accordionSections && form.event_type === "Casamento" && (
+            <F label="Nomes dos noivos" className="md:col-span-2"><Input value={form.couple_names} onChange={(e) => setForm({ ...form, couple_names: e.target.value })} placeholder="ex.: Ana & João" /></F>          )}
           <F label="Data"><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></F>
           <F label="Status">
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
@@ -466,11 +464,14 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           </div>
         </div>
       </Section>
+  );
 
-      {form.event_type === "Casamento" && (
-        <Section title="Detalhes do casamento (pré-wedding)" description="Informação recolhida no formulário que os noivos preenchem.">
+  const detailsSection = (
+{form.event_type === "Casamento" && (
+        <Section title={accordionSections ? "Detalhes do casamento" : "Detalhes do casamento (pré-wedding)"} description="Informação recolhida no formulário que os noivos preenchem.">
           <div className="grid md:grid-cols-2 gap-3">
-            <F label="Nomes dos noivos" className="md:col-span-2"><Input value={form.couple_names} onChange={(e) => setForm({ ...form, couple_names: e.target.value })} placeholder="ex.: Ana & João" /></F>
+            {!accordionSections && (
+            <F label="Nomes dos noivos" className="md:col-span-2"><Input value={form.couple_names} onChange={(e) => setForm({ ...form, couple_names: e.target.value })} placeholder="ex.: Ana & João" /></F>            )}
             <F label="Telefone da noiva"><Input value={form.bride_phone} onChange={(e) => setForm({ ...form, bride_phone: e.target.value })} /></F>
             <F label="Telefone do noivo"><Input value={form.groom_phone} onChange={(e) => setForm({ ...form, groom_phone: e.target.value })} /></F>
             <F label="Morada preparação da noiva" className="md:col-span-2"><Textarea rows={2} value={form.bride_prep_address} onChange={(e) => setForm({ ...form, bride_prep_address: e.target.value })} /></F>
@@ -499,8 +500,93 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           </div>
         </Section>
       )}
+  );
 
-      <Section title="Pagamentos">
+  const paymentsSection = (
+<Section title="Pagamentos">
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Sinal</div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
+              <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
+              <F label="Destino do sinal">
+                <Select
+                  value={depositDest}
+                  onValueChange={(v) =>
+                    setForm({
+                      ...form,
+                      deposit_method: v === "revolut_prism" ? "revolut_prism" : `directo:${assignedPhotogs[0]?.value ?? ""}`,
+                    })
+                  }
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="revolut_prism">Revolut PRISM</SelectItem>
+                    <SelectItem value="directo">Directo ao fotógrafo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </F>
+              {depositDest === "directo" && (
+                <F label="Qual fotógrafo">
+                  <Select value={depositPhotog || "none"} onValueChange={(v) => setForm({ ...form, deposit_method: `directo:${v === "none" ? "" : v}` })}>
+                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">—</SelectItem>
+                      {assignedPhotogs.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </F>
+              )}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Pagamento final</div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <F label="Pagamento final (€)">
+                <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+                  <span>Sugerido: {EUR(suggestedFinalPayment)} (valor total {EUR(eventTotal)} − sinal {EUR(Number(form.deposit_amount || 0))})</span>
+                  {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
+                    <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
+                  )}
+                </div>
+              </F>
+              <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
+              <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 space-y-2">
+            <h4 className="text-sm font-semibold">Resumo financeiro</h4>
+            {(() => {
+              const b = netBreakdown({
+                total_value: eventTotal, deposit_amount: form.deposit_amount, deposit_method: form.deposit_method,
+                second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
+                editor_id: form.editor_id, editor_cost: form.editor_cost,
+                commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
+                wedding_planner_id: form.wedding_planner_id, wp_commission_value: form.wp_commission_value,
+              });
+              const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
+              return (
+                <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
+                  <Row l="Receita bruta" v={EUR(b.gross)} />
+                  {form.wedding_planner_id && <Row l="– Comissão WP" v={EUR(b.wp)} />}
+                  <Row l="– Comissão PRISM" v={EUR(b.commission)} />
+                  <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
+                  <Row l="– Custo editor" v={EUR(b.editor)} />
+                  <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      </Section>
+  );
+
+  const legacyPaymentsSection = (
+<Section title="Pagamentos">
         <div className="grid md:grid-cols-2 gap-3">
           <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
             <div className="text-xs font-semibold uppercase text-muted-foreground">Sinal</div>
@@ -602,8 +688,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           </div>
         </div>
       </Section>
+  );
 
-      <Section title="Fotógrafos">
+  const photographersSection = (
+<Section title="Fotógrafos">
         <div className="space-y-3">
           {(form.slots as any[]).map((s, i) => {
             const slotDist = distribution[i];
@@ -705,10 +793,39 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             );
           })()}
 
+          {accordionSections && (
+          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
+            <div className="text-xs font-semibold uppercase text-muted-foreground">Custos</div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <F label="2º Fotógrafo">
+                <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo 2º fotógrafo (€)"><Input type="number" step="0.01" value={form.second_photographer_cost} onChange={(e) => setForm({ ...form, second_photographer_cost: e.target.value })} /></F>
+              <F label="Editor">
+                <Select value={form.editor_id || "none"} onValueChange={(v) => setForm({ ...form, editor_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem editor</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "editor" && (x.active || x.id === form.editor_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo editor (€)"><Input type="number" step="0.01" value={form.editor_cost} onChange={(e) => setForm({ ...form, editor_cost: e.target.value })} /></F>
+            </div>
+          </div>
+          )}
         </div>
       </Section>
+  );
 
-      <Section title="Extras" actions={<Button type="button" size="sm" variant="outline" onClick={addExtra}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>}>
+  const extrasSection = (
+<Section title="Extras" actions={<Button type="button" size="sm" variant="outline" onClick={addExtra}><Plus className="h-3 w-3 mr-1" />Adicionar</Button>}>
         <div className="space-y-2">
           {extras.map((x, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-end p-2 rounded bg-muted/40">
@@ -753,8 +870,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           </div>
         </div>
       </Section>
+  );
 
-      <Section title="Entrega">
+  const deliverySection = (
+<Section title="Entrega">
         {(() => {
           const days = daysUntil(event?.delivery_deadline);
           return (
@@ -788,13 +907,30 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           );
         })()}
       </Section>
+  );
 
-      <Section title="Notas">
+  const notesSection = (
+<Section title="Notas">
         <div className="grid gap-3">
           <F label="Notas internas"><Textarea rows={3} value={form.internal_notes} onChange={(e) => setForm({ ...form, internal_notes: e.target.value })} /></F>
           <F label="Notas evento (calendário)"><Textarea rows={3} value={form.event_notes} onChange={(e) => setForm({ ...form, event_notes: e.target.value })} /></F>
         </div>
       </Section>
+  );
+
+  return (
+    <SectionContext.Provider value={{ accordion: accordionSections, readOnly }}>
+    <Accordion type="multiple" defaultValue={["Informação do evento", "Fotógrafos"]} className={accordionSections ? "min-w-0" : "space-y-6 min-w-0"}>
+      {readOnly && (
+        <div className="rounded-md border border-warning/40 bg-warning/10 px-3 py-2 text-sm">
+          Modo de consulta — só pode editar os casamentos onde está alocado.
+        </div>
+      )}
+      {accordionSections ? (
+        <>{informationSection}{photographersSection}{extrasSection}{paymentsSection}{detailsSection}{deliverySection}{notesSection}</>
+      ) : (
+        <>{informationSection}{detailsSection}{legacyPaymentsSection}{photographersSection}{extrasSection}{deliverySection}{notesSection}</>
+      )}
 
       {!readOnly && (
         <div className="flex justify-end items-center gap-3 sticky bottom-0 bg-background/80 backdrop-blur py-3 border-t">
@@ -807,21 +943,41 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           <Button onClick={save} disabled={blockingConflicts.length > 0}>Guardar</Button>
         </div>
       )}
-    </fieldset>
+    </Accordion>
+    </SectionContext.Provider>
   );
 }
 
 function Section({ title, description, actions, children }: any) {
+  const { accordion, readOnly } = useContext(SectionContext);
+  if (accordion) {
+    return (
+      <AccordionItem value={title}>
+        <AccordionTrigger className="py-4 text-base font-semibold hover:no-underline motion-reduce:transition-none [&>svg]:motion-reduce:transition-none">
+          {title}
+        </AccordionTrigger>
+        <AccordionContent className="pb-5">
+          {description && <p className="text-xs text-muted-foreground mb-3">{description}</p>}
+          <fieldset disabled={readOnly} className="min-w-0 space-y-3 disabled:opacity-90">
+            {actions && <div className="flex justify-end">{actions}</div>}
+            {children}
+          </fieldset>
+        </AccordionContent>
+      </AccordionItem>
+    );
+  }
   return (
     <section className="rounded-lg border bg-card p-4 md:p-6">
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <h3 className="font-semibold">{title}</h3>
-          {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+      <fieldset disabled={readOnly} className="min-w-0 disabled:opacity-90">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <h3 className="font-semibold">{title}</h3>
+            {description && <p className="text-xs text-muted-foreground mt-0.5">{description}</p>}
+          </div>
+          {actions}
         </div>
-        {actions}
-      </div>
-      {children}
+        {children}
+      </fieldset>
     </section>
   );
 }
