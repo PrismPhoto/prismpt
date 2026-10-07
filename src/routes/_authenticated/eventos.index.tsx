@@ -16,7 +16,7 @@ import { findDuplicatePhotographers } from "@/lib/conflicts";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { syncGoogleCalendar } from "@/lib/calendar-sync.functions";
+import { CalendarSyncButton } from "@/components/calendar-sync-dialog";
 
 const STATUS_DOT: Record<string, string> = {
   Confirmado: "bg-emerald-500",
@@ -41,25 +41,6 @@ function EventsPage() {
   const [dateTo, setDateTo] = useState("");
   const [groupBy, setGroupBy] = useState("month");
   const [createOpen, setCreateOpen] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const runSync = useServerFn(syncGoogleCalendar);
-
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const res = await runSync({ data: undefined } as any);
-      if (res.imported > 0) toast.success(`${res.imported} eventos novos importados`);
-      else toast.info("Nenhum evento novo encontrado");
-      qc.invalidateQueries({ queryKey: ["events"] });
-    } catch (err: any) {
-      const msg = String(err?.message ?? err);
-      if (msg.includes("NOT_CONNECTED")) toast.error("Liga primeiro o Google Calendar nas Definições");
-      else toast.error(`Falha na sincronização: ${msg}`);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
   const { data: events = [] } = useQuery({
     queryKey: ["events", year, statusF],
     queryFn: async () => {
@@ -168,10 +149,7 @@ function EventsPage() {
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
             {role === "manager" && (
-              <Button variant="outline" onClick={handleSync} disabled={syncing}>
-                {syncing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                {syncing ? "A sincronizar…" : "Sincronizar Calendário"}
-              </Button>
+              <CalendarSyncButton />
             )}
             {role === "manager" && (
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>

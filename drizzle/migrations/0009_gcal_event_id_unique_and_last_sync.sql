@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX IF NOT EXISTS events_google_calendar_event_id_key ON public.events (google_calendar_event_id) WHERE google_calendar_event_id IS NOT NULL;
+ALTER TABLE public.app_settings ADD COLUMN IF NOT EXISTS gcal_last_sync_at timestamptz;
