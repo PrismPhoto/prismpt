@@ -502,6 +502,54 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       )
   );
 
+  const supplierCostFields = (
+            <div className="grid md:grid-cols-2 gap-3">
+              <F label="2º Fotógrafo">
+                <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo 2º fotógrafo (€)"><Input type="number" step="0.01" value={form.second_photographer_cost} onChange={(e) => setForm({ ...form, second_photographer_cost: e.target.value })} /></F>
+              <F label="Editor">
+                <Select value={form.editor_id || "none"} onValueChange={(v) => setForm({ ...form, editor_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem editor</SelectItem>
+                    {suppliers.filter((x: any) => x.type === "editor" && (x.active || x.id === form.editor_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </F>
+              <F label="Custo editor (€)"><Input type="number" step="0.01" value={form.editor_cost} onChange={(e) => setForm({ ...form, editor_cost: e.target.value })} /></F>
+            </div>
+  );
+
+  const financialSummary = (
+(() => {
+              const b = netBreakdown({
+                total_value: eventTotal, deposit_amount: form.deposit_amount, deposit_method: form.deposit_method,
+                second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
+                editor_id: form.editor_id, editor_cost: form.editor_cost,
+                commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
+                wedding_planner_id: form.wedding_planner_id, wp_commission_value: form.wp_commission_value,
+              });
+              const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
+              return (
+                <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
+                  <Row l="Receita bruta" v={EUR(b.gross)} />
+                  {form.wedding_planner_id && <Row l="– Comissão WP" v={EUR(b.wp)} />}
+                  <Row l="– Comissão PRISM" v={EUR(b.commission)} />
+                  <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
+                  <Row l="– Custo editor" v={EUR(b.editor)} />
+                  <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
+                </div>
+              );
+            })()
+  );
+
   const paymentsSection = (
 <Section title="Pagamentos">
         <div className="grid md:grid-cols-2 gap-3">
@@ -549,7 +597,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
                   <span>Sugerido: {EUR(suggestedFinalPayment)} (valor total {EUR(eventTotal)} − sinal {EUR(Number(form.deposit_amount || 0))})</span>
                   {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
-                    <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
+                    <Button type="button" variant="link" size="sm" className="h-auto p-0 text-xs" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</Button>
                   )}
                 </div>
               </F>
@@ -558,133 +606,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             </div>
           </div>
 
-          <div className="md:col-span-2 space-y-2">
-            <h4 className="text-sm font-semibold">Resumo financeiro</h4>
-            {(() => {
-              const b = netBreakdown({
-                total_value: eventTotal, deposit_amount: form.deposit_amount, deposit_method: form.deposit_method,
-                second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
-                editor_id: form.editor_id, editor_cost: form.editor_cost,
-                commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
-                wedding_planner_id: form.wedding_planner_id, wp_commission_value: form.wp_commission_value,
-              });
-              const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
-              return (
-                <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
-                  <Row l="Receita bruta" v={EUR(b.gross)} />
-                  {form.wedding_planner_id && <Row l="– Comissão WP" v={EUR(b.wp)} />}
-                  <Row l="– Comissão PRISM" v={EUR(b.commission)} />
-                  <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
-                  <Row l="– Custo editor" v={EUR(b.editor)} />
-                  <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
-                </div>
-              );
-            })()}
-          </div>
-        </div>
-      </Section>
-  );
-
-  const legacyPaymentsSection = (
-<Section title="Pagamentos">
-        <div className="grid md:grid-cols-2 gap-3">
-          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Sinal</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <F label="Sinal (€)"><Input type="number" step="0.01" value={form.deposit_amount} onChange={(e) => setForm({ ...form, deposit_amount: e.target.value })} /></F>
-              <F label="Data sinal pago"><Input type="date" value={form.deposit_paid_date} onChange={(e) => setForm({ ...form, deposit_paid_date: e.target.value })} /></F>
-              <F label="Destino do sinal">
-                <Select
-                  value={depositDest}
-                  onValueChange={(v) =>
-                    setForm({
-                      ...form,
-                      deposit_method: v === "revolut_prism" ? "revolut_prism" : `directo:${assignedPhotogs[0]?.value ?? ""}`,
-                    })
-                  }
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="revolut_prism">Revolut PRISM</SelectItem>
-                    <SelectItem value="directo">Directo ao fotógrafo</SelectItem>
-                  </SelectContent>
-                </Select>
-              </F>
-              {depositDest === "directo" && (
-                <F label="Qual fotógrafo">
-                  <Select value={depositPhotog || "none"} onValueChange={(v) => setForm({ ...form, deposit_method: `directo:${v === "none" ? "" : v}` })}>
-                    <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">—</SelectItem>
-                      {assignedPhotogs.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </F>
-              )}
-            </div>
-          </div>
-
-          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Pagamento final</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <F label="Pagamento final (€)">
-                <Input type="number" step="0.01" value={form.final_payment_value} onChange={(e) => setForm({ ...form, final_payment_value: e.target.value })} />
-                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <span>Sugerido: {EUR(suggestedFinalPayment)} (valor total {EUR(eventTotal)} − sinal {EUR(Number(form.deposit_amount || 0))})</span>
-                  {Number(form.final_payment_value || 0) !== suggestedFinalPayment && (
-                    <button type="button" className="text-primary underline" onClick={() => setForm({ ...form, final_payment_value: suggestedFinalPayment })}>usar sugerido</button>
-                  )}
-                </div>
-              </F>
-              <F label="Data pag. final"><Input type="date" value={form.final_payment_date} onChange={(e) => setForm({ ...form, final_payment_date: e.target.value })} /></F>
-              <F label="Método final" className="md:col-span-2"><Input value={form.final_payment_method} onChange={(e) => setForm({ ...form, final_payment_method: e.target.value })} /></F>
-            </div>
-          </div>
-
-          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Custos</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <F label="2º Fotógrafo">
-                <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
-                    {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </F>
-              <F label="Custo 2º fotógrafo (€)"><Input type="number" step="0.01" value={form.second_photographer_cost} onChange={(e) => setForm({ ...form, second_photographer_cost: e.target.value })} /></F>
-              <F label="Editor">
-                <Select value={form.editor_id || "none"} onValueChange={(v) => setForm({ ...form, editor_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem editor</SelectItem>
-                    {suppliers.filter((x: any) => x.type === "editor" && (x.active || x.id === form.editor_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </F>
-              <F label="Custo editor (€)"><Input type="number" step="0.01" value={form.editor_cost} onChange={(e) => setForm({ ...form, editor_cost: e.target.value })} /></F>
-            </div>
-            {(() => {
-              const b = netBreakdown({
-                total_value: eventTotal, deposit_amount: form.deposit_amount, deposit_method: form.deposit_method,
-                second_photographer_id: form.second_photographer_id, second_photographer_cost: form.second_photographer_cost,
-                editor_id: form.editor_id, editor_cost: form.editor_cost,
-                commission: (form.slots as any[]).reduce((s, x) => s + Number(x.prism_commission || 0), 0),
-                wedding_planner_id: form.wedding_planner_id, wp_commission_value: form.wp_commission_value,
-              });
-              const Row = ({ l, v, strong }: any) => <div className={`flex justify-between ${strong ? "font-semibold border-t pt-1 mt-1" : ""}`}><span>{l}</span><span>{v}</span></div>;
-              return (
-                <div className="text-sm rounded-md border bg-card p-3 space-y-0.5">
-                  <Row l="Receita bruta" v={EUR(b.gross)} />
-                  {form.wedding_planner_id && <Row l="– Comissão WP" v={EUR(b.wp)} />}
-                  <Row l="– Comissão PRISM" v={EUR(b.commission)} />
-                  <Row l="– Custo 2º fotógrafo" v={EUR(b.second)} />
-                  <Row l="– Custo editor" v={EUR(b.editor)} />
-                  <Row l="= Resultado líquido do fotógrafo" v={EUR(b.net)} strong />
-                </div>
-              );
-            })()}
+          <div className={accordionSections ? "md:col-span-2 space-y-2" : "md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2"}>
+            <h4 className="text-sm font-semibold">{accordionSections ? "Resumo financeiro" : "Custos"}</h4>
+            {!accordionSections && supplierCostFields}
+            {financialSummary}
           </div>
         </div>
       </Section>
@@ -766,10 +691,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 <h4 className="text-sm font-semibold mb-2">Valor final do fotógrafo</h4>
                 <div className="space-y-1.5 text-sm">
                   {rows.map((r, i) => (
-                    <div key={i} className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div key={i} className={accordionSections ? "flex flex-col sm:flex-row sm:items-center justify-between gap-2" : "flex items-center justify-between gap-3"}>
+                      <div className={accordionSections ? "flex flex-wrap items-center gap-2 min-w-0" : "flex items-center gap-2 min-w-0"}>
                         <span className="truncate">{r.name}</span>
-                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        <span className={accordionSections ? "text-xs text-muted-foreground" : "text-xs text-muted-foreground whitespace-nowrap"}>
                           pacote {EUR(r.baseFee)}
                           {r.extrasFee > 0 ? ` + extras ${EUR(r.extrasFee)}` : ""}
                           {r.clientDeposit > 0 ? ` · sinal recebido directo ${EUR(r.clientDeposit)}` : ""}
@@ -794,31 +719,10 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
           })()}
 
           {accordionSections && (
-          <div className="md:col-span-2 rounded-md border p-3 bg-muted/20 space-y-2">
-            <div className="text-xs font-semibold uppercase text-muted-foreground">Custos</div>
-            <div className="grid md:grid-cols-2 gap-3">
-              <F label="2º Fotógrafo">
-                <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
-                    {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </F>
-              <F label="Custo 2º fotógrafo (€)"><Input type="number" step="0.01" value={form.second_photographer_cost} onChange={(e) => setForm({ ...form, second_photographer_cost: e.target.value })} /></F>
-              <F label="Editor">
-                <Select value={form.editor_id || "none"} onValueChange={(v) => setForm({ ...form, editor_id: v === "none" ? "" : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem editor</SelectItem>
-                    {suppliers.filter((x: any) => x.type === "editor" && (x.active || x.id === form.editor_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </F>
-              <F label="Custo editor (€)"><Input type="number" step="0.01" value={form.editor_cost} onChange={(e) => setForm({ ...form, editor_cost: e.target.value })} /></F>
+            <div className="border-t pt-3 space-y-2">
+              <h4 className="text-sm font-semibold">Custos</h4>
+              {supplierCostFields}
             </div>
-          </div>
           )}
         </div>
       </Section>
@@ -929,7 +833,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       {accordionSections ? (
         <>{informationSection}{photographersSection}{extrasSection}{paymentsSection}{detailsSection}{deliverySection}{notesSection}</>
       ) : (
-        <>{informationSection}{detailsSection}{legacyPaymentsSection}{photographersSection}{extrasSection}{deliverySection}{notesSection}</>
+        <>{informationSection}{detailsSection}{paymentsSection}{photographersSection}{extrasSection}{deliverySection}{notesSection}</>
       )}
 
       {!readOnly && (
@@ -987,6 +891,7 @@ function F({ label, children, className = "" }: any) {
 }
 
 function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPhotog, conflict }: any) {
+  const { accordion } = useContext(SectionContext);
   const status = slot.final_payment_received ? "Pago" : slot.deposit_paid ? "Sinal" : "Pendente";
   const statusVariant: any = slot.final_payment_received ? "default" : slot.deposit_paid ? "secondary" : "outline";
   const hasPhotog = !!slot.photographer_id;
@@ -1011,7 +916,7 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
       )}
 
       <div className="grid grid-cols-12 gap-2 items-end">
-        <div className="col-span-5">
+        <div className={accordion ? "col-span-12 sm:col-span-5 min-w-0" : "col-span-5"}>
           <Label className="text-xs">{label}</Label>
           {isExternal ? (
             <Input
@@ -1027,7 +932,7 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
           )}
         </div>
         {!isExternal && (
-          <div className="col-span-2">
+          <div className={accordion ? "col-span-4 sm:col-span-2 min-w-0" : "col-span-2"}>
             <Label className="text-xs">Comissão €</Label>
             <Input
               type="number"
@@ -1038,7 +943,7 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
             />
           </div>
         )}
-        <div className={isExternal ? "col-span-5" : "col-span-3"}>
+        <div className={accordion ? "col-span-5 sm:col-span-3 min-w-0" : isExternal ? "col-span-5" : "col-span-3"}>
           <Label className="text-xs">{isExternal ? "Valor a pagar €" : "Fee (auto)"}</Label>
           {isExternal ? (
             <Input
@@ -1054,7 +959,7 @@ function PhotogSlot({ photographers, slot, onChange, label, isExternal, directPh
           )}
         </div>
         {!isExternal && (
-          <div className="col-span-2 flex justify-end">
+          <div className={accordion ? "col-span-3 sm:col-span-2 flex justify-end" : "col-span-2 flex justify-end"}>
             <Badge variant={statusVariant}>{status}</Badge>
           </div>
         )}
