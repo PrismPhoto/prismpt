@@ -79,7 +79,7 @@ function FinancePage() {
   const totalFees = allFeeRows.reduce((s, { ep, e }) => s + feeWithExtras(e, ep), 0);
   const totalFeesPaid = allFeeRows.reduce((s, { ep, e }) => s + paidToPhotographer(e, ep), 0);
   const totalCommission = allFeeRows.reduce((s, { ep }) => s + Number(ep.prism_commission || 0), 0);
-  const totalReceived = filtered.reduce((s, e) => s + Number(e.deposit_paid_date ? e.deposit_amount || 0 : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
+  const totalReceived = filtered.reduce((s, e) => s + (e.deposit_paid === true ? Number(e.deposit_amount || 0) : 0) + Number(e.final_payment_date ? e.final_payment_value || 0 : 0), 0);
   const totalPending = totalRevenue - totalReceived;
 
   // Per photographer balance
@@ -221,15 +221,20 @@ const isCyclik = (m: any) => String(m ?? "").toLowerCase().includes("cyclik");
 const directoInitials = (m: any) => String(m ?? "").split(":")[1]?.trim() ?? "";
 
 function SinaisSection({ rows, photographers }: { rows: any[]; photographers: any[] }) {
-  const paid = rows.filter((e: any) => e.deposit_paid || e.deposit_paid_date);
-  const unpaid = rows.filter((e: any) => !e.deposit_paid && !e.deposit_paid_date);
+  // Um sinal conta como pago apenas quando deposit_paid é true (sem fallback por data).
+  const paid = rows.filter((e: any) => e.deposit_paid === true);
+  const unpaid = rows.filter((e: any) => !e.deposit_paid);
 
-  const revolut = paid.filter((e) => isRevolutPrism(e.deposit_method) || (!e.deposit_method && !isDirecto(e.deposit_method) && !isCyclik(e.deposit_method)));
+  // Só contam como Revolut PRISM os sinais cujo método inclui "revolut".
+  const revolut = paid.filter((e) => isRevolutPrism(e.deposit_method));
+
   const directo = paid.filter((e) => isDirecto(e.deposit_method));
   const cyclik = paid.filter((e) => isCyclik(e.deposit_method));
 
   const sum = (list: any[]) => list.reduce((s, e) => s + Number(e.deposit_amount || 0), 0);
-  const totalAll = sum(revolut) + sum(directo) + sum(cyclik) + sum(unpaid);
+  // O total inclui todos os sinais, inclusive os que não têm método registado.
+  const totalAll = sum(paid) + sum(unpaid);
+
 
   // Agrupar sinais directos por fotógrafo (iniciais em 'directo:XX')
   const byInitials: Record<string, { name: string; count: number; total: number }> = {};

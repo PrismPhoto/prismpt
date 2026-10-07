@@ -100,13 +100,13 @@ export function PrismFinance({ year }: { year: number }) {
       </Card>
 
       {/* A — Receitas e comissões */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Sinais pagos/por pagar estão na secção "Sinais — Onde está o dinheiro" */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Mini label="Receita total" value={EUR(revenue)} />
-        <Mini label={`Sinais pagos (${depPaid.length})`} value={EUR(sumDep(depPaid))} />
-        <Mini label={`Sinais por pagar (${depUnpaid.length})`} value={EUR(sumDep(depUnpaid))} />
         <Mini label="Comissões PRISM" value={EUR(prismComm)} />
         <Mini label="Comissões WP" value={EUR(wpComm)} />
       </div>
+
 
       <Contributions year={year} photographers={photographers} contributions={contributions} refresh={refresh} />
       <Expenses expenses={expenses} refresh={refresh} />
