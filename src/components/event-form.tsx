@@ -334,6 +334,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
       photo_permission: form.photo_permission || null,
       deposit_amount: Number(form.deposit_amount || 0), deposit_method: form.deposit_method || null,
       deposit_paid_date: form.deposit_paid_date || null,
+      ...(form.deposit_paid_date ? { deposit_paid: true } : {}),
       final_payment_value: form.final_payment_value ? Number(form.final_payment_value) : null,
       final_payment_date: form.final_payment_date || null, final_payment_method: form.final_payment_method || null,
       internal_notes: form.internal_notes || null, event_notes: form.event_notes || null,
