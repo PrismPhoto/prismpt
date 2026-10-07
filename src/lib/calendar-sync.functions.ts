@@ -268,6 +268,9 @@ export const previewCalendarSync = createServerFn({ method: "POST" })
       .filter((r) => r.google_calendar_event_id && !calGids.has(r.google_calendar_event_id))
       .map((r) => ({ eventId: r.id, clientName: r.client_name ?? "", date: r.event_date, status: r.status }));
 
+    const { data: st } = await sb.from("app_settings").select("id").limit(1).maybeSingle();
+    if (st) await sb.from("app_settings").update({ gcal_last_sync_at: new Date().toISOString() } as any).eq("id", (st as any).id);
+
     return { year: data.year, news, diffs, removed, unchanged };
   });
 
