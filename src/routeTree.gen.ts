@@ -9,33 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
-import { Route as AuthenticatedEquipaRouteImport } from './routes/_authenticated/equipa'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
-import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
-import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
-import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
-import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedWeddingPlannersRouteImport } from './routes/_authenticated/wedding-planners'
-import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
-import { Route as AuthenticatedEventosIndexRouteImport } from './routes/_authenticated/eventos.index'
-import { Route as AuthenticatedEventosIdRouteImport } from './routes/_authenticated/eventos.$id'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated/suppliers'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedResourcesRouteImport } from './routes/_authenticated/resources'
+import { Route as AuthenticatedPacotesRouteImport } from './routes/_authenticated/pacotes'
+import { Route as AuthenticatedMeuPerfilRouteImport } from './routes/_authenticated/meu-perfil'
+import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEquipaRouteImport } from './routes/_authenticated/equipa'
+import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as AuthenticatedFotografosIndexRouteImport } from './routes/_authenticated/fotografos/index'
-import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos/$id'
+import { Route as AuthenticatedEventosIndexRouteImport } from './routes/_authenticated/eventos.index'
 import { Route as AuthenticatedSettingsAuditLogRouteImport } from './routes/_authenticated/settings_.audit-log'
+import { Route as AuthenticatedFotografosIdRouteImport } from './routes/_authenticated/fotografos/$id'
+import { Route as AuthenticatedEventosIdRouteImport } from './routes/_authenticated/eventos.$id'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -43,76 +44,13 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
-  id: '/calendario',
-  path: '/calendario',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEquipaRoute = AuthenticatedEquipaRouteImport.update({
-  id: '/equipa',
-  path: '/equipa',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
-  id: '/meu-perfil',
-  path: '/meu-perfil',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
-  id: '/pacotes',
-  path: '/pacotes',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
-  id: '/suppliers',
-  path: '/suppliers',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedWeddingPlannersRoute =
@@ -121,38 +59,78 @@ const AuthenticatedWeddingPlannersRoute =
     path: '/wedding-planners',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const Char91DotmcpChar93InvokeToolToolRoute =
-  Char91DotmcpChar93InvokeToolToolRouteImport.update({
-    id: '/.mcp/invoke-tool/$tool',
-    path: '/.mcp/invoke-tool/$tool',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedEventosIndexRoute =
-  AuthenticatedEventosIndexRouteImport.update({
-    id: '/eventos/',
-    path: '/eventos/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedEventosIdRoute = AuthenticatedEventosIdRouteImport.update({
-  id: '/eventos/$id',
-  path: '/eventos/$id',
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedResourcesRoute = AuthenticatedResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedPacotesRoute = AuthenticatedPacotesRouteImport.update({
+  id: '/pacotes',
+  path: '/pacotes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMeuPerfilRoute = AuthenticatedMeuPerfilRouteImport.update({
+  id: '/meu-perfil',
+  path: '/meu-perfil',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEquipaRoute = AuthenticatedEquipaRouteImport.update({
+  id: '/equipa',
+  path: '/equipa',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedFotografosIndexRoute =
   AuthenticatedFotografosIndexRouteImport.update({
     id: '/fotografos/',
     path: '/fotografos/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedFotografosIdRoute =
-  AuthenticatedFotografosIdRouteImport.update({
-    id: '/fotografos/$id',
-    path: '/fotografos/$id',
+const AuthenticatedEventosIndexRoute =
+  AuthenticatedEventosIndexRouteImport.update({
+    id: '/eventos/',
+    path: '/eventos/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsAuditLogRoute =
@@ -161,6 +139,28 @@ const AuthenticatedSettingsAuditLogRoute =
     path: '/settings/audit-log',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedFotografosIdRoute =
+  AuthenticatedFotografosIdRouteImport.update({
+    id: '/fotografos/$id',
+    path: '/fotografos/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEventosIdRoute = AuthenticatedEventosIdRouteImport.update({
+  id: '/eventos/$id',
+  path: '/eventos/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -330,11 +330,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -344,25 +344,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -372,67 +358,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/calendario': {
-      id: '/_authenticated/calendario'
-      path: '/calendario'
-      fullPath: '/calendario'
-      preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/equipa': {
-      id: '/_authenticated/equipa'
-      path: '/equipa'
-      fullPath: '/equipa'
-      preLoaderRoute: typeof AuthenticatedEquipaRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/leads': {
-      id: '/_authenticated/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/meu-perfil': {
-      id: '/_authenticated/meu-perfil'
-      path: '/meu-perfil'
-      fullPath: '/meu-perfil'
-      preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/pacotes': {
-      id: '/_authenticated/pacotes'
-      path: '/pacotes'
-      fullPath: '/pacotes'
-      preLoaderRoute: typeof AuthenticatedPacotesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/resources': {
-      id: '/_authenticated/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof AuthenticatedResourcesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/suppliers': {
-      id: '/_authenticated/suppliers'
-      path: '/suppliers'
-      fullPath: '/suppliers'
-      preLoaderRoute: typeof AuthenticatedSuppliersRouteImport
+    '/_authenticated/wedding-planners': {
+      id: '/_authenticated/wedding-planners'
+      path: '/wedding-planners'
+      fullPath: '/wedding-planners'
+      preLoaderRoute: typeof AuthenticatedWeddingPlannersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/team': {
@@ -442,26 +372,89 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTeamRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/wedding-planners': {
-      id: '/_authenticated/wedding-planners'
-      path: '/wedding-planners'
-      fullPath: '/wedding-planners'
-      preLoaderRoute: typeof AuthenticatedWeddingPlannersRouteImport
+    '/_authenticated/suppliers': {
+      id: '/_authenticated/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthenticatedSuppliersRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/resources': {
+      id: '/_authenticated/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof AuthenticatedResourcesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pacotes': {
+      id: '/_authenticated/pacotes'
+      path: '/pacotes'
+      fullPath: '/pacotes'
+      preLoaderRoute: typeof AuthenticatedPacotesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/meu-perfil': {
+      id: '/_authenticated/meu-perfil'
+      path: '/meu-perfil'
+      fullPath: '/meu-perfil'
+      preLoaderRoute: typeof AuthenticatedMeuPerfilRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/leads': {
+      id: '/_authenticated/leads'
+      path: '/leads'
+      fullPath: '/leads'
+      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/equipa': {
+      id: '/_authenticated/equipa'
+      path: '/equipa'
+      fullPath: '/equipa'
+      preLoaderRoute: typeof AuthenticatedEquipaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/calendario': {
+      id: '/_authenticated/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/fotografos/': {
+      id: '/_authenticated/fotografos/'
+      path: '/fotografos'
+      fullPath: '/fotografos/'
+      preLoaderRoute: typeof AuthenticatedFotografosIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/eventos/': {
       id: '/_authenticated/eventos/'
@@ -470,18 +463,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventosIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/eventos/$id': {
-      id: '/_authenticated/eventos/$id'
-      path: '/eventos/$id'
-      fullPath: '/eventos/$id'
-      preLoaderRoute: typeof AuthenticatedEventosIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/fotografos/': {
-      id: '/_authenticated/fotografos/'
-      path: '/fotografos'
-      fullPath: '/fotografos/'
-      preLoaderRoute: typeof AuthenticatedFotografosIndexRouteImport
+    '/_authenticated/settings_/audit-log': {
+      id: '/_authenticated/settings_/audit-log'
+      path: '/settings/audit-log'
+      fullPath: '/settings/audit-log'
+      preLoaderRoute: typeof AuthenticatedSettingsAuditLogRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/fotografos/$id': {
@@ -491,12 +477,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFotografosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/settings_/audit-log': {
-      id: '/_authenticated/settings_/audit-log'
-      path: '/settings/audit-log'
-      fullPath: '/settings/audit-log'
-      preLoaderRoute: typeof AuthenticatedSettingsAuditLogRouteImport
+    '/_authenticated/eventos/$id': {
+      id: '/_authenticated/eventos/$id'
+      path: '/eventos/$id'
+      fullPath: '/eventos/$id'
+      preLoaderRoute: typeof AuthenticatedEventosIdRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
