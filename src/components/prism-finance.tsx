@@ -54,9 +54,6 @@ export function PrismFinance({ year }: { year: number }) {
 
   const commissionOf = (e: any) => (e.event_photographers ?? []).reduce((s: number, x: any) => s + Number(x.prism_commission || 0), 0);
   const revenue = events.reduce((s: number, e: any) => s + Number(e.total_value || 0), 0);
-  const depPaid = events.filter((e: any) => e.deposit_paid);
-  const depUnpaid = events.filter((e: any) => !e.deposit_paid && e.status === "Confirmado");
-  const sumDep = (l: any[]) => l.reduce((s, e) => s + Number(e.deposit_amount || 0), 0);
   const prismComm = events.reduce((s: number, e: any) => s + commissionOf(e), 0);
   const wpComm = events.reduce((s: number, e: any) => s + Number(e.wp_commission_value || 0), 0);
 
@@ -100,13 +97,13 @@ export function PrismFinance({ year }: { year: number }) {
       </Card>
 
       {/* A — Receitas e comissões */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Sinais pagos/por pagar estão na secção "Sinais — Onde está o dinheiro" */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <Mini label="Receita total" value={EUR(revenue)} />
-        <Mini label={`Sinais pagos (${depPaid.length})`} value={EUR(sumDep(depPaid))} />
-        <Mini label={`Sinais por pagar (${depUnpaid.length})`} value={EUR(sumDep(depUnpaid))} />
         <Mini label="Comissões PRISM" value={EUR(prismComm)} />
         <Mini label="Comissões WP" value={EUR(wpComm)} />
       </div>
+
 
       <Contributions year={year} photographers={photographers} contributions={contributions} refresh={refresh} />
       <Expenses expenses={expenses} refresh={refresh} />
