@@ -54,9 +54,6 @@ export function PrismFinance({ year }: { year: number }) {
 
   const commissionOf = (e: any) => (e.event_photographers ?? []).reduce((s: number, x: any) => s + Number(x.prism_commission || 0), 0);
   const revenue = events.reduce((s: number, e: any) => s + Number(e.total_value || 0), 0);
-  const depPaid = events.filter((e: any) => e.deposit_paid);
-  const depUnpaid = events.filter((e: any) => !e.deposit_paid && e.status === "Confirmado");
-  const sumDep = (l: any[]) => l.reduce((s, e) => s + Number(e.deposit_amount || 0), 0);
   const prismComm = events.reduce((s: number, e: any) => s + commissionOf(e), 0);
   const wpComm = events.reduce((s: number, e: any) => s + Number(e.wp_commission_value || 0), 0);
 
