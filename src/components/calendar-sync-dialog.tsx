@@ -14,14 +14,15 @@ import {
   type SyncPreview,
 } from "@/lib/calendar-sync.functions";
 
-const YEARS = [2026, 2027, 2028, 2029, 2030];
+const YEARS = [2027, 2028, 2029, 2030];
+const DEFAULT_YEAR = 2027;
 
 export function CalendarSyncButton() {
   const qc = useQueryClient();
   const runPreview = useServerFn(previewCalendarSync);
   const runApply = useServerFn(applyCalendarSync);
   const getInfo = useServerFn(getCalendarSyncInfo);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(DEFAULT_YEAR);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState<SyncPreview | null>(null);
