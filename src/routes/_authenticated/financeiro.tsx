@@ -210,3 +210,128 @@ function KPI({ label, value }: { label: string; value: any }) {
     </CardContent></Card>
   );
 }
+
+// --- Sinais — Onde está o dinheiro ----------------------------------------
+const isRevolutPrism = (m: any) => String(m ?? "").toLowerCase().includes("revolut");
+const isDirecto = (m: any) => String(m ?? "").toLowerCase().startsWith("directo:");
+const isCyclik = (m: any) => String(m ?? "").toLowerCase().includes("cyclik");
+const directoInitials = (m: any) => String(m ?? "").split(":")[1]?.trim() ?? "";
+
+function SinaisSection({ rows, photographers }: { rows: any[]; photographers: any[] }) {
+  const paid = rows.filter((e: any) => e.deposit_paid || e.deposit_paid_date);
+  const unpaid = rows.filter((e: any) => !e.deposit_paid && !e.deposit_paid_date);
+
+  const revolut = paid.filter((e) => isRevolutPrism(e.deposit_method) || (!e.deposit_method && !isDirecto(e.deposit_method) && !isCyclik(e.deposit_method)));
+  const directo = paid.filter((e) => isDirecto(e.deposit_method));
+  const cyclik = paid.filter((e) => isCyclik(e.deposit_method));
+
+  const sum = (list: any[]) => list.reduce((s, e) => s + Number(e.deposit_amount || 0), 0);
+  const totalAll = sum(revolut) + sum(directo) + sum(cyclik) + sum(unpaid);
+
+  // Agrupar sinais directos por fotógrafo (iniciais em 'directo:XX')
+  const byInitials: Record<string, { name: string; count: number; total: number }> = {};
+  directo.forEach((e) => {
+    const ini = directoInitials(e.deposit_method).toUpperCase();
+    const p = photographers.find((ph: any) => String(ph.initials ?? "").toUpperCase() === ini);
+    const key = ini || "?";
+    if (!byInitials[key]) byInitials[key] = { name: p?.full_name ?? key, count: 0, total: 0 };
+    byInitials[key].count += 1;
+    byInitials[key].total += Number(e.deposit_amount || 0);
+  });
+  const directoRows = Object.entries(byInitials).sort((a, b) => b[1].total - a[1].total);
+
+  const unpaidSorted = [...unpaid].sort((a, b) => String(a.event_date).localeCompare(String(b.event_date)));
+
+  const cards = [
+    { label: "Revolut PRISM", list: revolut, cls: "border-l-emerald-500", txt: "text-emerald-600 dark:text-emerald-400" },
+    { label: "Directo Fotógrafos", list: directo, cls: "border-l-amber-500", txt: "text-amber-600 dark:text-amber-400" },
+    { label: "Cyclik (ZD)", list: cyclik, cls: "border-l-blue-500", txt: "text-blue-600 dark:text-blue-400" },
+    { label: "Por Pagar", list: unpaid, cls: "border-l-red-500", txt: "text-red-600 dark:text-red-400" },
+  ];
+
+  return (
+    <div className="mb-6 space-y-4">
+      <h2 className="text-lg font-semibold">Sinais — Onde está o dinheiro</h2>
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {cards.map((c) => (
+          <Card key={c.label} className={`border-l-4 ${c.cls}`}>
+            <CardContent className="p-4">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">{c.label}</div>
+              <div className={`text-xl font-semibold mt-1 tabular-nums ${c.txt}`}>{EUR(sum(c.list))}</div>
+              <div className="text-xs text-muted-foreground mt-1">{c.list.length} evento{c.list.length === 1 ? "" : "s"}</div>
+            </CardContent>
+          </Card>
+        ))}
+        <Card className="border-l-4 border-l-muted-foreground/40">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Total Sinais</div>
+            <div className="text-xl font-semibold mt-1 tabular-nums">{EUR(totalAll)}</div>
+            <div className="text-xs text-muted-foreground mt-1">{paid.length + unpaid.length} eventos</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader><CardTitle className="text-base">Directo aos fotógrafos</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30 text-xs uppercase">
+                <tr>
+                  <th className="text-left p-3">Fotógrafo</th>
+                  <th className="text-right p-3">Nº Sinais</th>
+                  <th className="text-right p-3">Total</th>
+                  <th className="text-right p-3">Deve à PRISM</th>
+                </tr>
+              </thead>
+              <tbody>
+                {directoRows.map(([ini, d]) => (
+                  <tr key={ini} className="border-t">
+                    <td className="p-3">{ini} · {d.name}</td>
+                    <td className="p-3 text-right tabular-nums">{d.count}</td>
+                    <td className="p-3 text-right tabular-nums">{EUR(d.total)}</td>
+                    <td className="p-3 text-right tabular-nums font-medium text-amber-600 dark:text-amber-400">{EUR(d.total)}</td>
+                  </tr>
+                ))}
+                {directoRows.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Sem sinais directos</td></tr>}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">Sinais por pagar</CardTitle></CardHeader>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/30 text-xs uppercase">
+                <tr>
+                  <th className="text-left p-3">Noivos</th>
+                  <th className="text-left p-3">Data</th>
+                  <th className="text-right p-3">Sinal</th>
+                  <th className="text-left p-3">Fotógrafos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unpaidSorted.map((e: any) => (
+                  <tr key={e.id} className="border-t">
+                    <td className="p-3">{e.client_name}</td>
+                    <td className="p-3 whitespace-nowrap">{fmtDate(e.event_date)}</td>
+                    <td className="p-3 text-right tabular-nums">{EUR(e.deposit_amount)}</td>
+                    <td className="p-3">
+                      {(e.event_photographers || [])
+                        .map((ep: any) => ep.photographers?.initials ?? ep.external_name)
+                        .filter(Boolean)
+                        .join(", ") || "—"}
+                    </td>
+                  </tr>
+                ))}
+                {unpaidSorted.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Todos os sinais pagos</td></tr>}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
