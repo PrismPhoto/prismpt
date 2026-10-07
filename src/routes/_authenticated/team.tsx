@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/team")({
-  head: () => ({ meta: [{ title: "Conversa da Equipa — PRISM" }, { name: "description", content: "Conversa, ideias e bugs da equipa PRISM." }] }),
+  head: () => ({ meta: [{"title": "Conversa da Equipa — PRISM"}, {"name": "description", "content": "Conversa, ideias e bugs da equipa PRISM."}, {"property": "og:title", "content": "Conversa da Equipa — PRISM"}, {"property": "og:description", "content": "Conversa, ideias e bugs da equipa PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   component: TeamPage,
 });
 

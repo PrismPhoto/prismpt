@@ -24,7 +24,8 @@ const STATUS_DOT: Record<string, string> = {
   Cancelado: "bg-destructive",
 };
 
-export const Route = createFileRoute("/_authenticated/eventos/")({ component: EventsPage });
+export const Route = createFileRoute("/_authenticated/eventos/")({
+  head: () => ({ meta: [{"title": "Eventos — PRISM"}, {"name": "description", "content": "Casamentos e eventos da equipa PRISM."}, {"property": "og:title", "content": "Eventos — PRISM"}, {"property": "og:description", "content": "Casamentos e eventos da equipa PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: EventsPage });
 
 function EventsPage() {
   const qc = useQueryClient();

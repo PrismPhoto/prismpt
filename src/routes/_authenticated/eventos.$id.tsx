@@ -21,6 +21,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/eventos/$id")({
+  head: () => ({
+    meta: [
+      { title: "Detalhe do evento — PRISM" },
+      { name: "description", content: "Informação, equipa, extras, pagamentos e entrega do evento PRISM." },
+      { property: "og:title", content: "Detalhe do evento — PRISM" },
+      { property: "og:description", content: "Informação, equipa, extras, pagamentos e entrega do evento PRISM." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: EventDetailPage,
 });
 
@@ -120,6 +130,7 @@ function EventDetailPage() {
       </div>
 
       <EventForm
+        accordionSections
         event={event}
         packages={packages}
         wps={wps}

@@ -13,7 +13,8 @@ import { fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/calendario")({ component: CalendarPage });
+export const Route = createFileRoute("/_authenticated/calendario")({
+  head: () => ({ meta: [{"title": "Calendário — PRISM"}, {"name": "description", "content": "Agenda de eventos e disponibilidade da equipa PRISM."}, {"property": "og:title", "content": "Calendário — PRISM"}, {"property": "og:description", "content": "Agenda de eventos e disponibilidade da equipa PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: CalendarPage });
 
 const STATUS_COLOR: Record<string, string> = {
   Confirmado: "bg-success text-success-foreground",

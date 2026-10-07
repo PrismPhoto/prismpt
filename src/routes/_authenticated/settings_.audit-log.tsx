@@ -12,7 +12,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/settings_/audit-log")({
-  head: () => ({ meta: [{ title: "Registo de alterações · PRISM" }] }),
+  head: () => ({ meta: [{"title": "Registo de alterações — PRISM"}, {"name": "description", "content": "Histórico de alterações dos registos PRISM."}, {"property": "og:title", "content": "Registo de alterações — PRISM"}, {"property": "og:description", "content": "Histórico de alterações dos registos PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   component: AuditLogPage,
 });
 

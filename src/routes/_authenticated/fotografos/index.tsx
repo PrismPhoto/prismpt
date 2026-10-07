@@ -12,7 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/fotografos/")({ component: PhotogPage });
+export const Route = createFileRoute("/_authenticated/fotografos/")({
+  head: () => ({ meta: [{"title": "Fotógrafos — PRISM"}, {"name": "description", "content": "Fotógrafos e membros da equipa PRISM."}, {"property": "og:title", "content": "Fotógrafos — PRISM"}, {"property": "og:description", "content": "Fotógrafos e membros da equipa PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: PhotogPage });
 
 function PhotogPage() {
   const qc = useQueryClient();

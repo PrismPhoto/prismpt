@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { EUR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/suppliers")({
-  head: () => ({ meta: [{ title: "Fornecedores — PRISM" }, { name: "description", content: "2ºs fotógrafos e editores da PRISM." }] }),
+  head: () => ({ meta: [{"title": "Fornecedores — PRISM"}, {"name": "description", "content": "2ºs fotógrafos e editores da PRISM."}, {"property": "og:title", "content": "Fornecedores — PRISM"}, {"property": "og:description", "content": "2ºs fotógrafos e editores da PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   component: SuppliersPage,
 });
 

@@ -17,7 +17,8 @@ import { EUR } from "@/lib/format";
 import { toast } from "sonner";
 import { defaultDistribution, resizeDistribution, type SlotDistribution } from "@/lib/fee-distribution";
 
-export const Route = createFileRoute("/_authenticated/pacotes")({ component: PackagesPage });
+export const Route = createFileRoute("/_authenticated/pacotes")({
+  head: () => ({ meta: [{"title": "Pacotes — PRISM"}, {"name": "description", "content": "Pacotes e preços de fotografia PRISM."}, {"property": "og:title", "content": "Pacotes — PRISM"}, {"property": "og:description", "content": "Pacotes e preços de fotografia PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: PackagesPage });
 
 function PackagesPage() {
   const qc = useQueryClient();
