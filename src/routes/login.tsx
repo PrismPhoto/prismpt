@@ -65,14 +65,12 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="items-center text-center">
           <CardTitle className="text-2xl">
-            <img src="/prism_lightbox.svg" alt="PRISM Lightbox" className="h-11 w-auto max-w-full" />
+            <img src="/prism_lightbox.svg" alt="PRISM Lightbox" className="mx-auto block h-11 w-auto max-w-full" />
             <span className="sr-only">PRISM Lightbox</span>
           </CardTitle>
-          <CardDescription>
-            {mode === "signin" ? "Inicie sessão para continuar" : "Criar nova conta"}
-          </CardDescription>
+          {mode === "signup" && <CardDescription>Criar nova conta</CardDescription>}
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
