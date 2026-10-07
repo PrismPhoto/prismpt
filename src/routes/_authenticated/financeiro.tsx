@@ -116,6 +116,8 @@ function FinancePage() {
 
       {role === "manager" && !activePhotographerId && <PrismFinance year={year} />}
 
+      {role === "manager" && !activePhotographerId && <SinaisSection rows={rows} photographers={photographers} />}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {role === "manager" && !activePhotographerId && <KPI label="Receita" value={EUR(totalRevenue)} />}
         {role === "manager" && !activePhotographerId && <KPI label="Recebido" value={EUR(totalReceived)} />}
