@@ -27,6 +27,7 @@ export type Database = {
           followup_enabled: boolean
           gcal_calendar_id: string | null
           gcal_connected: boolean
+          gcal_last_sync_at: string | null
           gmail_connected: boolean
           id: number
           pre_event_reminder_days: number
@@ -44,6 +45,7 @@ export type Database = {
           followup_enabled?: boolean
           gcal_calendar_id?: string | null
           gcal_connected?: boolean
+          gcal_last_sync_at?: string | null
           gmail_connected?: boolean
           id?: number
           pre_event_reminder_days?: number
@@ -61,6 +63,7 @@ export type Database = {
           followup_enabled?: boolean
           gcal_calendar_id?: string | null
           gcal_connected?: boolean
+          gcal_last_sync_at?: string | null
           gmail_connected?: boolean
           id?: number
           pre_event_reminder_days?: number
