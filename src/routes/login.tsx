@@ -66,7 +66,10 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">PRISM Management</CardTitle>
+          <CardTitle className="text-2xl">
+            <img src="/prism_lightbox.svg" alt="PRISM Lightbox" className="h-11 w-auto max-w-full" />
+            <span className="sr-only">PRISM Lightbox</span>
+          </CardTitle>
           <CardDescription>
             {mode === "signin" ? "Inicie sessão para continuar" : "Criar nova conta"}
           </CardDescription>
