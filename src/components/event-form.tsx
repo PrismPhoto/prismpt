@@ -467,7 +467,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
   );
 
   const detailsSection = (
-{form.event_type === "Casamento" && (
+    form.event_type === "Casamento" && (
         <Section title={accordionSections ? "Detalhes do casamento" : "Detalhes do casamento (pré-wedding)"} description="Informação recolhida no formulário que os noivos preenchem.">
           <div className="grid md:grid-cols-2 gap-3">
             {!accordionSections && (
@@ -499,7 +499,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
             <F label="Mais informações / fornecedores" className="md:col-span-2"><Textarea rows={3} value={form.pre_wedding_notes} onChange={(e) => setForm({ ...form, pre_wedding_notes: e.target.value })} /></F>
           </div>
         </Section>
-      )}
+      )
   );
 
   const paymentsSection = (
