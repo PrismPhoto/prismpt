@@ -26,6 +26,7 @@ export function CalendarSyncButton() {
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState<SyncPreview | null>(null);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [lastCount, setLastCount] = useState<number | null>(null);
   const [sel, setSel] = useState<Set<string>>(new Set());
 
   useEffect(() => { getInfo().then((r) => setLastSync(r.lastSync)).catch(() => {}); }, [getInfo]);
@@ -45,6 +46,7 @@ export function CalendarSyncButton() {
     try {
       const res = await runPreview({ data: { year } });
       setPreview(res);
+      setLastCount(res.news.length + res.diffs.length + res.removed.length);
       // removidos ficam desmarcados por defeito (nunca cancelar sem decisão explícita)
       setSel(new Set([...res.news.map((n) => `n:${n.gid}`), ...res.diffs.map((d) => `d:${d.eventId}`)]));
       setLastSync(new Date().toISOString());
@@ -93,7 +95,7 @@ export function CalendarSyncButton() {
         <Button variant="outline" onClick={start} disabled={loading} title={lastSync ? `Última sincronização: ${new Date(lastSync).toLocaleString("pt-PT")}` : "Nunca sincronizado"}>
           {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
           {loading ? "A ler calendário…" : "Sync Calendário"}
-          {preview === null && diffCount === 0 ? null : null}
+          {lastCount != null && <Badge variant={lastCount ? "default" : "secondary"} className="ml-2">{lastCount}</Badge>}
         </Button>
         <span className="text-xs text-muted-foreground hidden lg:inline">
           {lastSync ? `Última: ${new Date(lastSync).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" })}` : "Nunca sincronizado"}
