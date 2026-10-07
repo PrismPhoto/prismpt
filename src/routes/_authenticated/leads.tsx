@@ -15,7 +15,8 @@ import { EVENT_TYPES, LEAD_STATUSES, LEAD_SOURCES, fmtDate, packageLabel, packag
 import { Plus, Mail, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/leads")({ component: LeadsPage });
+export const Route = createFileRoute("/_authenticated/leads")({
+  head: () => ({ meta: [{"title": "Leads — PRISM"}, {"name": "description", "content": "Pedidos e propostas de eventos PRISM."}, {"property": "og:title", "content": "Leads — PRISM"}, {"property": "og:description", "content": "Pedidos e propostas de eventos PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: LeadsPage });
 
 const STATUS_COLS = ["Novo", "Proposta Enviada", "Adjudicado", "Arquivo"] as const;
 

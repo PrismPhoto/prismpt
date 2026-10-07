@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { UsersAdmin } from "@/components/users-admin";
 
-export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
+export const Route = createFileRoute("/_authenticated/settings")({
+  head: () => ({ meta: [{"title": "Definições — PRISM"}, {"name": "description", "content": "Definições de gestão e utilizadores PRISM."}, {"property": "og:title", "content": "Definições — PRISM"}, {"property": "og:description", "content": "Definições de gestão e utilizadores PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: SettingsPage });
 
 function SettingsPage() {
   const qc = useQueryClient();

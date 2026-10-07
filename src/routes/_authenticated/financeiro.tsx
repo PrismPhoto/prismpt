@@ -10,7 +10,8 @@ import { EUR, fmtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { PrismFinance } from "@/components/prism-finance";
 
-export const Route = createFileRoute("/_authenticated/financeiro")({ component: FinancePage });
+export const Route = createFileRoute("/_authenticated/financeiro")({
+  head: () => ({ meta: [{"title": "Financeiro — PRISM"}, {"name": "description", "content": "Receitas, comissões e pagamentos PRISM."}, {"property": "og:title", "content": "Financeiro — PRISM"}, {"property": "og:description", "content": "Receitas, comissões e pagamentos PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: FinancePage });
 
 function FinancePage() {
   const { role, photographerId } = useAuth();

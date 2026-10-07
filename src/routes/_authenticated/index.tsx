@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { PhotographerDashboard } from "@/components/photographer-dashboard";
 
 export const Route = createFileRoute("/_authenticated/")({
+  head: () => ({ meta: [{"title": "Dashboard — PRISM"}, {"name": "description", "content": "Visão geral dos eventos, receitas e entregas PRISM."}, {"property": "og:title", "content": "Dashboard — PRISM"}, {"property": "og:description", "content": "Visão geral dos eventos, receitas e entregas PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   component: DashboardPage,
 });
 

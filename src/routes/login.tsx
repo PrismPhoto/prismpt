@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({ meta: [{"title": "Entrar — PRISM"}, {"name": "description", "content": "Acesso à gestão de eventos e equipa PRISM."}, {"property": "og:title", "content": "Entrar — PRISM"}, {"property": "og:description", "content": "Acesso à gestão de eventos e equipa PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   validateSearch: (s: Record<string, unknown>) => ({
     next: typeof s.next === "string" && s.next.startsWith("/") && !s.next.startsWith("//") ? s.next : undefined,
   }),

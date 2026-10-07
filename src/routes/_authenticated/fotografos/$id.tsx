@@ -12,7 +12,8 @@ import { computeSlotFee, extrasForPhotographer, sumExtras, type SlotDistribution
 import { ArrowLeft, Loader2, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/fotografos/$id")({ component: PhotogProfile });
+export const Route = createFileRoute("/_authenticated/fotografos/$id")({
+  head: () => ({ meta: [{"title": "Perfil do fotógrafo — PRISM"}, {"name": "description", "content": "Agenda e informações do fotógrafo PRISM."}, {"property": "og:title", "content": "Perfil do fotógrafo — PRISM"}, {"property": "og:description", "content": "Agenda e informações do fotógrafo PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: PhotogProfile });
 
 const YEARS = [2027, 2028, 2029, 2030];
 

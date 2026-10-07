@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/wedding-planners")({ component: WpPage });
+export const Route = createFileRoute("/_authenticated/wedding-planners")({
+  head: () => ({ meta: [{"title": "Wedding Planners — PRISM"}, {"name": "description", "content": "Wedding planners e comissões de eventos PRISM."}, {"property": "og:title", "content": "Wedding Planners — PRISM"}, {"property": "og:description", "content": "Wedding planners e comissões de eventos PRISM."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }), component: WpPage });
 
 function WpPage() {
   const qc = useQueryClient();
