@@ -235,6 +235,25 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
   // O total inclui todos os sinais, inclusive os que não têm método registado.
   const totalAll = sum(paid) + sum(unpaid);
 
+  // Devoluções aos fotógrafos: linhas de event_photographers com sinal pago, valor > 0 e data,
+  // em eventos cujo sinal entrou no Revolut PRISM. A diferença é a comissão retida pela PRISM.
+  const revolutIds = new Set(revolut.map((e: any) => e.id));
+  let devolvido = 0;
+  let retido = 0;
+  revolut.forEach((e: any) => {
+    const dev = (e.event_photographers ?? []).reduce(
+      (s: number, ep: any) =>
+        s + (ep.deposit_paid && ep.deposit_paid_date && Number(ep.deposit_amount || 0) > 0 ? Number(ep.deposit_amount) : 0),
+      0,
+    );
+    if (dev > 0) {
+      devolvido += dev;
+      retido += Number(e.deposit_amount || 0) - dev;
+    }
+  });
+  const saldoRevolut = sum(revolut) - devolvido;
+
+
 
   // Agrupar sinais directos por fotógrafo (iniciais em 'directo:XX')
   const byInitials: Record<string, { name: string; count: number; total: number }> = {};
@@ -251,7 +270,6 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
   const unpaidSorted = [...unpaid].sort((a, b) => String(a.event_date).localeCompare(String(b.event_date)));
 
   const cards = [
-    { label: "Revolut PRISM", list: revolut, cls: "border-l-emerald-500", txt: "text-emerald-600 dark:text-emerald-400" },
     { label: "Directo Fotógrafos", list: directo, cls: "border-l-amber-500", txt: "text-amber-600 dark:text-amber-400" },
     ...(cyclik.length > 0 ? [{ label: "Cyclik (ZD)", list: cyclik, cls: "border-l-blue-500", txt: "text-blue-600 dark:text-blue-400" }] : []),
     { label: "Por Pagar", list: unpaid, cls: "border-l-red-500", txt: "text-red-600 dark:text-red-400" },
@@ -262,6 +280,22 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
       <h2 className="text-lg font-semibold">Sinais — Onde está o dinheiro</h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Revolut PRISM</div>
+            <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-600 dark:text-emerald-400">{EUR(saldoRevolut)}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Recebidos: {EUR(sum(revolut))} | Devolvidos: {EUR(devolvido)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-emerald-300">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões Retidas</div>
+            <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-500 dark:text-emerald-300">{EUR(retido)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Comissão PRISM nas devoluções</div>
+          </CardContent>
+        </Card>
         {cards.map((c) => (
           <Card key={c.label} className={`border-l-4 ${c.cls}`}>
             <CardContent className="p-4">
