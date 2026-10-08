@@ -38,7 +38,7 @@ export function PrismFinance({ year }: { year: number }) {
     queryKey: ["prism-finance", year],
     queryFn: async () => {
       const [ev, ph, co, ex] = await Promise.all([
-        supabase.from("events").select("id, event_date, status, total_value, deposit_amount, deposit_paid, wp_commission_value, event_photographers(prism_commission)").eq("event_year", year),
+        supabase.from("events").select("id, event_date, status, total_value, deposit_amount, deposit_paid, wp_commission_value, second_photographer_cost, event_photographers(prism_commission)").eq("event_year", year),
         supabase.from("photographers").select("id, initials, full_name, active").order("initials"),
         supabase.from("photographer_contributions").select("*").eq("year", year),
         supabase.from("prism_expenses").select("*").order("created_at"),
@@ -56,6 +56,7 @@ export function PrismFinance({ year }: { year: number }) {
   const revenue = events.reduce((s: number, e: any) => s + Number(e.total_value || 0), 0);
   const prismComm = events.reduce((s: number, e: any) => s + commissionOf(e), 0);
   const wpComm = events.reduce((s: number, e: any) => s + Number(e.wp_commission_value || 0), 0);
+  const secondCost = events.reduce((s: number, e: any) => s + Number(e.second_photographer_cost || 0), 0);
 
   // P&L por mês
   const pl = MONTHS.map((_, i) => {
@@ -98,10 +99,11 @@ export function PrismFinance({ year }: { year: number }) {
 
       {/* A — Receitas e comissões */}
       {/* Sinais pagos/por pagar estão na secção "Sinais — Onde está o dinheiro" */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Mini label="Receita total" value={EUR(revenue)} />
         <Mini label="Comissões PRISM" value={EUR(prismComm)} />
         <Mini label="Comissões WP" value={EUR(wpComm)} />
+        <Mini label="Custos 2ºs fotógrafos" value={EUR(secondCost)} />
       </div>
 
 
