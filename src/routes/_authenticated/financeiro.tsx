@@ -235,6 +235,25 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
   // O total inclui todos os sinais, inclusive os que não têm método registado.
   const totalAll = sum(paid) + sum(unpaid);
 
+  // Devoluções aos fotógrafos: linhas de event_photographers com sinal pago, valor > 0 e data,
+  // em eventos cujo sinal entrou no Revolut PRISM. A diferença é a comissão retida pela PRISM.
+  const revolutIds = new Set(revolut.map((e: any) => e.id));
+  let devolvido = 0;
+  let retido = 0;
+  revolut.forEach((e: any) => {
+    const dev = (e.event_photographers ?? []).reduce(
+      (s: number, ep: any) =>
+        s + (ep.deposit_paid && ep.deposit_paid_date && Number(ep.deposit_amount || 0) > 0 ? Number(ep.deposit_amount) : 0),
+      0,
+    );
+    if (dev > 0) {
+      devolvido += dev;
+      retido += Number(e.deposit_amount || 0) - dev;
+    }
+  });
+  const saldoRevolut = sum(revolut) - devolvido;
+
+
 
   // Agrupar sinais directos por fotógrafo (iniciais em 'directo:XX')
   const byInitials: Record<string, { name: string; count: number; total: number }> = {};
