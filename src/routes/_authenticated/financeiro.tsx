@@ -280,6 +280,22 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
       <h2 className="text-lg font-semibold">Sinais — Onde está o dinheiro</h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Revolut PRISM</div>
+            <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-600 dark:text-emerald-400">{EUR(saldoRevolut)}</div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Recebidos: {EUR(sum(revolut))} | Devolvidos: {EUR(devolvido)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-emerald-300">
+          <CardContent className="p-4">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Comissões Retidas</div>
+            <div className="text-xl font-semibold mt-1 tabular-nums text-emerald-500 dark:text-emerald-300">{EUR(retido)}</div>
+            <div className="text-xs text-muted-foreground mt-1">Comissão PRISM nas devoluções</div>
+          </CardContent>
+        </Card>
         {cards.map((c) => (
           <Card key={c.label} className={`border-l-4 ${c.cls}`}>
             <CardContent className="p-4">
