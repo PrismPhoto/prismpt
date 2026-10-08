@@ -509,7 +509,7 @@ export function EventForm({ event, packages, wps, photographers, onSaved, onSumm
                 <Select value={form.second_photographer_id || "none"} onValueChange={(v) => setForm({ ...form, second_photographer_id: v === "none" ? "" : v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sem 2º fotógrafo</SelectItem>
+                    <SelectItem value="none">Fotógrafo a Definir</SelectItem>
                     {suppliers.filter((x: any) => x.type === "second_photographer" && (x.active || x.id === form.second_photographer_id)).map((x: any) => <SelectItem key={x.id} value={x.id}>{x.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
