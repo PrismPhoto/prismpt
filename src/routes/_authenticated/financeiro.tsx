@@ -270,7 +270,6 @@ function SinaisSection({ rows, photographers }: { rows: any[]; photographers: an
   const unpaidSorted = [...unpaid].sort((a, b) => String(a.event_date).localeCompare(String(b.event_date)));
 
   const cards = [
-    { label: "Revolut PRISM", list: revolut, cls: "border-l-emerald-500", txt: "text-emerald-600 dark:text-emerald-400" },
     { label: "Directo Fotógrafos", list: directo, cls: "border-l-amber-500", txt: "text-amber-600 dark:text-amber-400" },
     ...(cyclik.length > 0 ? [{ label: "Cyclik (ZD)", list: cyclik, cls: "border-l-blue-500", txt: "text-blue-600 dark:text-blue-400" }] : []),
     { label: "Por Pagar", list: unpaid, cls: "border-l-red-500", txt: "text-red-600 dark:text-red-400" },
