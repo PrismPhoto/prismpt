@@ -71,6 +71,13 @@
       "when": 1791392788061,
       "tag": "0009_gcal_event_id_unique_and_last_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791472087433,
+      "tag": "0010_photographer_insert_event_photographers",
+      "breakpoints": true
     }
   ]
 }
