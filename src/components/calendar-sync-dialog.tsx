@@ -108,10 +108,10 @@ export function CalendarSyncButton() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               Revisão do Sync — {preview?.year}
-              <Badge variant={diffCount ? "default" : "secondary"}>{diffCount} diferenças</Badge>
+              <Badge variant={diffCount ? "default" : "secondary"}>{diffCount} novos</Badge>
             </DialogTitle>
             <DialogDescription>
-              Nada é alterado até clicares em aplicar. {preview?.unchanged ?? 0} eventos já estão iguais ao calendário.
+              Só aparecem casamentos "//" que ainda não estão na plataforma. {preview?.unchanged ?? 0} já existem e foram ignorados. Nada é criado até clicares em aplicar.
             </DialogDescription>
           </DialogHeader>
 
@@ -140,43 +140,6 @@ export function CalendarSyncButton() {
                 </ul>
               </section>
 
-              <section>
-                <h3 className="font-medium mb-2">Diferenças ({preview.diffs.length})</h3>
-                {preview.diffs.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma.</p>}
-                <ul className="space-y-2">
-                  {preview.diffs.map((d) => (
-                    <li key={d.eventId} className="flex gap-3 rounded-md border p-3 text-sm">
-                      <Checkbox checked={sel.has(`d:${d.eventId}`)} onCheckedChange={() => toggle(`d:${d.eventId}`)} />
-                      <div className="flex-1">
-                        <div className="font-medium">{d.clientName}</div>
-                        {d.linkOnly && <div className="text-xs text-muted-foreground">Ligar ao evento do calendário “{d.cal.title}”</div>}
-                        {d.changes.map((c) => (
-                          <div key={c.field} className="text-xs mt-1">
-                            <span className="text-muted-foreground">{c.label}:</span> app <b>{c.field === "date" ? fmtDate(c.app) : c.app}</b> → calendário <b>{c.field === "date" ? fmtDate(c.cal) : c.cal}</b>
-                            {c.field === "photographers" && <span className="text-muted-foreground"> (só adiciona os que faltam)</span>}
-                          </div>
-                        ))}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-medium mb-2">Na app mas não no calendário ({preview.removed.length})</h3>
-                {preview.removed.length === 0 && <p className="text-sm text-muted-foreground">Nenhum.</p>}
-                <ul className="space-y-2">
-                  {preview.removed.map((r) => (
-                    <li key={r.eventId} className="flex gap-3 rounded-md border border-destructive/40 p-3 text-sm">
-                      <Checkbox checked={sel.has(`r:${r.eventId}`)} onCheckedChange={() => toggle(`r:${r.eventId}`)} />
-                      <div className="flex-1">
-                        <div className="font-medium">{r.clientName} <span className="text-muted-foreground font-normal">· {fmtDate(r.date)} · {r.status}</span></div>
-                        <div className="text-xs text-muted-foreground">Possível cancelamento — se seleccionado, marca como Cancelado (não apaga).</div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             </div>
           )}
 
