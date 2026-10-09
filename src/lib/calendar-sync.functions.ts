@@ -227,46 +227,34 @@ export const previewCalendarSync = createServerFn({ method: "POST" })
       })
       .filter((c) => !!c.date && c.date.startsWith(String(data.year)));
 
+    // Apenas NOVOS: eventos "//" do calendário que ainda não existem na plataforma.
     const rows = (events ?? []) as any[];
-    const byGid = new Map(rows.filter((r) => r.google_calendar_event_id).map((r) => [r.google_calendar_event_id, r]));
-    const used = new Set<string>();
-    const news: CalItem[] = [];
-    const diffs: DiffItem[] = [];
-    let unchanged = 0;
+    const linkedGids = new Set(rows.map((r) => r.google_calendar_event_id).filter(Boolean));
+    const STOP = new Set(["e", "o", "a", "de", "da", "do", "and", "prewed", "prewedding", "pre", "wed", "wedding"]);
+    const words = (s: string) =>
+      s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 1 && !STOP.has(w));
+    const emailsIn = (s: string | null | undefined) => (s ?? "").toLowerCase().match(/[\w.+-]+@[\w-]+\.[\w.-]+/g) ?? [];
 
-    const compare = (row: any, c: CalItem): Change[] => {
-      const ch: Change[] = [];
-      if (row.event_date !== c.date) ch.push({ field: "date", label: "Data", app: row.event_date, cal: c.date });
-      const appPh = (row.event_photographers ?? []).map((x: any) => x.photographers?.initials).filter(Boolean).sort();
-      const missing = c.photographers.filter((i) => !appPh.includes(i));
-      if (c.photographers.length && missing.length) ch.push({ field: "photographers", label: "Fotógrafos", app: appPh.join(" + ") || "—", cal: c.photographers.join(" + ") });
-      if (c.packageId && c.packageId !== row.package_id) ch.push({ field: "package", label: "Pack", app: row.packages?.name ?? "—", cal: c.packName ?? "" });
-      return ch;
+    const exists = (c: CalItem) => {
+      if (linkedGids.has(c.gid)) return true;
+      const calEmails = new Set([...emailsIn(c.title), ...emailsIn(c.email), ...emailsIn(c.description)]);
+      const key = normalize(c.clientName);
+      const cw = words(c.clientName);
+      return rows.some((r) => {
+        const rEmail = (r.email ?? "").toLowerCase();
+        if (rEmail && calEmails.has(rEmail)) return true;
+        if (r.event_date !== c.date) return false;
+        const rk = normalize(r.client_name ?? "");
+        if (key && rk && (rk === key || rk.includes(key) || key.includes(rk))) return true;
+        const rw = words(r.client_name ?? "");
+        return !!cw[0] && !!rw[0] && cw[0] === rw[0];
+      });
     };
 
-    for (const c of cal) {
-      let row = byGid.get(c.gid);
-      let linkOnly = false;
-      if (!row) {
-        const key = normalize(c.clientName);
-        row = rows.find((r) => {
-          if (r.google_calendar_event_id || used.has(r.id) || r.event_date !== c.date) return false;
-          const rk = normalize(r.client_name ?? "");
-          return !!key && !!rk && (rk === key || rk.includes(key) || key.includes(rk));
-        });
-        linkOnly = !!row;
-      }
-      if (!row) { news.push(c); continue; }
-      used.add(row.id);
-      const changes = compare(row, c);
-      if (changes.length || linkOnly) diffs.push({ eventId: row.id, clientName: row.client_name ?? c.clientName, linkOnly, changes, cal: c });
-      else unchanged++;
-    }
-
-    const calGids = new Set(cal.map((c) => c.gid));
-    const removed: RemovedItem[] = rows
-      .filter((r) => r.google_calendar_event_id && !calGids.has(r.google_calendar_event_id))
-      .map((r) => ({ eventId: r.id, clientName: r.client_name ?? "", date: r.event_date, status: r.status }));
+    const news: CalItem[] = cal.filter((c) => !exists(c));
+    const diffs: DiffItem[] = [];
+    const removed: RemovedItem[] = [];
+    const unchanged = cal.length - news.length;
 
     const { data: st } = await sb.from("app_settings").select("id").limit(1).maybeSingle();
     if (st) await sb.from("app_settings").update({ gcal_last_sync_at: new Date().toISOString() } as any).eq("id", (st as any).id);
