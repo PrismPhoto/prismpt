@@ -95,9 +95,17 @@ function PhotogProfile() {
     const fin = a.final_payment_received ? Number(a.final_payment_value || 0) : 0;
     return dep + fin;
   };
-  const totalFees = assignments.reduce((s: number, a: any) => s + Number(a.effFee || 0), 0);
-  const totalPaid = assignments.reduce((s: number, a: any) => s + paidFor(a), 0);
+  // Mesma lógica da página Financeiro (vista individual): fee guardado + extras atribuídos
+  const finFee = (a: any) => Number(a.fee || 0) + Number(a.extrasFee || 0);
+  const finPaid = (a: any) => {
+    const dep = a.deposit_paid ? Number(a.deposit_amount || 0) : 0;
+    const fin = !a.final_payment_received ? 0 : (a.photographer_id ? Number(a.final_payment_value || 0) : Number(a.fee || 0));
+    return dep + fin;
+  };
+  const totalFees = assignments.reduce((s: number, a: any) => s + finFee(a), 0);
+  const totalPaid = assignments.reduce((s: number, a: any) => s + finPaid(a), 0);
   const totalPending = totalFees - totalPaid;
+  const totalComm = assignments.reduce((s: number, a: any) => s + Number(a.prism_commission || 0), 0);
 
   if (photogLoading) {
     return (
@@ -140,13 +148,12 @@ function PhotogProfile() {
         }
       />
 
-      {showMoney && (
-        <div className="grid md:grid-cols-3 gap-3 mb-6">
-          <Stat label={`Faturado ${year}`} value={EUR(totalFees)} />
-          <Stat label="Pago" value={EUR(totalPaid)} tone="success" />
-          <Stat label="Pendente" value={EUR(totalPending)} tone="warning" />
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <Stat label={`Fees totais ${year}`} value={EUR(totalFees)} />
+        <Stat label="Fees pagos" value={EUR(totalPaid)} tone="success" />
+        <Stat label="Por receber" value={EUR(totalPending)} tone="warning" />
+        <Stat label="Comissões PRISM" value={EUR(totalComm)} />
+      </div>
 
       <Card className="mb-6">
         <CardHeader><CardTitle className="text-base">Próximos eventos</CardTitle></CardHeader>
