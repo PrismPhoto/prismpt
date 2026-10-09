@@ -7,22 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EUR, fmtDate } from "@/lib/format";
 import {
   applyCalendarSync, getCalendarSyncInfo, previewCalendarSync,
   type SyncPreview,
 } from "@/lib/calendar-sync.functions";
 
-const YEARS = [2027, 2028, 2029, 2030];
-const DEFAULT_YEAR = 2027;
-
-export function CalendarSyncButton() {
+export function CalendarSyncButton({ year }: { year: number }) {
   const qc = useQueryClient();
   const runPreview = useServerFn(previewCalendarSync);
   const runApply = useServerFn(applyCalendarSync);
   const getInfo = useServerFn(getCalendarSyncInfo);
-  const [year, setYear] = useState(DEFAULT_YEAR);
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState<SyncPreview | null>(null);
@@ -89,13 +84,9 @@ export function CalendarSyncButton() {
   return (
     <>
       <div className="flex items-center gap-2">
-        <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
-          <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
-          <SelectContent>{YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
-        </Select>
         <Button variant="outline" onClick={start} disabled={loading} title={lastSync ? `Última sincronização: ${new Date(lastSync).toLocaleString("pt-PT")}` : "Nunca sincronizado"}>
           {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-          {loading ? "A ler calendário…" : "Sync Calendário"}
+          {loading ? "A ler…" : "Sync"}
           {lastCount != null && <Badge variant={lastCount ? "default" : "secondary"} className="ml-2">{lastCount}</Badge>}
         </Button>
         <span className="text-xs text-muted-foreground hidden lg:inline">

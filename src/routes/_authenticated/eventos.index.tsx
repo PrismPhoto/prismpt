@@ -149,7 +149,7 @@ function EventsPage() {
             </Select>
             <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4 mr-2" />CSV</Button>
             {role === "manager" && (
-              <CalendarSyncButton />
+              <CalendarSyncButton year={year} />
             )}
             {role === "manager" && (
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
