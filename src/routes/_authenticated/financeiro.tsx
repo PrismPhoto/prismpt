@@ -35,9 +35,11 @@ function FinancePage() {
     },
   });
 
-  const filtered = role !== "photographer" && photogF === "all"
+  // Fotógrafos nunca têm a vista "Todos"; por defeito vêem-se a si próprios
+  const selPhotog = role === "photographer" ? (photogF !== "all" ? photogF : photographerId) : (photogF !== "all" ? photogF : null);
+  const filtered = !selPhotog
     ? rows
-    : rows.filter((e: any) => e.event_photographers?.some((ep: any) => ep.photographer_id === (role === "photographer" ? photographerId : photogF)));
+    : rows.filter((e: any) => e.event_photographers?.some((ep: any) => ep.photographer_id === selPhotog));
 
   // Extras attributed to a specific photographer count toward their fee
   const extrasForPhotographer = (e: any, photographerId: string) =>
@@ -66,9 +68,7 @@ function FinancePage() {
   };
 
 
-  const activePhotographerId = role === "photographer"
-    ? photographerId
-    : (photogF !== "all" ? photogF : null);
+  const activePhotographerId = selPhotog;
 
   const totalRevenue = filtered.reduce((s, e) => s + Number(e.total_value || 0), 0);
   const allFeeRows = filtered.flatMap((e: any) =>
@@ -100,13 +100,19 @@ function FinancePage() {
     <PageContainer>
       <PageHeader
         title="Financeiro"
-        description={role === "photographer" ? "A sua caixa" : "Resumo financeiro"}
+        description={role === "photographer" ? (activePhotographerId === photographerId ? "A sua caixa" : `Resumo de ${photographers.find((p: any) => p.id === activePhotographerId)?.full_name ?? "colega"}`) : "Resumo financeiro"}
         actions={
           <>
             <Select value={String(year)} onValueChange={(v) => setYear(Number(v))}>
               <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
               <SelectContent>{years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
             </Select>
+            {role === "photographer" && (
+              <Select value={activePhotographerId ?? ""} onValueChange={setPhotogF}>
+                <SelectTrigger className="w-36"><SelectValue placeholder="Fotógrafo" /></SelectTrigger>
+                <SelectContent>{photographers.filter((p: any) => p.active || p.id === photographerId).map((p: any) => <SelectItem key={p.id} value={p.id}>{p.initials}{p.id === photographerId ? " (eu)" : ""}</SelectItem>)}</SelectContent>
+              </Select>
+            )}
             {role === "manager" && (
               <Select value={photogF} onValueChange={setPhotogF}>
                 <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -181,7 +187,7 @@ function FinancePage() {
                     {role === "manager" && <td className="p-3 text-right tabular-nums">{e.final_payment_date ? EUR(e.final_payment_value) : <span className="text-muted-foreground">—</span>}</td>}
                     <td className="p-3">
                       <div className="flex gap-1 flex-wrap">
-                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === photographerId).map((ep: any) => {
+                        {e.event_photographers?.filter((ep: any) => role === "manager" || ep.photographer_id === activePhotographerId).map((ep: any) => {
                           const owed = owedToPhotographer(e, ep);
                           const variant = owed <= 0 ? "default" : ep.deposit_paid ? "secondary" : "outline";
                           return (
